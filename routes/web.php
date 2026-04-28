@@ -6,8 +6,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KlienController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\JadwalController;
-use App\Http\Controllers\HasilTesController;   
-use App\Http\Controllers\LaporanController; 
+use App\Http\Controllers\HasilTesController;
+use App\Http\Controllers\LaporanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,16 +16,25 @@ use App\Http\Controllers\LaporanController;
 */
 
 // --- GUEST ROUTES (Tanpa Login) ---
-Route::get('/', [AuthController::class, 'showLogin'])->name('login');
+
+// Halaman utama (/) mau diarahkan ke login juga boleh
+Route::get('/', function() {
+    return redirect()->route('login');
+});
+
+// Route GET untuk nampilin form login (URL: /login)
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+
+// Route POST untuk proses kirim data login (URL: /login)
 Route::post('/login', [AuthController::class, 'login']);
 
+// Register tetap sama
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.process');
 
-
 // --- AUTH ROUTES (Hanya Setelah Login) ---
 Route::middleware(['auth'])->group(function () {
-    
+
     // 1. Dashboard (Langsung panggil Controller, jangan pakai Closure/function lagi)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 

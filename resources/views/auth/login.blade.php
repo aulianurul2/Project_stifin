@@ -1,8 +1,81 @@
-<form action="/login" method="POST">
-    @csrf
-    <h2>Login STIFIN</h2>
-    <input type="text" name="username" placeholder="Username" required>
-    <input type="password" name="password" placeholder="Password" required>
-    <button type="submit">Login</button>
-    <p>Belum punya akun? <a href="/register">Daftar di sini</a></p>
-</form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
+
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="logo-icon">⚡</div>
+                <h2>Sign In STIFIn</h2>
+                <p>Access your account</p>
+            </div>
+
+            <form class="login-form" id="loginForm" action="{{ route('login') }}" method="POST" novalidate>
+                @csrf
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <input type="email" id="email" name="email" required autocomplete="email">
+                        <label for="email">Email</label>
+                        <span class="input-line"></span>
+                    </div>
+                    <span class="error-message" id="emailError"></span>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-wrapper password-wrapper">
+                        <input type="password" id="password" name="password" required autocomplete="current-password">
+                        <label for="password">Password</label>
+                        <button type="button" class="password-toggle" id="passwordToggle" aria-label="Toggle password visibility">
+                            <span class="toggle-icon"></span>
+                        </button>
+                        <span class="input-line"></span>
+                    </div>
+                    <span class="error-message" id="passwordError"></span>
+                </div>
+
+                <div class="form-options">
+                    <div class="remember-wrapper">
+                        <input type="checkbox" id="remember" name="remember">
+                        <label for="remember" class="checkbox-label">
+                            <span class="custom-checkbox"></span>
+                            Keep me signed in
+                        </label>
+                    </div>
+                    <a href="#" class="forgot-password">Lupa password?</a>
+                </div>
+
+                <button type="submit" class="login-btn btn">
+                    <span class="btn-text">Sign In</span>
+                    <span class="btn-loader"></span>
+                    <span class="btn-glow"></span>
+                </button>
+
+            </form>
+
+            <div class="signup-link">
+                <p>Belum Punya Akun? <a href="/register">Buat Baru</a></p>
+            </div>
+
+            <div class="success-message" id="successMessage">
+                <div class="success-icon">✓</div>
+                <h3>Selamat Datang!</h3>
+                <p>Redirecting to your dashboard...</p>
+            </div>
+        </div>
+
+        <div class="background-effects">
+            <div class="glow-orb glow-orb-1"></div>
+            <div class="glow-orb glow-orb-2"></div>
+            <div class="glow-orb glow-orb-3"></div>
+        </div>
+    </div>
+
+    <script src="{{ asset('assets/js/script.js') }}"></script>
+</body>
+</html>
