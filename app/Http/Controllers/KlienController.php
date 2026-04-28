@@ -19,14 +19,15 @@ class KlienController extends Controller
 
     public function update(Request $request, $id)
     {
+        // Ganti validasi alamat menjadi no_hp
         $request->validate([
             'nama' => 'required|string|max:100',
-            'alamat' => 'nullable|string'
+            'no_hp' => 'required|string|max:15'
         ]);
 
         DB::table('klien')->where('id_klien', $id)->update([
             'nama' => $request->nama,
-            'alamat' => $request->alamat,
+            'no_hp' => $request->no_hp, // Simpan no_hp
         ]);
 
         return redirect()->back()->with('success', 'Data klien berhasil diperbarui');
