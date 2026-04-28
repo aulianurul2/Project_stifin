@@ -2,6 +2,27 @@
 <html>
 <head>
     <title>Daftar Akun</title>
+    <style>
+        /* Gaya sederhana untuk menyatukan +62 dengan input */
+        .phone-input-container {
+            display: flex;
+            align-items: center;
+        }
+        .prefix {
+            background: #e2e2e2;
+            padding: 2px 8px;
+            border: 1px solid #a9a9a9;
+            border-right: none;
+            height: 17px; /* Menyesuaikan tinggi input default browser */
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+        }
+        .phone-field {
+            border: 1px solid #a9a9a9;
+            padding: 2px;
+        }
+    </style>
 </head>
 <body>
     <h2>Form Pendaftaran</h2>
@@ -41,9 +62,23 @@
     <div>
         <label>Jenis Kelamin:</label><br>
         <select name="jenis_kelamin" required>
-            <option value="L">Laki-laki</option>
-            <option value="P">Perempuan</option>
+            <option value="L" {{ old('jenis_kelamin') == 'L' ? 'selected' : '' }}>Laki-laki</option>
+            <option value="P" {{ old('jenis_kelamin') == 'P' ? 'selected' : '' }}>Perempuan</option>
         </select>
+    </div>
+
+    <div>
+        <label>Nomor HP (WhatsApp):</label><br>
+        <div class="phone-input-container">
+            <span class="prefix">+62</span>
+            <input type="number" 
+                   name="no_hp" 
+                   class="phone-field"
+                   placeholder="812345678" 
+                   value="{{ old('no_hp') }}" 
+                   oninput="if(this.value.startsWith('0')) this.value = this.value.substring(1);"
+                   required>
+        </div>
     </div>
 
     <div>

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
-use App\Models\Admin;
 use App\Models\Klien;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -13,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 class AuthController extends Controller
 {
     /**
-     * Menampilkan halaman login (paling pertama saat serve)
+     * Menampilkan halaman login
      */
     public function showLogin()
     {
@@ -30,15 +29,29 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        // Menggunakan Auth::attempt untuk memvalidasi username dan password terenkripsi
-        if (Auth::attempt(['username' => $request->username, 'password' => $request->password])) {
+        // 1. Coba Autentikasi
+        if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             
-            // Mengarahkan ke dashboard setelah login berhasil
+            // 2. Ambil data user yang sedang login
+            $user = Auth::user();
+
+            // 3. Cek Role: Jika bukan admin, gagalkan login (karena ini login khusus admin)
+            if ($user->role !== 'admin') {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'login' => 'Akses ditolak! Akun Anda tidak memiliki hak akses Admin.',
+                ])->withInput($request->only('username'));
+            }
+
+            // 4. Jika admin, arahkan ke dashboard
             return redirect()->intended('dashboard');
         }
 
-        // Jika gagal, kembali dengan pesan error
+        // Jika gagal autentikasi
         return back()->withErrors([
             'login' => 'Username atau Password salah!',
         ])->withInput($request->only('username'));
@@ -53,43 +66,46 @@ class AuthController extends Controller
     }
 
     /**
-     * Proses penyimpanan data user baru ke database
+     * Proses pendaftaran klien baru
      */
-   public function register(Request $request)
-{
-    $request->validate([
-        'nama' => 'required|string|max:100',
-        'username' => 'required|unique:user,username|max:50',
-        'password' => 'required|min:6',
-        'tanggal_lahir' => 'required|date',
-        'alamat' => 'required|string',
-        'jenis_kelamin' => 'required|in:L,P',
-    ]);
-
-    try {
-        // 2. Simpan ke tabel 'user' dahulu
-        $user = \App\Models\User::create([
-            'nama' => $request->nama,
-            'username' => $request->username,
-            'password' => \Illuminate\Support\Facades\Hash::make($request->password),
-            'role' => 'klien', // Otomatis klien sesuai permintaan sebelumnya
+    public function register(Request $request)
+    {
+        $request->validate([
+            'nama' => 'required|string|max:100',
+            'username' => 'required|unique:user,username|max:50',
+            'password' => 'required|min:6',
+            'tanggal_lahir' => 'required|date',
+            'alamat' => 'required|string',
+            'jenis_kelamin' => 'required|in:L,P',
+            'no_hp' => 'required|numeric', // Validasi input nomor hp
         ]);
 
-        // 3. Simpan detail profil ke tabel 'klien'
-        \App\Models\Klien::create([
-            'id_user' => $user->id_user, // ID dari user yang baru saja dibuat
-            'nama' => $request->nama,
-            'tanggal_lahir' => $request->tanggal_lahir,
-            'jenis_kelamin' => $request->jenis_kelamin,
-            'alamat' => $request->alamat,
-        ]);
+        try {
+            // 1. Simpan ke tabel 'user'
+            $user = User::create([
+                'nama' => $request->nama,
+                'username' => $request->username,
+                'password' => Hash::make($request->password),
+                'role' => 'klien', // Otomatis menjadi klien
+            ]);
 
-        return redirect()->route('login')->with('success', 'Pendaftaran berhasil! Silahkan login.');
+            // 2. Simpan detail profil ke tabel 'klien'
+            Klien::create([
+                'id_user' => $user->id_user,
+                'nama' => $request->nama,
+                'tanggal_lahir' => $request->tanggal_lahir,
+                'jenis_kelamin' => $request->jenis_kelamin,
+                'alamat' => $request->alamat,
+                'no_hp' => '+62' . $request->no_hp, // Gabungkan prefix +62
+            ]);
 
-    } catch (\Exception $e) {
-        return back()->withErrors(['error' => 'Gagal menyimpan data: ' . $e->getMessage()])->withInput();
+            return redirect()->route('login')->with('success', 'Pendaftaran berhasil! Silakan login.');
+
+        } catch (\Exception $e) {
+            Log::error("Pendaftaran Gagal: " . $e->getMessage());
+            return back()->withErrors(['error' => 'Gagal menyimpan data: ' . $e->getMessage()])->withInput();
+        }
     }
-}
 
     /**
      * Proses Logout

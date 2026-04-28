@@ -13,9 +13,9 @@ class Klien extends Model
     protected $fillable = [
         'id_user',
         'nama',
-        'no_hp',
         'tanggal_lahir',
         'alamat',
         'jenis_kelamin',
+        'no_hp',
     ];
 }
