@@ -15,7 +15,22 @@ body {
     justify-content: center;
     padding: 20px;
     line-height: 1.6;
-    overflow: hidden;
+    overflow-y: auto;
+    height: auto;
+}
+
+textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    padding: 10px 0;
+    font-size: 16px;
+    font-family: inherit;
+    resize: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
 }
 
 .login-container {
@@ -23,6 +38,7 @@ body {
     max-width: 400px;
     position: relative;
     z-index: 10;
+    padding: 40px 0;
 }
 
 .login-card {
@@ -30,7 +46,7 @@ body {
     border: 1px solid #2a2a35;
     border-radius: 16px;
     padding: 40px;
-    box-shadow: 
+    box-shadow:
         0 20px 40px rgba(0, 0, 0, 0.3),
         0 0 0 1px rgba(255, 255, 255, 0.05);
     position: relative;
@@ -55,7 +71,7 @@ body {
 }
 
 .login-card:hover {
-    box-shadow: 
+    box-shadow:
         0 20px 60px rgba(0, 0, 0, 0.4),
         0 0 0 1px rgba(0, 255, 136, 0.1),
         0 0 40px rgba(0, 255, 136, 0.1);
@@ -92,73 +108,114 @@ body {
     font-weight: 400;
 }
 
+.phone-input-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 0;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
 /* Form Group & Input Styles */
 .form-group {
     margin-bottom: 24px;
     position: relative;
 }
 
-.input-wrapper {
-    position: relative;
-    margin-bottom: 24px;
+.phone-label {
+    display: block;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: -5px;
 }
 
-.input-wrapper input {
+/* --- Konsistensi Input, Textarea, dan Phone Container --- */
+
+/* Samakan dasar semua elemen input & textarea */
+.input-wrapper input,
+.input-wrapper textarea,
+.phone-field {
     width: 100%;
-    background: #1a1a25;
-    border: 1px solid #2a2a35;
-    border-radius: 6px;
-    padding: 24px 16px;
-    color: #ffffff;
-    font-size: 16px;
-    font-weight: 400;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: transparent;
+    border: none;
     outline: none;
+    color: #fff;
+    padding: 10px 0;
+    font-size: 16px;
+    font-family: inherit;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
 }
 
-.input-wrapper input:focus {
-    border-color: #00ff88;
-    background: rgba(26, 26, 37, 0.8);
-    box-shadow: 
-        0 0 0 3px rgba(0, 255, 136, 0.1),
-        0 4px 20px rgba(0, 255, 136, 0.1);
+/* Khusus Textarea agar melar sesuai isi */
+.input-wrapper textarea {
+    resize: none;
+    min-height: 45px;
+    display: block;
 }
 
-.input-wrapper input:focus + label,
-.input-wrapper input:valid + label {
-    transform: translateY(-32px) translateX(4px) scale(0.85);
+/* Container Nomor HP */
+.phone-input-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.input-prefix {
     color: #00ff88;
-    font-weight: 500;
+    font-weight: 700;
 }
 
+/* Animasi Floating Label untuk Semuanya */
 .input-wrapper label {
     position: absolute;
-    left: 16px;
-    top: 24px;
-    color: #a0a0b0;
-    font-size: 16px;
-    font-weight: 400;
+    left: 0;
+    top: 10px;
+    color: rgba(255, 255, 255, 0.5);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     pointer-events: none;
-    transform-origin: left top;
 }
 
-.input-line {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    width: 0;
-    height: 2px;
-    background: linear-gradient(90deg, #00ff88, #0099ff);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    transform: translateX(-50%);
-    border-radius: 2px;
+/* Efek saat Fokus atau Ada Isi */
+.input-wrapper input:focus ~ label,
+.input-wrapper input:not(:placeholder-shown) ~ label,
+.input-wrapper textarea:focus ~ label,
+.input-wrapper textarea:not(:placeholder-shown) ~ label {
+    top: -12px;
+    font-size: 12px;
+    color: #00ff88;
+    font-weight: 600;
 }
 
-.input-wrapper input:focus ~ .input-line {
+/* Garis Neon saat Fokus */
+.input-wrapper input:focus ~ .input-line,
+.input-wrapper textarea:focus ~ .input-line,
+.phone-input-container:focus-within {
+    border-bottom-color: #00ff88;
+    box-shadow: 0 1px 0 0 #00ff88;
+}
+
+/* Membuat warna label Nomor HP jadi putih terang */
+.input-wrapper label[for="no_hp"] {
+    color: #ffffff !important;
+    opacity: 1 !important;
+}
+
+.input-wrapper input:focus ~ .input-line,
+.input-wrapper textarea:focus ~ .input-line {
     width: 100%;
+    background: #00ff88;
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
 }
 
+/* Tetap berikan warna neon saat label melayang ke atas (biar tetap keren) */
+.input-wrapper input:focus ~ label[for="no_hp"],
+.input-wrapper input:not(:placeholder-shown) ~ label[for="no_hp"] {
+    color: #00ff88 !important; /* Warna neon STIFIn */
+}
 /* Password Toggle */
 .password-wrapper input {
     padding-right: 50px;
@@ -314,7 +371,7 @@ body {
 
 .login-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 
+    box-shadow:
         0 10px 30px rgba(0, 255, 136, 0.3),
         0 0 40px rgba(0, 255, 136, 0.2);
 }
@@ -606,30 +663,30 @@ body {
     body {
         padding: 10px;
     }
-    
+
     .login-card {
         padding: 24px;
         margin: 10px;
     }
-    
+
     .login-header h2 {
         font-size: 1.75rem;
     }
-    
+
     .input-wrapper input {
         padding: 16px;
     }
-    
+
     .password-wrapper input {
         padding-right: 45px;
     }
-    
+
     .form-options {
         flex-direction: column;
         align-items: flex-start;
         gap: 16px;
     }
-    
+
     .glow-orb {
         opacity: 0.5;
     }
