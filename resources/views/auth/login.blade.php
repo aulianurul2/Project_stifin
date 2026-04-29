@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
-
 </head>
 <body>
     <div class="login-container">
@@ -16,15 +15,21 @@
                 <p>Access your account</p>
             </div>
 
+            @if($errors->has('login'))
+                <div style="color: #ff6b6b; margin-bottom: 15px; font-size: 0.9rem; text-align: center;">
+                    {{ $errors->first('login') }}
+                </div>
+            @endif
+
             <form class="login-form" id="loginForm" action="{{ route('login') }}" method="POST" novalidate>
                 @csrf
                 <div class="form-group">
                     <div class="input-wrapper">
-                        <input type="email" id="email" name="email" required autocomplete="email">
-                        <label for="email">Email</label>
+                        <input type="text" id="username" name="username" value="{{ old('username') }}" required autocomplete="username">
+                        <label for="username">Username</label>
                         <span class="input-line"></span>
                     </div>
-                    <span class="error-message" id="emailError"></span>
+                    <span class="error-message" id="usernameError"></span>
                 </div>
 
                 <div class="form-group">
@@ -59,7 +64,7 @@
             </form>
 
             <div class="signup-link">
-                <p>Belum Punya Akun? <a href="/register">Buat Baru</a></p>
+                <p>Belum Punya Akun? <a href="{{ route('register') }}">Buat Baru</a></p>
             </div>
 
             <div class="success-message" id="successMessage">
@@ -76,6 +81,25 @@
         </div>
     </div>
 
-    <script src="{{ asset('assets/js/script.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordInput = document.getElementById('password');
+            const passwordToggle = document.getElementById('passwordToggle');
+
+            if (passwordToggle && passwordInput) {
+                passwordToggle.addEventListener('click', function(e) {
+                    // Mencegah reload halaman
+                    e.preventDefault();
+                    
+                    // Ubah tipe input
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    
+                    // Tambahkan class active jika ingin merubah icon via CSS
+                    this.classList.toggle('active');
+                });
+            }
+        });
+    </script>
 </body>
 </html>
