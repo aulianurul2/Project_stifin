@@ -17,7 +17,8 @@
 </head>
 <body class="bg-gray-50 flex">
 
-     <div class="w-64 bg-slate-900 min-h-screen text-white flex-shrink-0">
+    <!-- Sidebar -->
+    <div class="w-64 bg-slate-900 min-h-screen text-white flex-shrink-0 no-print">
         <div class="p-6 text-xl font-bold border-b border-slate-800 text-center">STIFIn Admin</div>
         <nav class="mt-4">
             <a href="{{ route('dashboard') }}" class="flex items-center py-3 px-6 text-gray-400 hover:bg-slate-800 transition">
@@ -35,6 +36,7 @@
             <a href="{{ route('hasil-tes') }}" class="flex items-center py-3 px-6 text-gray-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fas fa-file-medical mr-3"></i> Hasil Tes
             </a>
+            <!-- Link Laporan Aktif -->
             <a href="{{ route('laporan.index') }}" class="flex items-center py-3 px-6 bg-blue-600 text-white">
                 <i class="fas fa-chart-bar mr-3"></i> Laporan
             </a>
@@ -43,19 +45,32 @@
                 <button type="submit" class="w-full text-left py-3 px-6 text-red-400 hover:bg-red-900/20 transition">
                     <i class="fas fa-sign-out-alt mr-3"></i> Logout
                 </button>
-            </form>
+            </form>     
         </nav>
     </div>
 
     <div class="flex-1 flex flex-col">
+        <!-- HEADER DENGAN TOMBOL PDF & EXCEL -->
         <header class="bg-white shadow-sm p-6 flex justify-between items-center no-print">
             <h2 class="text-2xl font-bold text-gray-800">Laporan Statistik</h2>
-            <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center">
-                <i class="fas fa-print mr-2"></i> Cetak Laporan
-            </button>
+            <div class="flex gap-3">
+                <!-- Export PDF -->
+                <a href="{{ route('laporan.pdf') }}" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition flex items-center shadow-sm">
+                    <i class="fas fa-file-pdf mr-2"></i> PDF
+                </a>
+                <!-- Export Excel -->
+                <a href="{{ route('laporan.excel') }}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center shadow-sm">
+                    <i class="fas fa-file-excel mr-2"></i> Excel
+                </a>
+                <!-- Print Biasa -->
+                <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center shadow-sm">
+                    <i class="fas fa-print mr-2"></i> Print Browser
+                </button>
+            </div>
         </header>
 
         <main class="p-8">
+            <!-- Stats Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center transition hover:shadow-md">
                     <div class="p-4 bg-blue-50 rounded-xl text-blue-600 mr-4"><i class="fas fa-users fa-2x"></i></div>
@@ -80,6 +95,7 @@
                 </div>
             </div>
 
+            <!-- Charts and Tables -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <h3 class="text-lg font-bold mb-6 text-gray-700 flex items-center">
@@ -143,6 +159,5 @@
             </div>
         </main>
     </div>
-
 </body>
 </html>

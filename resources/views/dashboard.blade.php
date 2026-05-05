@@ -136,6 +136,12 @@
 
     <script>
         const ctx = document.getElementById('stifinChart').getContext('2d');
+        
+        // Membuat efek gradasi warna yang modern
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(37, 99, 235, 0.25)'); // Biru transparan di atas
+        gradient.addColorStop(1, 'rgba(37, 99, 235, 0)');    // Menghilang di bawah
+
         new Chart(ctx, {
             type: 'line',
             data: {
@@ -143,30 +149,62 @@
                 datasets: [{
                     label: 'Jumlah Tes',
                     data: @json($dataBulanan),
-                    borderColor: '#2563eb',
-                    backgroundColor: 'rgba(37, 99, 235, 0.05)',
+                    borderColor: '#2563eb', // Warna garis biru pekat
+                    backgroundColor: gradient, // Menggunakan gradasi yang dibuat tadi
                     fill: true,
-                    tension: 0.4,
-                    borderWidth: 2,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#2563eb'
+                    tension: 0.45, // Membuat garis lebih melengkung halus
+                    borderWidth: 3,
+                    pointRadius: 0, // Sembunyikan titik default
+                    pointHoverRadius: 6, // Munculkan titik besar saat kursor di atasnya
+                    pointHitRadius: 30,
+                    pointBackgroundColor: '#2563eb',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e293b', // Warna gelap slate
+                        padding: 12,
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 13 },
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `📈 Total: ${context.raw} Tes`;
+                            }
+                        }
+                    }
                 },
                 scales: {
                     y: { 
                         beginAtZero: true, 
-                        ticks: { stepSize: 1, font: { size: 11 } },
-                        grid: { borderDash: [5, 5] }
+                        border: { display: false },
+                        ticks: { 
+                            stepSize: 1, 
+                            color: '#94a3b8',
+                            font: { size: 11 } 
+                        },
+                        grid: { 
+                            color: 'rgba(226, 232, 240, 0.6)',
+                            drawTicks: false
+                        }
                     },
                     x: { 
+                        border: { display: false },
                         grid: { display: false },
-                        ticks: { font: { size: 11 } }
+                        ticks: { 
+                            color: '#94a3b8',
+                            font: { size: 11 } 
+                        }
                     }
                 }
             }

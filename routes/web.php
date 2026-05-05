@@ -65,6 +65,8 @@ Route::middleware(['auth'])->group(function () {
 
     // 6. Laporan
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
+    Route::get('/laporan/pdf', [LaporanController::class, 'exportPdf'])->name('laporan.pdf');
+    Route::get('/laporan/excel', [LaporanController::class, 'exportExcel'])->name('laporan.excel');
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

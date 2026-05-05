@@ -35,7 +35,7 @@ class DatabaseSeeder extends Seeder
 
         // Data Hasil Tes
         DB::table('hasiltes')->insert([
-            ['id_tes' => 1, 'id_klien' => 4, 'tipe_tes' => 'Tes Kognitif', 'id_admin' => 1, 'id_jadwal' => 1, 'tanggal' => '2026-04-28', 'hasil' => 'Sensing', 'file_hasil' => '1777363790_Jobsheet_PBO2_Calvin.pdf', 'status_tes' => 'Selesai', 'biaya_tes' => 150000],
+            ['id_tes' => 1, 'id_klien' => 4, 'tipe_tes' => 'Tes Kognitif', 'id_admin' => 1, 'id_jadwal' => 1, 'tanggal' => '2026-04-28', 'hasil' => '', 'file_hasil' => '', 'status_tes' => 'Proses', 'biaya_tes' => 150000],
         ]);
     }
 }
