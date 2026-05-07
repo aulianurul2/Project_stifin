@@ -8,28 +8,24 @@ use Illuminate\Support\Facades\Storage;
 
 class HasilTesController extends Controller
 {
-    public function index(Request $request)
-    {
-        $tab = $request->query('tab', 'kelola');
+   public function index(Request $request)
+{
+    $tab = $request->get('tab', 'kelola');
 
-        if ($tab == 'riwayat') {
-            // Data yang sudah selesai
-            $data = DB::table('hasiltes')
-                ->join('klien', 'hasiltes.id_klien', '=', 'klien.id_klien')
-                ->where('hasiltes.status_tes', 'Selesai')
-                ->select('hasiltes.*', 'klien.nama', 'klien.no_hp')
-                ->get();
-        } else {
-            // Data yang masih dalam proses/perlu diinput hasilnya
-            $data = DB::table('hasiltes')
-                ->join('klien', 'hasiltes.id_klien', '=', 'klien.id_klien')
-                ->where('hasiltes.status_tes', 'Proses')
-                ->select('hasiltes.*', 'klien.nama', 'klien.no_hp')
-                ->get();
-        }
-
-        return view('hasil-tes', compact('data', 'tab'));
+    if ($tab == 'kelola') {
+        // Tampilkan data yang baru diterima (belum selesai)
+        $data = DB::table('hasiltes')
+            ->where('status_tes', '!=', 'Selesai')
+            ->get();
+    } else {
+        // Tampilkan riwayat yang sudah selesai
+        $data = DB::table('hasiltes')
+            ->where('status_tes', 'Selesai')
+            ->get();
     }
+
+    return view('hasil-tes', compact('data', 'tab'));
+}
 
     public function update(Request $request, $id)
     {

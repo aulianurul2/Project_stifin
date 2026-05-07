@@ -52,10 +52,11 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // 4. Jadwal Tes
-    Route::prefix('jadwal-tes')->group(function () {
-        Route::get('/', [JadwalController::class, 'index'])->name('jadwal-tes');
-        Route::delete('/{id}', [JadwalController::class, 'destroy'])->name('jadwal.destroy');
-    });
+Route::prefix('jadwal-tes')->group(function () {
+    Route::get('/', [JadwalController::class, 'index'])->name('jadwal-tes');
+    Route::post('/store', [JadwalController::class, 'store'])->name('jadwal.store'); // Hapus prefix jadwal-tes di sini
+    Route::delete('/{id}', [JadwalController::class, 'destroy'])->name('jadwal.destroy');
+});
 
     // 5. Hasil Tes
     Route::prefix('hasil-tes')->group(function () {

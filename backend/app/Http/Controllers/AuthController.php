@@ -118,4 +118,79 @@ class AuthController extends Controller
         
         return redirect()->route('login');
     }
+
+    public function registerAPI(Request $request)
+    {
+        // 1. Validasi input
+        $request->validate([
+            'nama' => 'required|string|max:100',
+            'username' => 'required|unique:user,username|max:50',
+            'password' => 'required|min:6',
+            'tanggal_lahir' => 'required|date',
+            'alamat' => 'required|string',
+            'jenis_kelamin' => 'required|in:L,P',
+            'no_hp' => 'required',
+        ]);
+
+        try {
+            // 2. Simpan ke tabel 'user'
+            $user = User::create([
+                'nama' => $request->nama,
+                'username' => $request->username,
+                'password' => Hash::make($request->password),
+                'role' => 'klien', 
+            ]);
+
+            // 3. Simpan detail profil ke tabel 'klien'
+            Klien::create([
+                'id_user' => $user->id_user, 
+                'nama' => $request->nama,
+                'tanggal_lahir' => $request->tanggal_lahir,
+                'jenis_kelamin' => $request->jenis_kelamin,
+                'alamat' => $request->alamat,
+                'no_hp' => '+62' . $request->no_hp, 
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Pendaftaran akun STIFIn berhasil!'
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    public function loginAPI(Request $request)
+{
+    $credentials = $request->validate([
+        'username' => 'required',
+        'password' => 'required',
+    ]);
+
+    // Cek apakah username dan password cocok
+    if (Auth::attempt($credentials)) {
+        $user = Auth::user();
+
+        // Kembalikan respon sukses dalam format JSON
+        return response()->json([
+            'success' => true,
+            'message' => 'Login Berhasil!',
+            'user' => [
+                'nama' => $user->nama,
+                'no_hp' => $user->no_hp,
+                'username' => $user->username,
+                'role' => $user->role
+            ]
+        ], 200);
+    }
+
+    // Jika gagal
+    return response()->json([
+        'success' => false,
+        'message' => 'Username atau Password salah!'
+    ], 401);
+}
 }
