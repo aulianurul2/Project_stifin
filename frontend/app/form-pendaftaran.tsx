@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import axios from 'axios';
+import axiosInstance from '@/src/api/axiosConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function FormPendaftaran() {
@@ -50,7 +50,7 @@ export default function FormPendaftaran() {
     setLoading(true);
     try {
       // Mengirim data pendaftaran lengkap ke API Laravel
-      const response = await axios.post('http://192.168.100.117:8000/api/pendaftaran/submit', {
+      const response = await axiosInstance.post('/pendaftaran/submit', {
         id_jadwal: id_jadwal,
         nama_lengkap: namaLengkap,
         nik: nik,
@@ -61,7 +61,14 @@ export default function FormPendaftaran() {
 
       if (response.status === 200) {
         Alert.alert("Berhasil", "Pendaftaran Anda telah berhasil dikirim!", [
-          { text: "Selesai", onPress: () => router.replace('/(tabs)') }
+          { 
+            text: "Selesai", 
+            onPress: () => {
+              // Ganti '/(tabs)' menjadi path spesifik ke riwayat
+              // Asumsi file kamu bernama app/(tabs)/riwayat.tsx
+              router.replace('/(tabs)/riwayat'); 
+            } 
+          }
         ]);
       }
     } catch (error: any) {
