@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axiosInstance from '@/src/api/axiosConfig';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      const response = await axios.post('http://192.168.100.117:8000/api/login', {
+      const response = await axiosInstance.post('/login', {
         username,
         password,
       });

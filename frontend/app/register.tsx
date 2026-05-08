@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import axios from 'axios';
+import axiosInstance from '@/src/api/axiosConfig';
 
 // --- Definisi Interface untuk Props agar TypeScript tidak Error ---
 interface InputBoxProps {
@@ -62,7 +62,7 @@ export default function RegisterScreen() {
       const parts = form.tanggal_lahir.split('/');
       const formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
 
-      const response = await axios.post('http://192.168.100.117:8000/api/addnew', {
+      const response = await axiosInstance.post('/addnew', {
         ...form,
         tanggal_lahir: formattedDate
       });

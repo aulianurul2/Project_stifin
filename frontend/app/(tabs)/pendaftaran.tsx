@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import axios from 'axios';
+import axiosInstance from '@/src/api/axiosConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Jadwal {
@@ -34,16 +34,21 @@ export default function PendaftaranTes() {
   const fetchJadwal = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://192.168.100.117:8000/api/jadwal-tersedia');
+      const response = await axiosInstance.get('/jadwal-tersedia');
       setJadwalData(response.data);
     } catch (error) {
       Alert.alert("Error", "Gagal mengambil data jadwal.");
     } finally { setLoading(false); }
   };
 
-  const filteredJadwal = jadwalData.filter(item => 
-    item.lokasi.toLowerCase().trim() === tempatTes.toLowerCase().trim() && item.status === 'Tersedia'
-  );
+ const filteredJadwal = jadwalData.filter(item => {
+  // Pastikan lokasi dan status tidak null sebelum di-string
+  const lokasiDB = String(item.lokasi || "").toLowerCase().trim();
+  const lokasiPilihan = String(tempatTes || "").toLowerCase().trim();
+  const statusDB = String(item.status || "").toLowerCase().trim();
+
+  return lokasiDB === lokasiPilihan && statusDB === 'tersedia';
+});
 
   return (
     <SafeAreaView style={styles.container}>
