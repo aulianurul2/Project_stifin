@@ -45,34 +45,57 @@ export default function RegisterScreen() {
     setForm({ ...form, tanggal_lahir: formatted });
   };
 
-  const handleRegister = async () => {
-    // Validasi sederhana
-    const requiredFields = ['nama', 'username', 'password', 'tanggal_lahir', 'jenis_kelamin', 'golongan_darah', 'no_hp', 'email'];
-    for (let field of requiredFields) {
-      if (!(form as any)[field]) {
-        Alert.alert("Perhatian", `Mohon isi field ${field.replace('_', ' ')}`);
+// Cari fungsi handleRegister di register.tsx
+const handleRegister = async () => {
+    // 1. Validasi lokal yang lebih ketat
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!form.email || !emailRegex.test(form.email.trim())) {
+        Alert.alert("Perhatian", "Format email tidak valid. Pastikan tidak ada spasi.");
         return;
-      }
     }
 
     setLoading(true);
     try {
-      const parts = form.tanggal_lahir.split('/');
-      const formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        // Format tanggal ke YYYY-MM-DD
+        const parts = form.tanggal_lahir.split('/');
+        const formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
 
-      const response = await axiosInstance.post('/addnew', {
-        ...form,
-        tanggal_lahir: formattedDate
-      });
+        // 2. Buat payload yang bersih (MENGHAPUS SPASI DI SEMUA FIELD KRUSIAL)
+        const payload = {
+            ...form,
+            nama: form.nama.trim(),
+            username: form.username.trim().toLowerCase(),
+            email: form.email.trim().toLowerCase(), // Pastikan email bersih
+            tanggal_lahir: formattedDate,
+            no_hp: form.no_hp.trim()
+        };
 
-      Alert.alert("Sukses", response.data.message);
-      router.push('/login');
+        console.log("Kirim Data ke Server:", payload); // Cek ini di terminal Metro kamu
+
+        const response = await axiosInstance.post('/addnew', payload);
+
+        Alert.alert("Sukses", "Pendaftaran berhasil! Silakan login.");
+        router.push('/login');
     } catch (error: any) {
-      Alert.alert("Error", error.response?.data?.message || "Gagal mendaftar");
+        console.log("XHR Error Detail:", error.response?.data);
+        
+        // Tangkap pesan error spesifik dari Laravel
+        const serverErrors = error.response?.data?.errors;
+        let errorMessage = "Gagal mendaftar";
+        
+        if (serverErrors) {
+            // Jika ada error spesifik (seperti email atau username unik)
+            const details = Object.values(serverErrors).flat().join('\n');
+            errorMessage = details;
+        } else {
+            errorMessage = error.response?.data?.message || errorMessage;
+        }
+
+        Alert.alert("Registrasi Gagal", errorMessage);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
 
   return (
     <SafeAreaView style={styles.container}>

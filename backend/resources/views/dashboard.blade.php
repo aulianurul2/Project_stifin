@@ -94,41 +94,50 @@
                 </div>
 
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col">
-                    <h4 class="text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider border-b pb-3">Aktivitas Terbaru</h4>
-                    <div class="overflow-y-auto flex-1">
-                        <table class="min-w-full divide-y divide-gray-100">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Klien</th>
-                                    <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-100">
-                                @forelse($aktivitasTerbaru as $row)
-                                <tr class="hover:bg-gray-50 transition">
-                                    <td class="px-3 py-4">
-                                        <p class="text-sm font-medium text-gray-900">{{ $row->nama }}</p>
-                                        <p class="text-[11px] text-gray-400">{{ date('d M Y', strtotime($row->tanggal)) }}</p>
-                                    </td>
-                                    <td class="px-3 py-4 text-center">
-                                        @php
-                                            $st = $row->status_tes;
-                                            $color = ($st == 'Selesai') ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800';
-                                        @endphp
-                                        <span class="px-2 py-1 rounded-full text-[10px] font-bold {{ $color }}">
-                                            {{ $st }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="2" class="px-3 py-10 text-center text-gray-400 italic text-sm">Belum ada aktivitas.</td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <h4 class="text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider border-b pb-3">Aktivitas Pendaftaran</h4>
+    <div class="overflow-y-auto flex-1">
+        <table class="min-w-full divide-y divide-gray-100">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Klien</th>
+                    <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-100">
+                @forelse($pendaftaranTerbaru as $row) {{-- Ganti variabel jika perlu sesuai Controller --}}
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-3 py-4">
+                        {{-- Mengambil nama klien dari data pendaftaran --}}
+                        <p class="text-sm font-medium text-gray-900">{{ $row->nama_klien }}</p>
+                        {{-- Mengambil info waktu pendaftaran --}}
+                       <p class="text-[11px] text-gray-400">{{ $row->tanggal ? \Carbon\Carbon::parse($row->tanggal)->diffForHumans() : 'Baru saja' }}</p>
+                    </td>
+                    <td class="px-3 py-4 text-center">
+                        @php
+                            $st = $row->status ?? 'Menunggu';
+                            $color = 'bg-yellow-100 text-yellow-800'; // Default Menunggu
+                            
+                            if ($st == 'Diterima') {
+                                $color = 'bg-green-100 text-green-800';
+                            } elseif ($st == 'Ditolak') {
+                                $color = 'bg-red-100 text-red-800';
+                            }
+                        @endphp
+                        <span class="px-2 py-1 rounded-full text-[10px] font-bold {{ $color }}">
+                            {{ $st }}
+                        </span>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="2" class="px-3 py-10 text-center text-gray-400 italic text-sm">Belum ada pendaftaran masuk.</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    <a href="{{ route('pendaftaran-tes') }}" class="text-center text-xs text-blue-600 font-bold mt-4 hover:underline">Lihat Semua Pendaftaran</a>
+</div>
 
             </div>
         </main>
