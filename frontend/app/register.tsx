@@ -1,22 +1,13 @@
 import React, { useState, type ComponentProps } from 'react';
 import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
-  ScrollView, 
-  SafeAreaView, 
-  Alert, 
-  ActivityIndicator, 
-  KeyboardAvoidingView, 
-  Platform 
+  View, Text, TextInput, TouchableOpacity, StyleSheet, 
+  ScrollView, SafeAreaView, Alert, ActivityIndicator, 
+  KeyboardAvoidingView, Platform 
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import axiosInstance from '@/src/api/axiosConfig';
 
-// --- Definisi Interface untuk Props agar TypeScript tidak Error ---
 interface InputBoxProps {
   label: string;
   icon: ComponentProps<typeof Ionicons>['name'];
@@ -37,11 +28,15 @@ export default function RegisterScreen() {
     password: '',
     tanggal_lahir: '',
     jenis_kelamin: '', 
+    golongan_darah: '',
     no_hp: '',
-    alamat: ''
+    alamat: '',
+    institusi: '',
+    sosmed: '',
+    email: '',
+    domisili: ''
   });
 
-  // Fungsi mengatur format tanggal DD/MM/YYYY otomatis
   const handleDateChange = (text: string) => {
     let cleaned = text.replace(/\D/g, '');
     let formatted = cleaned;
@@ -51,14 +46,17 @@ export default function RegisterScreen() {
   };
 
   const handleRegister = async () => {
-    if (!form.nama || !form.username || !form.password || !form.tanggal_lahir || !form.jenis_kelamin) {
-      Alert.alert("Perhatian", "Mohon lengkapi semua data wajib.");
-      return;
+    // Validasi sederhana
+    const requiredFields = ['nama', 'username', 'password', 'tanggal_lahir', 'jenis_kelamin', 'golongan_darah', 'no_hp', 'email'];
+    for (let field of requiredFields) {
+      if (!(form as any)[field]) {
+        Alert.alert("Perhatian", `Mohon isi field ${field.replace('_', ' ')}`);
+        return;
+      }
     }
 
     setLoading(true);
     try {
-      // Konversi DD/MM/YYYY menjadi YYYY-MM-DD untuk Laravel/MySQL
       const parts = form.tanggal_lahir.split('/');
       const formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
 
@@ -70,8 +68,7 @@ export default function RegisterScreen() {
       Alert.alert("Sukses", response.data.message);
       router.push('/login');
     } catch (error: any) {
-      const msg = error.response?.data?.message || "Gagal terhubung ke server backend";
-      Alert.alert("Pendaftaran Gagal", msg);
+      Alert.alert("Error", error.response?.data?.message || "Gagal mendaftar");
     } finally {
       setLoading(false);
     }
@@ -80,60 +77,53 @@ export default function RegisterScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{flex: 1}}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.card}>
             <View style={styles.header}>
-              <View style={styles.logoCircle}><Text style={styles.logoIcon}>⚡</Text></View>
-              <Text style={styles.title}>Sign Up STIFIn</Text>
-              <Text style={styles.subtitle}>Lengkapi data diri Anda</Text>
+              <Text style={styles.title}>Registrasi Klien</Text>
+              <Text style={styles.subtitle}>Silakan lengkapi profil STIFIn Anda</Text>
             </View>
 
             <View style={styles.form}>
-              <InputBox label="Nama Lengkap" icon="person-outline" placeholder="Nama sesuai identitas" onChangeText={(v: string) => setForm({...form, nama: v})} />
-              <InputBox label="Username" icon="at-outline" placeholder="Buat username unik" onChangeText={(v: string) => setForm({...form, username: v})} />
-              <InputBox label="Password" icon="lock-closed-outline" placeholder="Minimal 6 karakter" secureTextEntry onChangeText={(v: string) => setForm({...form, password: v})} />
+              <InputBox label="Nama Lengkap" icon="person-outline" placeholder="Nama Lengkap" onChangeText={(v) => setForm({...form, nama: v})} />
+              <InputBox label="Username" icon="at-outline" placeholder="Username" onChangeText={(v) => setForm({...form, username: v})} />
+              <InputBox label="Password" icon="lock-closed-outline" placeholder="Password" secureTextEntry onChangeText={(v) => setForm({...form, password: v})} />
               
               <View style={styles.inputGroupOuter}>
                 <Text style={styles.inputLabel}>Tanggal Lahir (DD/MM/YYYY)</Text>
                 <View style={styles.inputWrapper}>
                   <Ionicons name="calendar-outline" size={18} color="#64748b" style={styles.fieldIcon} />
-                  <TextInput 
-                    style={styles.textInput} 
-                    placeholder="Contoh: 17/08/1945" 
-                    value={form.tanggal_lahir} 
-                    onChangeText={handleDateChange} 
-                    keyboardType="numeric" 
-                    maxLength={10} 
-                    placeholderTextColor="#64748b" 
-                  />
+                  <TextInput style={styles.textInput} placeholder="17/08/1945" value={form.tanggal_lahir} onChangeText={handleDateChange} keyboardType="numeric" maxLength={10} placeholderTextColor="#64748b" />
                 </View>
               </View>
 
-              <View style={styles.inputGroupOuter}>
-                <Text style={styles.inputLabel}>Jenis Kelamin</Text>
-                <View style={styles.genderContainer}>
-                  <TouchableOpacity style={[styles.genderBox, form.jenis_kelamin === 'L' && styles.genderBoxActive]} onPress={() => setForm({...form, jenis_kelamin: 'L'})}>
-                    <Ionicons name="male" size={24} color={form.jenis_kelamin === 'L' ? '#fff' : '#64748b'} />
-                    <Text style={[styles.genderText, form.jenis_kelamin === 'L' && styles.genderTextActive]}>Laki-laki</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.genderBox, form.jenis_kelamin === 'P' && styles.genderBoxActive]} onPress={() => setForm({...form, jenis_kelamin: 'P'})}>
-                    <Ionicons name="female" size={24} color={form.jenis_kelamin === 'P' ? '#fff' : '#64748b'} />
-                    <Text style={[styles.genderText, form.jenis_kelamin === 'P' && styles.genderTextActive]}>Perempuan</Text>
-                  </TouchableOpacity>
+              <View style={styles.row}>
+                <View style={{flex: 1, marginRight: 10}}>
+                   <Text style={styles.inputLabel}>Gender</Text>
+                   <View style={styles.genderContainer}>
+                      <TouchableOpacity style={[styles.miniBox, form.jenis_kelamin === 'L' && styles.boxActive]} onPress={() => setForm({...form, jenis_kelamin: 'L'})}>
+                        <Text style={[styles.boxText, form.jenis_kelamin === 'L' && styles.textActive]}>L</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={[styles.miniBox, form.jenis_kelamin === 'P' && styles.boxActive]} onPress={() => setForm({...form, jenis_kelamin: 'P'})}>
+                        <Text style={[styles.boxText, form.jenis_kelamin === 'P' && styles.textActive]}>P</Text>
+                      </TouchableOpacity>
+                   </View>
+                </View>
+                <View style={{flex: 1}}>
+                   <InputBox label="Gol. Darah" icon="water-outline" placeholder="A/B/O/AB" onChangeText={(v) => setForm({...form, golongan_darah: v})} />
                 </View>
               </View>
 
-              <InputBox label="Nomor HP" icon="call-outline" placeholder="8123456..." keyboardType="numeric" onChangeText={(v: string) => setForm({...form, no_hp: v})} />
-              <InputBox label="Alamat Lengkap" icon="location-outline" placeholder="Alamat tinggal saat ini" multiline onChangeText={(v: string) => setForm({...form, alamat: v})} />
+              <InputBox label="No. HP" icon="call-outline" placeholder="812xxx" keyboardType="numeric" onChangeText={(v) => setForm({...form, no_hp: v})} />
+              <InputBox label="Email" icon="mail-outline" placeholder="email@anda.com" keyboardType="email-address" onChangeText={(v) => setForm({...form, email: v})} />
+              <InputBox label="Institusi" icon="business-outline" placeholder="Nama Sekolah/Kantor" onChangeText={(v) => setForm({...form, institusi: v})} />
+              <InputBox label="FB/Instagram" icon="logo-instagram" placeholder="@username" onChangeText={(v) => setForm({...form, sosmed: v})} />
+              <InputBox label="Domisili" icon="map-outline" placeholder="Kota saat ini" onChangeText={(v) => setForm({...form, domisili: v})} />
+              <InputBox label="Alamat Lengkap" icon="location-outline" placeholder="Alamat detail" multiline onChangeText={(v) => setForm({...form, alamat: v})} />
 
               <TouchableOpacity style={styles.primaryBtn} onPress={handleRegister} disabled={loading}>
                 {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Daftar Sekarang</Text>}
               </TouchableOpacity>
-
-              <View style={styles.footer}>
-                <Text style={styles.footerText}>Sudah punya akun? </Text>
-                <TouchableOpacity onPress={() => router.push('/login')}><Text style={styles.linkText}>Login di sini</Text></TouchableOpacity>
-              </View>
             </View>
           </View>
         </ScrollView>
@@ -142,44 +132,37 @@ export default function RegisterScreen() {
   );
 }
 
-// --- Komponen InputBox yang sudah di-fix TypeScript-nya ---
 const InputBox = ({ label, icon, ...props }: InputBoxProps) => (
   <View style={styles.inputGroupOuter}>
     <Text style={styles.inputLabel}>{label}</Text>
     <View style={styles.inputWrapper}>
       <Ionicons name={icon} size={18} color="#64748b" style={styles.fieldIcon} />
-      <TextInput 
-        style={styles.textInput} 
-        placeholderTextColor="#64748b" 
-        {...props} 
-      />
+      <TextInput style={styles.textInput} placeholderTextColor="#64748b" {...props} />
     </View>
   </View>
 );
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f172a' },
-  scrollContent: { padding: 24, flexGrow: 1, justifyContent: 'center' },
-  card: { backgroundColor: '#1e293b', borderRadius: 28, padding: 25, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.05)', elevation: 8 },
-  header: { alignItems: 'center', marginBottom: 25 },
-  logoCircle: { width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(59, 130, 246, 0.1)', justifyContent: 'center', alignItems: 'center', marginBottom: 15 },
-  logoIcon: { fontSize: 30 },
-  title: { fontSize: 24, fontWeight: '800', color: '#fff' },
-  subtitle: { color: '#94a3b8', fontSize: 14, marginTop: 4 },
-  form: { width: '100%' },
-  inputGroupOuter: { marginBottom: 18 },
-  inputLabel: { color: '#94a3b8', fontSize: 12, fontWeight: '600', marginBottom: 8, marginLeft: 4, textTransform: 'uppercase' },
-  inputWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0f172a', borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.1)', paddingHorizontal: 15 },
-  fieldIcon: { marginRight: 12 },
-  textInput: { flex: 1, color: '#fff', paddingVertical: 12, fontSize: 15 },
-  genderContainer: { flexDirection: 'row', justifyContent: 'space-between' },
-  genderBox: { flex: 0.48, flexDirection: 'row', backgroundColor: '#0f172a', borderRadius: 14, padding: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.1)' },
-  genderBoxActive: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
-  genderText: { color: '#64748b', marginLeft: 8, fontWeight: '600' },
-  genderTextActive: { color: '#fff' },
-  primaryBtn: { backgroundColor: '#3b82f6', paddingVertical: 16, borderRadius: 14, alignItems: 'center', marginTop: 20 },
-  btnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
-  footerText: { color: '#94a3b8' },
-  linkText: { color: '#3b82f6', fontWeight: 'bold' }
+  scrollContent: { padding: 20, paddingBottom: 40 },
+  card: { backgroundColor: '#1e293b', borderRadius: 20, padding: 20 },
+  header: { marginBottom: 20, alignItems: 'center' },
+  title: { fontSize: 22, fontWeight: 'bold', color: '#fff' },
+  subtitle: { color: '#94a3b8', fontSize: 13 },
+  form: { 
+    width: '100%' 
+  },
+  inputGroupOuter: { marginBottom: 15 },
+  inputLabel: { color: '#94a3b8', fontSize: 11, fontWeight: '600', marginBottom: 5, textTransform: 'uppercase' },
+  inputWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0f172a', borderRadius: 10, paddingHorizontal: 12, borderWidth: 1, borderColor: '#334155' },
+  fieldIcon: { marginRight: 10 },
+  textInput: { flex: 1, color: '#fff', paddingVertical: 10, fontSize: 14 },
+  row: { flexDirection: 'row', justifyContent: 'space-between' },
+  genderContainer: { flexDirection: 'row', justifyContent: 'space-between', height: 45 },
+  miniBox: { flex: 1, backgroundColor: '#0f172a', borderRadius: 10, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#334155', marginHorizontal: 2 },
+  boxActive: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
+  boxText: { color: '#64748b', fontWeight: 'bold' },
+  textActive: { color: '#fff' },
+  primaryBtn: { backgroundColor: '#3b82f6', paddingVertical: 15, borderRadius: 10, alignItems: 'center', marginTop: 10 },
+  btnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 }
 });

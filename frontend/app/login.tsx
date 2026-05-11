@@ -24,40 +24,42 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!username || !password) {
-      Alert.alert("Perhatian", "Silakan masukkan username dan password Anda.");
-      return;
-    }
+// Di dalam login.tsx, ubah fungsi handleLogin menjadi seperti ini:
 
-    setLoading(true);
-    try {
-      // Menggunakan axiosInstance (URL otomatis mengambil dari .env)
-      const response = await axiosInstance.post('/login', {
-        username,
-        password,
-      });
+const handleLogin = async () => {
+  if (!username || !password) {
+    Alert.alert("Perhatian", "Silakan masukkan username dan password Anda.");
+    return;
+  }
 
-      if (response.data.success) {
-        const userNama = response.data.user.nama;
-        const userHp = response.data.user.no_hp;
-        
-        // SIMPAN DATA KE MEMORI HP (AsyncStorage)
-        await AsyncStorage.setItem('user_name', userNama);
-        await AsyncStorage.setItem('user_phone', userHp || ""); // Simpan No HP agar otomatis di Form
-        
-        // Pindah ke Dashboard
-        router.replace('/(tabs)');
-      } else {
-        Alert.alert("Gagal", response.data.message || "Username atau password salah.");
-      }
-    } catch (error: any) {
-      console.error(error);
-      Alert.alert("Login Gagal", "Terjadi kesalahan koneksi ke server.");
-    } finally {
-      setLoading(false);
+  setLoading(true);
+  try {
+    const response = await axiosInstance.post('/login', {
+      username,
+      password,
+    });
+
+    if (response.data.success) {
+      const userNama = response.data.user.nama;
+      const userHp = response.data.user.no_hp;
+      const token = response.data.token; // 1. Ambil token dari response
+
+      // SIMPAN DATA KE MEMORI HP (AsyncStorage)
+      await AsyncStorage.setItem('user_token', token); // 2. SIMPAN TOKEN INI (PENTING!)
+      await AsyncStorage.setItem('user_name', userNama);
+      await AsyncStorage.setItem('user_phone', userHp || "");
+
+      router.replace('/(tabs)');
+    } else {
+      Alert.alert("Gagal", response.data.message || "Username atau password salah.");
     }
-  };
+  } catch (error: any) {
+    console.error(error);
+    Alert.alert("Login Gagal", "Terjadi kesalahan koneksi ke server.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <SafeAreaView style={styles.container}>

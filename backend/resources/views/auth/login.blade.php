@@ -63,9 +63,6 @@
 
             </form>
 
-            <div class="signup-link">
-                <p>Belum Punya Akun? <a href="{{ route('register') }}">Buat Baru</a></p>
-            </div>
 
             <div class="success-message" id="successMessage">
                 <div class="success-icon">✓</div>

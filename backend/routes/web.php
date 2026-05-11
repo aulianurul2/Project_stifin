@@ -32,6 +32,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.process');
 
+// API Register untuk Mobile (Wajib ada agar register.tsx berfungsi)
+Route::post('/addnew', [AuthController::class, 'registerAPI']);
+
 // --- AUTH ROUTES (Hanya Setelah Login) ---
 Route::middleware(['auth'])->group(function () {
 
@@ -41,6 +44,7 @@ Route::middleware(['auth'])->group(function () {
     // 2. Kelola Klien
     Route::prefix('kelola-klien')->group(function () {
         Route::get('/', [KlienController::class, 'index'])->name('kelola-klien');
+        Route::get('/{id}', [KlienController::class, 'show'])->name('klien.show'); // Route untuk Lihat Detail
         Route::put('/{id}', [KlienController::class, 'update'])->name('klien.update');
         Route::delete('/{id}', [KlienController::class, 'destroy'])->name('klien.destroy');
     });

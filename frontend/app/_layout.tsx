@@ -4,49 +4,40 @@ export default function RootLayout() {
   return (
     <Stack
       screenOptions={{
-        // Menyembunyikan header default agar tampilan 
-        // Login & Register bersih sesuai desain STIFIn
+        // Menyembunyikan header default agar tampilan bersih
         headerShown: false,
-        animation: 'fade', // Memberikan efek transisi yang halus
+        animation: 'fade', 
       }}
     >
       {/* 1. Halaman Login */}
       <Stack.Screen 
         name="login" 
-        options={{ 
-          title: 'Login',
-        }} 
+        options={{ title: 'Login' }} 
       />
 
       {/* 2. Halaman Register */}
       <Stack.Screen 
         name="register" 
-        options={{ 
-          title: 'Register',
-        }} 
+        options={{ title: 'Register' }} 
       />
 
-      {/* 3. Folder (tabs) - Ini adalah Dashboard setelah Login */}
+      {/* 3. Dashboard (Tabs) */}
       <Stack.Screen 
         name="(tabs)" 
         options={{ 
           headerShown: false,
-          // Mencegah user kembali ke Login dengan tombol back 
-          // setelah berhasil masuk ke Dashboard
-          gestureEnabled: false, 
+          gestureEnabled: false, // Mencegah balik ke login pakai swipe
         }} 
       />
-      <Stack>
-  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-  <Stack.Screen name="login" options={{ headerShown: false }} />
-  <Stack.Screen 
-    name="form-pendaftaran" 
-    options={{ 
-      title: 'Formulir Pendaftaran',
-      headerShown: false // Atau true jika ingin header bawaan Expo
-    }} 
-  />
-</Stack>
+
+      {/* 4. Halaman Form Pendaftaran */}
+      {/* Pastikan nama filenya 'form-pendaftaran.tsx' di folder app */}
+      <Stack.Screen 
+        name="form-pendaftaran" 
+        options={{ 
+          headerShown: false 
+        }} 
+      />
     </Stack>
   );
 }

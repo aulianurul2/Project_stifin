@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
+import axiosInstance from '@/src/api/axiosConfig';
 
 export default function RiwayatJadwal() {
   const [userName, setUserName] = useState("User");
@@ -24,7 +24,7 @@ export default function RiwayatJadwal() {
     try {
       setLoading(true);
       // Ganti IP sesuai laptop kamu
-      const response = await axios.get('http://192.168.100.117:8000/api/riwayat-pendaftaran');
+      const response = await axiosInstance.get('/riwayat-pendaftaran');
       setRiwayat(response.data);
     } catch (error) {
       console.error("Gagal ambil riwayat", error);

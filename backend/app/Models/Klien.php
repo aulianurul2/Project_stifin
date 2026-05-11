@@ -11,11 +11,16 @@ class Klien extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'id_user',
-        'nama',
-        'tanggal_lahir',
-        'alamat',
-        'jenis_kelamin',
-        'no_hp',
-    ];
+    'id_user',
+    'nama',
+    'tanggal_lahir',
+    'jenis_kelamin',
+    'golongan_darah',
+    'no_hp',
+    'alamat',
+    'institusi',
+    'sosmed',
+    'email',
+    'domisili',
+];
 }

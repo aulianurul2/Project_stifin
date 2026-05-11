@@ -25,7 +25,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="history"
+        name="riwayat"
         options={{
           title: 'Hasil Tes',
           tabBarIcon: ({ color }) => <Ionicons name="document-text-outline" size={24} color={color} />,
@@ -38,13 +38,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <Ionicons name="person-outline" size={24} color={color} />,
         }}
       />
-      <Tabs.Screen
-  name="pendaftaran"
-  options={{
-    href: null, // Sembunyikan dari bar menu bawah jika hanya ingin diakses lewat klik tombol
-    headerShown: false
-  }}
-/>
+   
     </Tabs>
     
   );

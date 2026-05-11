@@ -77,7 +77,7 @@ class AuthController extends Controller
             'tanggal_lahir' => 'required|date',
             'alamat' => 'required|string',
             'jenis_kelamin' => 'required|in:L,P',
-            'no_hp' => 'required|numeric', // Validasi input nomor hp
+            'no_hp' => 'required|numeric', 
         ]);
 
         try {
@@ -86,17 +86,17 @@ class AuthController extends Controller
                 'nama' => $request->nama,
                 'username' => $request->username,
                 'password' => Hash::make($request->password),
-                'role' => 'klien', // Otomatis menjadi klien
+                'role' => 'klien', 
             ]);
 
             // 2. Simpan detail profil ke tabel 'klien'
             Klien::create([
-                'id_user' => $user->id_user,
+                'id_user' => $user->id_user, 
                 'nama' => $request->nama,
                 'tanggal_lahir' => $request->tanggal_lahir,
                 'jenis_kelamin' => $request->jenis_kelamin,
                 'alamat' => $request->alamat,
-                'no_hp' => '+62' . $request->no_hp, // Gabungkan prefix +62
+                'no_hp' => '+62' . $request->no_hp, 
             ]);
 
             return redirect()->route('login')->with('success', 'Pendaftaran berhasil! Silakan login.');
@@ -119,50 +119,53 @@ class AuthController extends Controller
         return redirect()->route('login');
     }
 
-    public function registerAPI(Request $request)
-    {
-        // 1. Validasi input
-        $request->validate([
-            'nama' => 'required|string|max:100',
-            'username' => 'required|unique:user,username|max:50',
-            'password' => 'required|min:6',
-            'tanggal_lahir' => 'required|date',
-            'alamat' => 'required|string',
-            'jenis_kelamin' => 'required|in:L,P',
-            'no_hp' => 'required',
+    /**
+     * API Pendaftaran untuk aplikasi mobile (register.tsx)
+     */
+ public function registerAPI(Request $request)
+{
+    $request->validate([
+        'nama' => 'required|string|max:100',
+        'username' => 'required|unique:user,username|max:50',
+        'password' => 'required|min:6',
+        'tanggal_lahir' => 'required|date',
+        'jenis_kelamin' => 'required|in:L,P',
+        'golongan_darah' => 'required',
+        'no_hp' => 'required',
+        'alamat' => 'required|string',
+        'institusi' => 'required',
+        'sosmed' => 'required',
+        'email' => 'required|email',
+        'domisili' => 'required',
+    ]);
+
+    try {
+        $user = User::create([
+            'nama' => $request->nama,
+            'username' => $request->username,
+            'password' => Hash::make($request->password),
+            'role' => 'klien',
         ]);
 
-        try {
-            // 2. Simpan ke tabel 'user'
-            $user = User::create([
-                'nama' => $request->nama,
-                'username' => $request->username,
-                'password' => Hash::make($request->password),
-                'role' => 'klien', 
-            ]);
+        Klien::create([
+            'id_user' => $user->id_user,
+            'nama' => $request->nama,
+            'tanggal_lahir' => $request->tanggal_lahir,
+            'jenis_kelamin' => $request->jenis_kelamin,
+            'golongan_darah' => $request->golongan_darah,
+            'no_hp' => $request->no_hp,
+            'alamat' => $request->alamat,
+            'institusi' => $request->institusi,
+            'sosmed' => $request->sosmed,
+            'email' => $request->email,
+            'domisili' => $request->domisili,
+        ]);
 
-            // 3. Simpan detail profil ke tabel 'klien'
-            Klien::create([
-                'id_user' => $user->id_user, 
-                'nama' => $request->nama,
-                'tanggal_lahir' => $request->tanggal_lahir,
-                'jenis_kelamin' => $request->jenis_kelamin,
-                'alamat' => $request->alamat,
-                'no_hp' => '+62' . $request->no_hp, 
-            ]);
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Pendaftaran akun STIFIn berhasil!'
-            ], 201);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Gagal: ' . $e->getMessage()
-            ], 500);
-        }
+        return response()->json(['status' => 'success', 'message' => 'Pendaftaran berhasil!'], 201);
+    } catch (\Exception $e) {
+        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
     }
+}
     public function loginAPI(Request $request)
 {
     $credentials = $request->validate([
@@ -170,24 +173,33 @@ class AuthController extends Controller
         'password' => 'required',
     ]);
 
-    // Cek apakah username dan password cocok
+    // 1. Cek apakah username dan password cocok
     if (Auth::attempt($credentials)) {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        // Kembalikan respon sukses dalam format JSON
+        // 2. BUAT TOKEN SANCTUM (PENTING!)
+        // Token ini yang akan digunakan oleh React Native untuk akses rute yang diproteksi
+        $token = $user->createToken('mobile_auth_token')->plainTextToken;
+
+        // 3. Ambil data klien terkait untuk auto-fill yang lebih lengkap
+        // Karena data detail seperti domisili/golongan darah ada di tabel 'klien'
+        $klien = \App\Models\Klien::where('id_user', $user->id_user)->first();
+
         return response()->json([
             'success' => true,
             'message' => 'Login Berhasil!',
+            'token' => $token, // Kirim token ke frontend
             'user' => [
                 'nama' => $user->nama,
-                'no_hp' => $user->no_hp,
                 'username' => $user->username,
-                'role' => $user->role
+                'role' => $user->role,
+                // Ambil No HP dari tabel klien agar konsisten
+                'no_hp' => $klien ? $klien->no_hp : null, 
             ]
         ], 200);
     }
 
-    // Jika gagal
     return response()->json([
         'success' => false,
         'message' => 'Username atau Password salah!'

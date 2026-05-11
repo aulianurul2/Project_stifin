@@ -23,7 +23,6 @@ class PendaftaranController extends Controller
         $request->validate([
             'id_jadwal' => 'required',
             'nama_lengkap' => 'required',
-            'nik' => 'required',
             'no_hp' => 'required',
             'email' => 'required|email',
             'alamat' => 'required',
@@ -32,7 +31,6 @@ class PendaftaranController extends Controller
         // Menggunakan DB table 'jadwal' agar konsisten
         $update = DB::table('jadwal')->where('id_jadwal', $request->id_jadwal)->update([
             'nama_klien' => $request->nama_lengkap,
-            'nik' => $request->nik,
             'no_hp' => $request->no_hp,
             'email' => $request->email,
             'alamat' => $request->alamat,
