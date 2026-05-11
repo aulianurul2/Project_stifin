@@ -1,14 +1,14 @@
 <!-- Sidebar -->
-<div class="sidebar" data-background-color="dark">
+<div class="sidebar" data-background-color="dark2">
     <div class="sidebar-logo">
         <!-- Logo Header -->
-        <div class="logo-header" data-background-color="dark">
+        <div class="logo-header" data-background-color="green">
             <a href="{{ route('dashboard') }}" class="logo">
                 <img
-                    src="assets/img/kaiadmin/logo_light.svg"
+                    src="assets/img/kaiadmin/logo_light.png"
                     alt="navbar brand"
                     class="navbar-brand"
-                    height="20"
+                    height="100"
                 />
             </a>
             <div class="nav-toggle">
