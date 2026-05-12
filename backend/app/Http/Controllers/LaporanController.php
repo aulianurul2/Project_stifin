@@ -12,34 +12,33 @@ class LaporanController extends Controller
 {
     public function index()
     {
-        // 1. Ambil Total Klien
+        // 1. Total Klien yang terdaftar
         $totalKlien = DB::table('klien')->count();
 
-        // 2. Ambil Total Tes Selesai
-        $totalTesSelesai = DB::table('hasiltes')
-                            ->where('status_tes', 'Selesai')
-                            ->count();
+        // 2. Total Tes yang sudah berstatus 'Selesai'
+        $totalTesSelesai = DB::table('hasiltes')->where('status_tes', 'Selesai')->count();
 
-        // 3. Ambil Total Pendapatan
-        $totalPendapatan = DB::table('hasiltes')
-                            ->where('status_tes', 'Selesai')
-                            ->sum('biaya_tes');
+        // 3. Total Pendapatan
+        $totalPendapatan = DB::table('hasiltes')->where('status_tes', 'Selesai')->sum('biaya_tes');
 
-        // 4. Statistik Distribusi Hasil STIFIn
+        // 4. Statistik Distribusi (Sekarang diubah menghitung status saja karena tipe_tes dihapus)
         $statistikHasil = DB::table('hasiltes')
-                            ->select('hasil', DB::raw('count(*) as total'))
-                            ->whereNotNull('hasil')
-                            ->where('status_tes', 'Selesai')
-                            ->groupBy('hasil')
-                            ->get();
+            ->select('status_tes as hasil', DB::raw('count(*) as total'))
+            ->groupBy('status_tes')
+            ->get();
 
-        // 5. Riwayat 10 Transaksi Terbaru
+        // 5. Ambil 10 Riwayat Tes Terbaru (JOIN dengan Klien untuk ambil Nama)
         $riwayatLaporan = DB::table('hasiltes')
-                            ->join('klien', 'hasiltes.id_klien', '=', 'klien.id_klien')
-                            ->select('klien.nama', 'hasiltes.hasil', 'hasiltes.biaya_tes', 'hasiltes.tanggal')
-                            ->orderBy('hasiltes.tanggal', 'desc')
-                            ->limit(10)
-                            ->get();
+            ->join('klien', 'hasiltes.id_klien', '=', 'klien.id_klien')
+            ->select(
+                'klien.nama', 
+                'hasiltes.status_tes as hasil', // Kita pakai status_tes sebagai pengganti 'hasil' di blade
+                'hasiltes.tanggal'
+            )
+            ->where('hasiltes.status_tes', 'Selesai')
+            ->orderBy('hasiltes.updated_at', 'desc')
+            ->limit(10)
+            ->get();
 
         return view('laporan', compact(
             'totalKlien', 
@@ -50,33 +49,21 @@ class LaporanController extends Controller
         ));
     }
 
-    public function exportPdf() 
+    public function exportPdf()
     {
-        // PERBAIKAN: Gunakan DB::table agar konsisten dengan fungsi index() 
-        // dan menghindari error "Class Not Found"
-        $data = [
-            'totalKlien' => DB::table('klien')->count(),
-            'totalTesSelesai' => DB::table('hasiltes')->where('status_tes', 'Selesai')->count(),
-            'totalPendapatan' => DB::table('hasiltes')->where('status_tes', 'Selesai')->sum('biaya_tes'),
-            'riwayatLaporan' => DB::table('hasiltes')
-                                ->join('klien', 'hasiltes.id_klien', '=', 'klien.id_klien')
-                                ->select('klien.nama', 'hasiltes.hasil', 'hasiltes.tanggal')
-                                ->orderBy('hasiltes.tanggal', 'desc')
-                                ->get(),
-            'statistikHasil' => DB::table('hasiltes') // Tambahkan ini jika template PDF membutuhkannya
-                                ->select('hasil', DB::raw('count(*) as total'))
-                                ->whereNotNull('hasil')
-                                ->where('status_tes', 'Selesai')
-                                ->groupBy('hasil')
-                                ->get()
-        ];
+        $data = DB::table('hasiltes')
+            ->join('klien', 'hasiltes.id_klien', '=', 'klien.id_klien')
+            ->select('klien.nama', 'hasiltes.status_tes as hasil', 'hasiltes.tanggal', 'hasiltes.biaya_tes')
+            ->where('hasiltes.status_tes', 'Selesai')
+            ->get();
 
-        $pdf = Pdf::loadView('layout.pdf_template', $data);
-        return $pdf->download('Laporan_STIFIn_'.date('Y-m-d').'.pdf');
+        $pdf = Pdf::loadView('pdf_laporan', compact('data'));
+    
+         return $pdf->download('laporan-stifin.pdf');
     }
 
-    public function exportExcel() 
+    public function exportExcel()
     {
-        return Excel::download(new LaporanExport, 'Laporan-STIFIn-'.date('d-m-Y').'.xlsx');
+        return Excel::download(new LaporanExport, 'laporan-stifin.xlsx');
     }
 }

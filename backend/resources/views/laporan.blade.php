@@ -62,10 +62,7 @@
                 <a href="{{ route('laporan.excel') }}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center shadow-sm">
                     <i class="fas fa-file-excel mr-2"></i> Excel
                 </a>
-                <!-- Print Biasa -->
-                <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center shadow-sm">
-                    <i class="fas fa-print mr-2"></i> Print Browser
-                </button>
+               
             </div>
         </header>
 
@@ -109,7 +106,7 @@
                         <div>
                             <div class="flex justify-between text-sm mb-2">
                                 <span class="font-bold text-gray-600 uppercase tracking-tight">{{ $stat->hasil }}</span>
-                                <span class="text-gray-500 font-medium">{{ $stat->total }} Orang ({{ round($persen, 1) }}%)</span>
+                                <span class="text-gray-500 font-medium">{{ $stat->total }} Orang</span>
                             </div>
                             <div class="w-full bg-gray-100 rounded-full h-3">
                                 <div class="bg-blue-600 h-3 rounded-full transition-all duration-500" style="width: {{ $persen }}%"></div>

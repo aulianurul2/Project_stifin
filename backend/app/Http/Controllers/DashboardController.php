@@ -34,16 +34,13 @@ class DashboardController extends Controller
         }
 
         // --- AKTIVITAS TERBARU (BAGIAN YANG DIPERBAIKI) ---
-        $aktivitasTerbaru = DB::table('jadwal')
-            ->join('klien', 'jadwal.id_klien', '=', 'klien.id_klien')
-            ->select(
-                'klien.nama as nama_klien', 
-                'jadwal.created_at as tanggal', // MENGGUNAKAN created_at BUKAN tgl_pendaftaran
-                'jadwal.status as status'
-            )
-            ->orderBy('jadwal.id_jadwal', 'desc')
-            ->limit(5)
-            ->get();
+      // --- AKTIVITAS TERBARU (VERSI PERBAIKAN) ---
+// --- AKTIVITAS TERBARU (BERDASARKAN TABEL JADWAL) ---
+$aktivitasTerbaru = DB::table('jadwal')
+    ->select('nama_klien', 'tanggal', 'status as status_tes')
+    ->orderBy('id_jadwal', 'desc') // Menggunakan id_jadwal sebagai urutan terbaru
+    ->limit(5)
+    ->get();
 
         return view('dashboard', compact(
             'totalKlien', 

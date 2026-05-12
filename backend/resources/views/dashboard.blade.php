@@ -293,92 +293,63 @@
 
 
                         <div class="col-md-4">
-
-                            <div class="card card-round">
-
-                                <div class="card-header">
-
-                                    <div class="card-head-row">
-
-                                        <div class="card-title">Aktivitas Terbaru</div>
-
-                                    </div>
-
-                                </div>
-
-                                <div class="card-body p-0">
-
-                                    <div class="table-responsive">
-
-                                        <table class="table table-hover mb-0">
-
-                                            <thead>
-
-                                                <tr>
-
-                                                    <th class="text-muted">Klien</th>
-
-                                                    <th class="text-muted text-center">Status</th>
-
-                                                </tr>
-
-                                            </thead>
-
-                                            <tbody>
-
-                                                @forelse($aktivitasTerbaru as $row)
-
-                                                <tr>
-
-                                                    <td>
-
-                                                        <p class="fw-semibold mb-0">{{ $row->nama }}</p>
-
-                                                        <span class="text-muted" style="font-size:11px;">{{ date('d M Y', strtotime($row->tanggal)) }}</span>
-
-                                                    </td>
-
-                                                    <td class="text-center">
-
-                                                        @php
-
-                                                            $st = $row->status_tes;
-
-                                                            $badge = ($st == 'Selesai') ? 'badge-success' : 'badge-info';
-
-                                                        @endphp
-
-                                                        <span class="badge {{ $badge }}">{{ $st }}</span>
-
-                                                    </td>
-
-                                                </tr>
-
-                                                @empty
-
-                                                <tr>
-
-                                                    <td colspan="2" class="text-center text-muted py-4">
-
-                                                        <em>Belum ada aktivitas.</em>
-
-                                                    </td>
-
-                                                </tr>
-
-                                                @endforelse
-
-                                            </tbody>
-
-                                        </table>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
+    <div class="card card-round">
+        <div class="card-header">
+            <div class="card-head-row">
+                <div class="card-title">Pendaftaran Tes Terbaru</div>
+                <div class="card-tools">
+                    <a href="{{ route('pendaftaran-tes') }}" class="btn btn-label-info btn-round btn-sm">
+                        Lihat Semua
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="text-muted">Klien</th>
+                            <th class="text-muted text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                     @forelse($aktivitasTerbaru as $row)
+<tr>
+    <td>
+        <p class="fw-semibold mb-0">{{ $row->nama_klien }}</p>
+        <span class="text-muted" style="font-size:11px;">
+            <i class="far fa-calendar-alt"></i> 
+            {{ $row->tanggal ? date('d M Y', strtotime($row->tanggal)) : '-' }}
+        </span>
+    </td>
+    <td class="text-center">
+        @php
+            $statusRaw = strtolower($row->status_tes); 
+            $badge = 'badge-warning'; 
+            
+            if(in_array($statusRaw, ['selesai', 'konfirmasi', 'disetujui'])) {
+                $badge = 'badge-success';
+            } elseif(in_array($statusRaw, ['batal', 'ditolak'])) {
+                $badge = 'badge-danger';
+            }
+        @endphp
+        <span class="badge {{ $badge }}">{{ ucfirst($row->status_tes ?? 'Pending') }}</span>
+    </td>
+</tr>
+@empty
+<tr>
+    <td colspan="2" class="text-center text-muted py-4">
+        <em>Belum ada pendaftaran masuk.</em>
+    </td>
+</tr>
+@endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
                     </div>
 

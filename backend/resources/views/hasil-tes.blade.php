@@ -58,7 +58,6 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Nama Klien</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Tipe Tes</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Hasil</th>
                             <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase">Aksi</th>
                         </tr>
@@ -70,10 +69,10 @@
                                 <div class="font-bold text-gray-900">{{ $item->nama }}</div>
                                 <div class="text-gray-500">{{ $item->no_hp }}</div>
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-600">{{ $item->tipe_tes ?? 'Tes STIFIn' }}</td>
+                           
                             <td class="px-6 py-4 text-sm">
                                 @if($item->status_tes == 'Selesai')
-                                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full font-bold text-xs">{{ $item->hasil }}</span>
+                                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full font-bold text-xs">Tersertifikasi</span>
                                 @else
                                     <span class="text-gray-400 italic">Belum diinput</span>
                                 @endif
@@ -83,16 +82,29 @@
                                     <button onclick="openModal('{{ $item->id_tes }}', '{{ $item->nama }}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs hover:bg-blue-700 transition">
                                         <i class="fas fa-check-circle mr-1"></i> Input Hasil
                                     </button>
-                                @else
-                                    <div class="flex justify-center space-x-2 text-sm">
-                                        <a href="{{ asset('uploads/hasil/' . $item->file_hasil) }}" download class="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition">
-                                            <i class="fas fa-download"></i>
-                                        </a>
-                                        <button onclick="previewFile('{{ asset('uploads/hasil/' . $item->file_hasil) }}')" class="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                @endif
+                              @else
+    <div class="flex justify-center space-x-2 text-sm">
+        <a href="{{ asset('uploads/hasil/' . $item->file_hasil) }}" 
+           download="{{ 'Sertifikat_' . $item->nama }}" 
+           class="p-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition" 
+           title="Download Sertifikat">
+            <i class="fas fa-certificate"></i>
+        </a>
+
+        <a href="{{ asset('uploads/hasil/' . $item->file_detail) }}" 
+           download="{{ 'Detail_Hasil_' . $item->nama }}" 
+           class="p-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition" 
+           title="Download Hasil Lengkap">
+            <i class="fas fa-file-alt"></i>
+        </a>
+
+        <button onclick="previewFile('{{ asset('uploads/hasil/' . $item->file_hasil) }}')" 
+                class="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition" 
+                title="Preview Sertifikat">
+            <i class="fas fa-eye"></i>
+        </button>
+    </div>
+@endif
                             </td>
                         </tr>
                         @empty
@@ -104,32 +116,32 @@
         </main>
     </div>
 
-    <div id="modalHasil" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-40">
-        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
-            <h3 class="text-lg font-bold mb-4">Input Hasil Tes: <span id="modalNama" class="text-blue-600"></span></h3>
-            <form id="formHasil" method="POST" enctype="multipart/form-data">
-                @csrf @method('PUT')
-                <div class="mb-4 text-sm font-medium">
-                    <label class="block mb-1">Pilih Hasil Mesin Kecerdasan</label>
-                    <select name="hasil" class="w-full border rounded-lg p-2 bg-gray-50 focus:ring-2 focus:ring-blue-500" required>
-                        <option value="Sensing">Sensing</option>
-                        <option value="Thinking">Thinking</option>
-                        <option value="Intuiting">Intuiting</option>
-                        <option value="Feeling">Feeling</option>
-                        <option value="Instinct">Instinct</option>
-                    </select>
-                </div>
-                <div class="mb-6 text-sm font-medium text-gray-700">
-                    <label class="block mb-1">Unggah Sertifikat (PDF/Gambar)</label>
-                    <input type="file" name="file_hasil" class="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
-                </div>
-                <div class="flex justify-end space-x-3 text-sm font-semibold text-gray-500">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2 hover:text-gray-800 transition">Batal</button>
-                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md">Simpan & Selesaikan</button>
-                </div>
-            </form>
-        </div>
+   <div id="modalHasil" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-40">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+        <h3 class="text-lg font-bold mb-4">Input Berkas Hasil: <span id="modalNama" class="text-blue-600"></span></h3>
+        
+        <form id="formHasil" method="POST" enctype="multipart/form-data">
+            @csrf
+            
+            <div class="mb-4 text-sm font-medium text-gray-700">
+                <label class="block mb-1 font-bold"><i class="fas fa-certificate mr-2 text-yellow-500"></i>Unggah Sertifikat (Ringkasan)</label>
+                <input type="file" name="file_hasil" class="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border rounded-lg" required>
+                <p class="text-[10px] text-gray-400 mt-1">*Format: PDF/JPG/PNG</p>
+            </div>
+
+            <div class="mb-6 text-sm font-medium text-gray-700">
+                <label class="block mb-1 font-bold"><i class="fas fa-file-alt mr-2 text-blue-500"></i>Unggah Hasil Tes Lengkap (Detail)</label>
+                <input type="file" name="file_detail" class="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-50 file:text-green-700 hover:file:bg-green-100 cursor-pointer border rounded-lg" required>
+                <p class="text-[10px] text-gray-400 mt-1">*Format: PDF/DOC/DOCX</p>
+            </div>
+
+            <div class="flex justify-end space-x-3 text-sm font-semibold">
+                <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-500 hover:text-gray-800 transition">Batal</button>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md">Simpan & Selesaikan</button>
+            </div>
+        </form>
     </div>
+</div>
 
    <div id="modalPreview" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 z-50">
     <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[95vh] flex flex-col overflow-hidden border border-gray-300">
@@ -162,10 +174,17 @@
     <script>
         // Logic Modal Input
         function openModal(id, nama) {
-            document.getElementById('modalHasil').classList.remove('hidden');
-            document.getElementById('modalNama').innerText = nama;
-            document.getElementById('formHasil').action = '/hasil-tes/' + id;
-        }
+    // 1. Munculkan Modal
+    document.getElementById('modalHasil').classList.remove('hidden');
+    document.getElementById('modalNama').innerText = nama;
+    
+    // 2. Set Action URL secara dinamis menggunakan named route 'hasil.update'
+    // Kita pakai replace untuk memasukkan ID ke dalam string route
+    let url = "{{ route('hasil.update', ':id') }}";
+    url = url.replace(':id', id);
+    
+    document.getElementById('formHasil').action = url;
+}
         function closeModal() {
             document.getElementById('modalHasil').classList.add('hidden');
         }

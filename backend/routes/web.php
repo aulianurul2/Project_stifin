@@ -63,7 +63,7 @@ Route::prefix('jadwal-tes')->group(function () {
     // 5. Hasil Tes
     Route::prefix('hasil-tes')->group(function () {
         Route::get('/', [HasilTesController::class, 'index'])->name('hasil-tes');
-        Route::put('/{id}', [HasilTesController::class, 'update'])->name('hasil.update');
+        Route::post('/{id}', [HasilTesController::class, 'update'])->name('hasil.update');
     });
 
     // 6. Laporan

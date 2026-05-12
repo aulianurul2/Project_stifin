@@ -18,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 
 interface KlienFormData {
+  id_klien: string;
   nama: string;
   no_hp: string;
   tanggal_lahir: string;
@@ -48,6 +49,7 @@ export default function FormPendaftaran() {
   const [fetchingData, setFetchingData] = useState<boolean>(true);
 
   const [formData, setFormData] = useState<KlienFormData>({
+    id_klien: '',
     nama: '',
     no_hp: '',
     tanggal_lahir: '',
@@ -71,6 +73,7 @@ export default function FormPendaftaran() {
 
         if (u) {
           setFormData({
+            id_klien: u.id_user,
             nama: u.nama || '',
             no_hp: u.no_hp || '',
             tanggal_lahir: u.tanggal_lahir || '',
