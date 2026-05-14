@@ -41,4 +41,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/pendaftaran/submit', [PendaftaranController::class, 'storeAPI']);
     Route::get('/riwayat-pendaftaran', [PendaftaranController::class, 'getRiwayat']);
+    Route::get('/hasil-tes-saya', [PendaftaranController::class, 'hasilTesSaya']);
 });

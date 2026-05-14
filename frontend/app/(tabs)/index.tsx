@@ -48,7 +48,7 @@ export default function DashboardIndex() {
         <Text style={styles.sectionTitle}>Layanan Utama</Text>
         <View style={styles.grid}>
           <MenuBox title="Daftar Tes" icon="create-outline" color="#3b82f6" onPress={() => router.push('/(tabs)/pendaftaran')} />
-          <MenuBox title="Jadwal Tes" icon="calendar-outline" color="#10b981" />
+          <MenuBox title="Jadwal Tes" icon="calendar-outline" color="#10b981"  />
           <MenuBox title="Hasil Tes" icon="stats-chart-outline" color="#f59e0b" />
           <MenuBox title="Panduan" icon="book-outline" color="#8b5cf6" />
         </View>

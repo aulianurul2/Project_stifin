@@ -65,7 +65,7 @@ public function storeAPI(Request $request)
     ], 500);
 }
     // API untuk mengambil Riwayat di React Native
-    public function getRiwayat(Request $request)
+ public function getRiwayat(Request $request)
 {
     $user = $request->user();
 
@@ -78,12 +78,45 @@ public function storeAPI(Request $request)
     }
 
     $riwayat = DB::table('jadwal')
-        ->where('id_klien', $klien->id_klien)
-        ->where('status', '!=', 'Tersedia')
-        ->orderBy('updated_at', 'desc')
+        ->leftJoin('hasiltes', 'jadwal.id_jadwal', '=', 'hasiltes.id_jadwal')
+        ->select(
+            'jadwal.*',
+            'hasiltes.status_tes',
+            'hasiltes.file_hasil',
+            'hasiltes.file_detail'
+        )
+        ->where('jadwal.id_klien', $klien->id_klien)
+        ->orderBy('jadwal.updated_at', 'desc')
         ->get();
 
     return response()->json($riwayat);
+}
+
+public function hasilTesSaya(Request $request)
+{
+    $user = $request->user();
+
+    $klien = DB::table('klien')
+        ->where('id_user', $user->id_user)
+        ->first();
+
+    if (!$klien) {
+        return response()->json([]);
+    }
+
+    $data = DB::table('hasiltes')
+        ->join('jadwal', 'hasiltes.id_jadwal', '=', 'jadwal.id_jadwal')
+        ->where('hasiltes.id_klien', $klien->id_klien)
+        ->select(
+            'hasiltes.*',
+            'jadwal.tanggal',
+            'jadwal.waktu',
+            'jadwal.status'
+        )
+        ->orderBy('hasiltes.id_tes', 'desc')
+        ->get();
+
+    return response()->json($data);
 }
     // Update Status dari Dashboard Web Admin
 public function updateStatus(Request $request, $id)

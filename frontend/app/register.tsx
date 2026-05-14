@@ -113,7 +113,7 @@ const handleRegister = async () => {
               <InputBox label="Password" icon="lock-closed-outline" placeholder="Password" secureTextEntry onChangeText={(v) => setForm({...form, password: v})} />
               
               <View style={styles.inputGroupOuter}>
-                <Text style={styles.inputLabel}>Tanggal Lahir (DD/MM/YYYY)</Text>
+                <Text style={styles.inputLabel}>Tanggal Lahir (Tanggal/Bulan/Tahun)</Text>
                 <View style={styles.inputWrapper}>
                   <Ionicons name="calendar-outline" size={18} color="#64748b" style={styles.fieldIcon} />
                   <TextInput style={styles.textInput} placeholder="17/08/1945" value={form.tanggal_lahir} onChangeText={handleDateChange} keyboardType="numeric" maxLength={10} placeholderTextColor="#64748b" />
@@ -121,20 +121,87 @@ const handleRegister = async () => {
               </View>
 
               <View style={styles.row}>
-                <View style={{flex: 1, marginRight: 10}}>
-                   <Text style={styles.inputLabel}>Gender</Text>
-                   <View style={styles.genderContainer}>
-                      <TouchableOpacity style={[styles.miniBox, form.jenis_kelamin === 'L' && styles.boxActive]} onPress={() => setForm({...form, jenis_kelamin: 'L'})}>
-                        <Text style={[styles.boxText, form.jenis_kelamin === 'L' && styles.textActive]}>L</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={[styles.miniBox, form.jenis_kelamin === 'P' && styles.boxActive]} onPress={() => setForm({...form, jenis_kelamin: 'P'})}>
-                        <Text style={[styles.boxText, form.jenis_kelamin === 'P' && styles.textActive]}>P</Text>
-                      </TouchableOpacity>
-                   </View>
-                </View>
-                <View style={{flex: 1}}>
-                   <InputBox label="Gol. Darah" icon="water-outline" placeholder="A/B/O/AB" onChangeText={(v) => setForm({...form, golongan_darah: v})} />
-                </View>
+                <View style={{ flex: 1, marginRight: 10 }}>
+  <Text style={styles.inputLabel}>Gender</Text>
+
+  <View style={styles.genderContainer}>
+    <TouchableOpacity
+      style={[
+        styles.genderBox,
+        form.jenis_kelamin === 'L' &&
+          styles.boxActive
+      ]}
+      onPress={() =>
+        setForm({
+          ...form,
+          jenis_kelamin: 'L'
+        })
+      }
+    >
+      <Text
+        style={[
+          styles.boxText,
+          form.jenis_kelamin === 'L' &&
+            styles.textActive
+        ]}
+      >
+        Laki-laki
+      </Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      style={[
+        styles.genderBox,
+        form.jenis_kelamin === 'P' &&
+          styles.boxActive
+      ]}
+      onPress={() =>
+        setForm({
+          ...form,
+          jenis_kelamin: 'P'
+        })
+      }
+    >
+      <Text
+        style={[
+          styles.boxText,
+          form.jenis_kelamin === 'P' &&
+            styles.textActive
+        ]}
+      >
+        Perempuan
+      </Text>
+    </TouchableOpacity>
+  </View>
+</View>
+                <View style={{ flex: 1 }}>
+  <Text style={styles.inputLabel}>Gol. Darah</Text>
+
+  <View style={styles.goldarContainer}>
+    {['A', 'B', 'AB', 'O'].map((item) => (
+      <TouchableOpacity
+        key={item}
+        style={[
+          styles.goldarBox,
+          form.golongan_darah === item && styles.boxActive
+        ]}
+        onPress={() =>
+          setForm({ ...form, golongan_darah: item })
+        }
+      >
+        <Text
+          style={[
+            styles.boxText,
+            form.golongan_darah === item &&
+              styles.textActive
+          ]}
+        >
+          {item}
+        </Text>
+      </TouchableOpacity>
+    ))}
+  </View>
+</View>
               </View>
 
               <InputBox label="No. HP" icon="call-outline" placeholder="812xxx" keyboardType="numeric" onChangeText={(v) => setForm({...form, no_hp: v})} />
@@ -181,10 +248,43 @@ const styles = StyleSheet.create({
   fieldIcon: { marginRight: 10 },
   textInput: { flex: 1, color: '#fff', paddingVertical: 10, fontSize: 14 },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
-  genderContainer: { flexDirection: 'row', justifyContent: 'space-between', height: 45 },
-  miniBox: { flex: 1, backgroundColor: '#0f172a', borderRadius: 10, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#334155', marginHorizontal: 2 },
+  genderContainer: {
+  flexDirection: 'row',
+  justifyContent: 'space-between'
+},
+
+genderBox: {
+  flex: 1,
+  backgroundColor: '#0f172a',
+  borderRadius: 10,
+  justifyContent: 'center',
+  alignItems: 'center',
+  borderWidth: 1,
+  borderColor: '#334155',
+  paddingVertical: 10,
+  marginRight: 6
+},
+
+  goldarContainer: {
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  justifyContent: 'space-between'
+},
+
+goldarBox: {
+  width: '48%',
+  backgroundColor: '#0f172a',
+  borderRadius: 10,
+  justifyContent: 'center',
+  alignItems: 'center',
+  borderWidth: 1,
+  borderColor: '#334155',
+  paddingVertical: 10,
+  marginBottom: 8
+},
+  
   boxActive: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
-  boxText: { color: '#64748b', fontWeight: 'bold' },
+  boxText: { color: '#64748b', fontWeight: "bold", fontSize: 11 },
   textActive: { color: '#fff' },
   primaryBtn: { backgroundColor: '#3b82f6', paddingVertical: 15, borderRadius: 10, alignItems: 'center', marginTop: 10 },
   btnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 }
