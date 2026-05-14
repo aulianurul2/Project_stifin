@@ -121,11 +121,13 @@ const handleKirim = async () => {
       sosmed: formData.sosmed,
     });
 
-    if (response.status === 200 || response.status === 201) {
-      Alert.alert("Berhasil", "Pendaftaran berhasil dikirim!", [
-        { text: "OK", onPress: () => router.replace('/(tabs)/riwayat') }
-      ]);
-    }
+   if (response.status === 200 || response.status === 201) {
+  Alert.alert("Berhasil", "Pendaftaran berhasil dikirim!");
+  
+  setTimeout(() => {
+    router.replace('/riwayat');
+  }, 300);
+}
   } catch (error: any) {
     console.log("Error Detail:", error.response?.data);
     Alert.alert("Gagal", "Terjadi kesalahan saat mengirim pendaftaran.");

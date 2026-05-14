@@ -24,6 +24,14 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <Ionicons name="home-outline" size={24} color={color} />,
         }}
       />
+       <Tabs.Screen
+        name="pendaftaran"
+        options={{
+          title: 'Pendaftaran',
+          tabBarIcon: ({ color }) => <Ionicons name="create-outline" size={24} color={color} />,
+        }}
+      />
+
       <Tabs.Screen
         name="riwayat"
         options={{
@@ -31,13 +39,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <Ionicons name="document-text-outline" size={24} color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profil',
-          tabBarIcon: ({ color }) => <Ionicons name="person-outline" size={24} color={color} />,
-        }}
-      />
+     
    
     </Tabs>
     

@@ -29,35 +29,62 @@ public function storeAPI(Request $request)
         'alamat' => 'required',
     ]);
 
-    // Update tabel jadwal (Hapus id_user karena kolomnya tidak ada di database kamu)
-    $update = DB::table('jadwal')->where('id_jadwal', $request->id_jadwal)->update([
-        'nama_klien' => $request->nama_lengkap,
-        'no_hp'      => $request->no_hp,
-        'email'      => $request->email,
-        'alamat'     => $request->alamat,
-        'status'     => 'Menunggu',
-        'updated_at' => now(),
-    ]);
+    $user = $request->user();
+
+    // Cari klien berdasarkan akun login
+    $klien = DB::table('klien')
+        ->where('id_user', $user->id_user)
+        ->first();
+
+    if (!$klien) {
+        return response()->json([
+            'message' => 'Data klien tidak ditemukan'
+        ], 404);
+    }
+
+    $update = DB::table('jadwal')
+        ->where('id_jadwal', $request->id_jadwal)
+        ->update([
+            'id_klien'   => $klien->id_klien, // INI PENTING
+            'nama_klien' => $request->nama_lengkap,
+            'no_hp'      => $request->no_hp,
+            'email'      => $request->email,
+            'alamat'     => $request->alamat,
+            'status'     => 'Menunggu',
+            'updated_at' => now(),
+        ]);
 
     if ($update) {
-        return response()->json(['message' => 'Pendaftaran berhasil dikirim!'], 200);
+        return response()->json([
+            'message' => 'Pendaftaran berhasil'
+        ], 200);
     }
-    return response()->json(['message' => 'Gagal memperbarui jadwal'], 500);
+
+    return response()->json([
+        'message' => 'Gagal daftar'
+    ], 500);
 }
-
     // API untuk mengambil Riwayat di React Native
-    public function getRiwayat() {
-        // Mengambil data dari tabel 'jadwal' yang statusnya bukan 'Tersedia'
-        // orderBy desc supaya yang terbaru muncul di paling atas
-        $riwayat = DB::table('jadwal')
-            ->where('status', '!=', 'Tersedia')
-            ->whereNotNull('nama_klien') // Memastikan hanya data yang sudah diisi user
-            ->orderBy('updated_at', 'desc')
-            ->get();
-            
-        return response()->json($riwayat);
+    public function getRiwayat(Request $request)
+{
+    $user = $request->user();
+
+    $klien = DB::table('klien')
+        ->where('id_user', $user->id_user)
+        ->first();
+
+    if (!$klien) {
+        return response()->json([]);
     }
 
+    $riwayat = DB::table('jadwal')
+        ->where('id_klien', $klien->id_klien)
+        ->where('status', '!=', 'Tersedia')
+        ->orderBy('updated_at', 'desc')
+        ->get();
+
+    return response()->json($riwayat);
+}
     // Update Status dari Dashboard Web Admin
 public function updateStatus(Request $request, $id)
 {
@@ -78,7 +105,9 @@ public function updateStatus(Request $request, $id)
 
         // 2. CEK ATAU BUAT DATA KLIEN
         // Kita cari klien berdasarkan email atau no_hp yang diinput saat daftar
-        $klien = DB::table('klien')->where('email', $jadwal->email)->first();
+        $klien = DB::table('klien')
+    ->where('id_klien', $jadwal->id_klien)
+    ->first();
         
         if (!$klien) {
             // Jika klien belum terdaftar di tabel klien, buat baru otomatis
