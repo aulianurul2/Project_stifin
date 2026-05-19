@@ -25,18 +25,20 @@ export default function TabLayout() {
         }}
       />
        <Tabs.Screen
-        name="pendaftaran"
+        name="home"
         options={{
           title: 'Pendaftaran',
           tabBarIcon: ({ color }) => <Ionicons name="create-outline" size={24} color={color} />,
         }}
       />
 
+
+        
       <Tabs.Screen
-        name="riwayat"
+        name="edit-profile"
         options={{
-          title: 'Hasil Tes',
-          tabBarIcon: ({ color }) => <Ionicons name="document-text-outline" size={24} color={color} />,
+          title: 'Edit Profil',
+          tabBarIcon: ({ color }) => <Ionicons name="person-outline" size={24} color={color} />,
         }}
       />
      

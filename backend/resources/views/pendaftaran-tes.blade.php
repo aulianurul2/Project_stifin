@@ -25,9 +25,16 @@
                 <i class="fas fa-calendar-alt mr-3"></i> Jadwal Tes
             </a>
 
+
+            <a href="{{ route('kelola-konten.index') }}" class="flex items-center py-3 px-6 text-gray-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fas fa-file-medical mr-3"></i> Kelola Konten
+            </a>
+
+            
             <a href="{{ route('hasil-tes') }}" class="flex items-center py-3 px-6 text-gray-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fas fa-file-medical mr-3"></i> Hasil Tes
             </a>
+
             <a href="{{ route('laporan.index') }}" class="flex items-center py-3 px-6 text-gray-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fas fa-chart-bar mr-3"></i> Laporan
             </a>

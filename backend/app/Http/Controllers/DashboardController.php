@@ -12,7 +12,7 @@ class DashboardController extends Controller
         // 1. Total Klien dari tabel klien
         $totalKlien = DB::table('klien')->count();
         
-        // 2. Pendaftaran: Total semua data di tabel jadwal
+        // 2. Pendaftaran: Total semua data di tabel pendaftaran
         $pendaftaran = DB::table('jadwal')->count(); 
         
         // 3. Hasil Tes: Diambil dari tabel hasiltes yang statusnya 'Selesai'

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class KlienController extends Controller
 {
@@ -22,20 +23,86 @@ class KlienController extends Controller
         // Ganti validasi alamat menjadi no_hp
         $request->validate([
             'nama' => 'required|string|max:100',
-            'no_hp' => 'required|string|max:15'
+            'no_hp' => 'required|string|max:15',
+            'email' => 'nullable|email|max:100',
+            'alamat' => 'nullable|string|max:255'
         ]);
 
         DB::table('klien')->where('id_klien', $id)->update([
             'nama' => $request->nama,
             'no_hp' => $request->no_hp, // Simpan no_hp
+            'email' => $request->email,
+            'alamat' => $request->alamat
         ]);
 
         return redirect()->back()->with('success', 'Data klien berhasil diperbarui');
     }
 
-    public function destroy($id)
+   public function destroy($id)
+{
+    // Ambil data klien
+    $klien = DB::table('klien')
+        ->where('id_klien', $id)
+        ->first();
+
+    if (!$klien) {
+        return redirect()->back()->with('error', 'Klien tidak ditemukan');
+    }
+
+    // Hapus user -> klien ikut kehapus otomatis
+    DB::table('user')
+        ->where('id_user', $klien->id_user)
+        ->delete();
+
+    return redirect()->back()->with('success', 'Klien berhasil dihapus');
+}
+public function updateProfile(Request $request)
     {
-        DB::table('klien')->where('id_klien', $id)->delete();
-        return redirect()->back()->with('success', 'Klien berhasil dihapus');
+        $userId = auth()->id(); // Ambil ID User dari token login Sanctum
+
+        $klien = DB::table('klien')
+        ->where('id_user', $userId)
+        ->first();
+
+
+        // Validasi input, email harus unik di tabel 'user' kecuali milik dia sendiri
+        $request->validate([
+        'nama'   => 'required|string|max:100',
+        'no_hp'  => 'required|string|max:15',
+        'alamat' => 'required|string',
+
+        'email' => [
+            'required',
+            'email',
+            'max:100',
+            Rule::unique('klien', 'email')
+                ->ignore($klien->id_klien, 'id_klien')
+        ],
+    ]);
+
+        // 1. Update data akun login utama (tabel user)
+        DB::table('user')->where('id_user', $userId)->update([
+            'nama'       => $request->nama,
+        ]);
+
+        // 2. Update data detail profil (tabel klien)
+        DB::table('klien')->where('id_user', $userId)->update([
+            'nama'           => $request->nama,
+            'no_hp'          => $request->no_hp,
+            'email'          => $request->email, 
+            'tanggal_lahir'  => $request->tanggal_lahir,
+            'jenis_kelamin'  => $request->jenis_kelamin,
+            'golongan_darah' => $request->golongan_darah,
+            'alamat'         => $request->alamat,
+            'institusi'      => $request->institusi,
+            'sosmed'         => $request->sosmed,
+            'domisili'       => $request->domisili,
+            
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profil dan data akun berhasil diperbarui!'
+        ], 200);
     }
 }

@@ -5,11 +5,13 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\PendaftaranController;
+use App\Http\Controllers\KontenInformasiController;
 
 // Rute Publik (Tanpa Login)
 Route::post('/addnew', [AuthController::class, 'registerAPI']);
 Route::post('/login', [AuthController::class, 'loginAPI']);
 Route::get('/jadwal-tersedia', [JadwalController::class, 'getJadwalApi']);
+Route::get('/informasi-tes', [KontenInformasiController::class, 'getApiInformasi']);
 
 // Rute Privat (Harus Login/Membawa Token)
 Route::middleware('auth:sanctum')->group(function () {
@@ -39,6 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
         ]);
     });
 
+    Route::put('/profile/update', [\App\Http\Controllers\KlienController::class, 'updateProfile']);
     Route::post('/pendaftaran/submit', [PendaftaranController::class, 'storeAPI']);
     Route::get('/riwayat-pendaftaran', [PendaftaranController::class, 'getRiwayat']);
     Route::get('/hasil-tes-saya', [PendaftaranController::class, 'hasilTesSaya']);

@@ -51,8 +51,12 @@ class JadwalController extends Controller
     // Ambil semua jadwal yang statusnya 'Tersedia'
     $data = DB::table('jadwal')
         ->where('status', 'Tersedia')
-        ->get();
-        
+        ->get()
+        ->map(function ($item) {
+        // Format waktu di sini menggunakan Carbon sebelum dikirim ke React Native
+        $item->waktu = \Carbon\Carbon::parse($item->waktu)->format('H:i');
+        return $item;
+    });
     return response()->json($data);
 }
 }

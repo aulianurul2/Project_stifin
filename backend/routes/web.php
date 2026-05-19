@@ -7,6 +7,7 @@ use App\Http\Controllers\KlienController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\HasilTesController;
+use App\Http\Controllers\KontenInformasiController;
 use App\Http\Controllers\LaporanController;
 
 /*
@@ -70,6 +71,9 @@ Route::prefix('jadwal-tes')->group(function () {
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/pdf', [LaporanController::class, 'exportPdf'])->name('laporan.pdf');
     Route::get('/laporan/excel', [LaporanController::class, 'exportExcel'])->name('laporan.excel');
+
+    // 7. Konten Informasi
+    Route::resource('kelola-konten', KontenInformasiController::class);
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

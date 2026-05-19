@@ -24,6 +24,9 @@
             <a href="{{ route('jadwal-tes') }}" class="flex items-center py-3 px-6 bg-blue-600 text-white">
                 <i class="fas fa-calendar-alt mr-3"></i> Jadwal Tes
             </a>
+            <a href="{{ route('kelola-konten.index') }}" class="flex items-center py-3 px-6 text-gray-400 hover:bg-slate-800 hover:text-white transition">
+                <i class="fas fa-file-medical mr-3"></i> Kelola Konten
+            </a>
             <a href="{{ route('hasil-tes') }}" class="flex items-center py-3 px-6 text-gray-400 hover:bg-slate-800 hover:text-white transition">
                 <i class="fas fa-file-medical mr-3"></i> Hasil Tes
             </a>
@@ -101,7 +104,7 @@
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm font-bold text-gray-900">{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</div>
-                                <div class="text-xs text-gray-500">{{ $item->waktu }} WIB</div>
+                                <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($item->waktu)->format('H:i') }} WIB</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($item->lokasi == 'Home Visit')
