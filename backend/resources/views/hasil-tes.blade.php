@@ -1,216 +1,259 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>Hasil Tes - STIFIn</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta content="width=device-width, initial-scale=1.0, shrink-to-fit=no" name="viewport" />
+    <link rel="icon" href="{{ asset('assets/img/kaiadmin/favicon.ico') }}" type="image/x-icon" />
+
+    <script src="{{ asset('assets/js/plugin/webfont/webfont.min.js') }}"></script>
+    <script>
+        WebFont.load({
+            google: { families: ["Public Sans:300,400,500,600,700"] },
+            custom: {
+                families: [
+                    "Font Awesome 5 Solid",
+                    "Font Awesome 5 Regular",
+                    "Font Awesome 5 Brands",
+                    "simple-line-icons",
+                ],
+                urls: ["{{ asset('assets/css/fonts.min.css') }}"],
+            },
+            active: function () {
+                sessionStorage.fonts = true;
+            },
+        });
+    </script>
+
+    <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/css/plugins.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/css/kaiadmin.min.css') }}" />
 </head>
-<body class="bg-gray-50 flex">
+<body>
+    <div class="wrapper">
 
-    <div class="w-64 bg-slate-900 min-h-screen text-white flex-shrink-0">
-        <div class="p-6 text-xl font-bold border-b border-slate-800 text-center">STIFIn Admin</div>
-        <nav class="mt-4">
-            <a href="{{ route('dashboard') }}" class="flex items-center py-3 px-6 text-gray-400 hover:bg-slate-800 transition">
-                <i class="fas fa-home mr-3"></i> Dashboard
-            </a>
-            <a href="{{ route('kelola-klien') }}" class="flex items-center py-3 px-6 text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fas fa-users mr-3"></i> Kelola Klien
-            </a>
-            <a href="{{ route('pendaftaran-tes') }}" class="flex items-center py-3 px-6 text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fas fa-edit mr-3"></i> Pendaftaran Tes
-            </a>
-            <a href="{{ route('jadwal-tes') }}" class="flex items-center py-3 px-6 text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fas fa-calendar-alt mr-3"></i> Jadwal Tes
-            </a>
-            
-            <a href="{{ route('kelola-konten.index') }}" class="flex items-center py-3 px-6 text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fas fa-file-medical mr-3"></i> Kelola Konten
-            </a>
-            
-            <a href="{{ route('hasil-tes') }}" class="flex items-center py-3 px-6 bg-blue-600 text-white">
-                <i class="fas fa-file-medical mr-3"></i> Hasil Tes
-            </a>
-            <a href="{{ route('laporan.index') }}" class="flex items-center py-3 px-6 text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fas fa-chart-bar mr-3"></i> Laporan
-            </a>
-            <form action="{{ route('logout') }}" method="POST" class="border-t border-slate-800 mt-4 pt-4">
-                @csrf
-                <button type="submit" class="w-full text-left py-3 px-6 text-red-400 hover:bg-red-900/20 transition">
-                    <i class="fas fa-sign-out-alt mr-3"></i> Logout
-                </button>
-            </form>
-        </nav>
-    </div>
+        @include('partials.sidebar')
 
-    <div class="flex-1">
-        <header class="bg-white shadow-sm p-6">
-            <h2 class="text-2xl font-bold text-gray-800">Manajemen Hasil Tes</h2>
-        </header>
-
-        <main class="p-8">
-            <div class="flex space-x-4 mb-8 border-b">
-                <a href="?tab=kelola" class="py-2 px-6 font-semibold {{ $tab == 'kelola' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-gray-400' }}">
-                    <i class="fas fa-tasks mr-2"></i> Kelola Hasil Tes
-                </a>
-                <a href="?tab=riwayat" class="py-2 px-6 font-semibold {{ $tab == 'riwayat' ? 'border-b-4 border-blue-600 text-blue-600' : 'text-gray-400' }}">
-                    <i class="fas fa-history mr-2"></i> Riwayat Tes
-                </a>
+        <div class="main-panel">
+            <div class="main-header">
+                @include('partials.navbar')
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Nama Klien</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Hasil</th>
-                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                        @forelse($data as $item)
-                        <tr>
-                            <td class="px-6 py-4 text-sm">
-                                <div class="font-bold text-gray-900">{{ $item->nama }}</div>
-                                <div class="text-gray-500">{{ $item->no_hp }}</div>
-                            </td>
-                           
-                            <td class="px-6 py-4 text-sm">
-                                @if($item->status_tes == 'Selesai')
-                                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full font-bold text-xs">Tersertifikasi</span>
-                                @else
-                                    <span class="text-gray-400 italic">Belum diinput</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                @if($tab == 'kelola')
-                                    <button onclick="openModal('{{ $item->id_tes }}', '{{ $item->nama }}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs hover:bg-blue-700 transition">
-                                        <i class="fas fa-check-circle mr-1"></i> Input Hasil
-                                    </button>
-                              @else
-    <div class="flex justify-center space-x-2 text-sm">
-        <a href="{{ asset('uploads/hasil/' . $item->file_hasil) }}" 
-           download="{{ 'Sertifikat_' . $item->nama }}" 
-           class="p-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition" 
-           title="Download Sertifikat">
-            <i class="fas fa-certificate"></i>
-        </a>
+            <div class="container">
+                <div class="page-inner">
 
-        <a href="{{ asset('uploads/hasil/' . $item->file_detail) }}" 
-           download="{{ 'Detail_Hasil_' . $item->nama }}" 
-           class="p-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition" 
-           title="Download Hasil Lengkap">
-            <i class="fas fa-file-alt"></i>
-        </a>
+                    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h3 class="fw-bold mb-1">Manajemen Hasil Tes</h3>
+                            <ul class="breadcrumbs mb-0 p-0" style="background: transparent;">
+                                <li class="nav-home"><a href="{{ route('dashboard') }}"><i class="icon-home"></i></a></li>
+                                <li class="separator"><i class="icon-arrow-right"></i></li>
+                                <li class="nav-item"><a href="#" class="text-muted">Hasil Tes</a></li>
+                            </ul>
+                        </div>
+                    </div>
 
-        <button onclick="previewFile('{{ asset('uploads/hasil/' . $item->file_hasil) }}')" 
-                class="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition" 
-                title="Preview Sertifikat">
-            <i class="fas fa-eye"></i>
-        </button>
-    </div>
-@endif
-                            </td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="4" class="px-6 py-10 text-center text-gray-400 italic">Data tidak ditemukan</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </main>
-    </div>
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <ul class="nav nav-tabs nav-line nav-color-primary border-bottom" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link py-2 px-4 fw-bold {{ $tab == 'kelola' ? 'active' : '' }}" href="?tab=kelola">
+                                        <i class="fas fa-tasks me-2"></i> Kelola Hasil Tes
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link py-2 px-4 fw-bold {{ $tab == 'riwayat' ? 'active' : '' }}" href="?tab=riwayat">
+                                        <i class="fas fa-history me-2"></i> Riwayat Tes
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
 
-   <div id="modalHasil" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-40">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
-        <h3 class="text-lg font-bold mb-4">Input Berkas Hasil: <span id="modalNama" class="text-blue-600"></span></h3>
-        
-        <form id="formHasil" method="POST" enctype="multipart/form-data">
-            @csrf
-            
-            <div class="mb-4 text-sm font-medium text-gray-700">
-                <label class="block mb-1 font-bold"><i class="fas fa-certificate mr-2 text-yellow-500"></i>Unggah Sertifikat (Ringkasan)</label>
-                <input type="file" name="file_hasil" class="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border rounded-lg" required>
-                <p class="text-[10px] text-gray-400 mt-1">*Format: PDF/JPG/PNG</p>
-            </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card card-round shadow-sm">
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0 text-nowrap">
+                                            <thead class="bg-light text-secondary">
+                                                <tr>
+                                                    <th class="px-4 py-3 fw-bold text-uppercase small" style="width: 40%">Nama Klien</th>
+                                                    <th class="px-4 py-3 fw-bold text-uppercase small" style="width: 30%">Hasil</th>
+                                                    <th class="px-4 py-3 fw-bold text-uppercase small text-center" style="width: 30%">Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse($data as $item)
+                                                    <tr>
+                                                        <td class="px-4 py-3">
+                                                            <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ $item->nama }}</div>
+                                                            <div class="text-muted small"><i class="fab fa-whatsapp me-1"></i> {{ $item->no_hp }}</div>
+                                                        </td>
+                                                        <td class="px-4 py-3">
+                                                            @if($item->status_tes == 'Selesai')
+                                                                <span class="badge bg-success bg-opacity-10 text-success fw-bold px-3 py-2 card-round">
+                                                                    <i class="fas fa-check-circle me-1"></i> Tersertifikasi
+                                                                </span>
+                                                            @else
+                                                                <span class="text-muted fst-italic small">Belum diinput</span>
+                                                            @endif
+                                                        </td>
+                                                        <td class="px-4 py-3 text-center">
+                                                            @if($tab == 'kelola')
+                                                                <button type="button" onclick="openModal('{{ $item->id_tes }}', '{{ $item->nama }}')" class="btn btn-primary btn-sm btn-round px-3">
+                                                                    <i class="fas fa-check-circle me-1"></i> Input Hasil
+                                                                </button>
+                                                            @else
+                                                                <div class="d-flex justify-content-center align-items-center gap-2">
+                                                                    <a href="{{ asset('uploads/hasil/' . $item->file_hasil) }}"
+                                                                       download="{{ 'Sertifikat_' . $item->nama }}"
+                                                                       class="btn btn-warning btn-sm p-2 text-dark card-round shadow-sm"
+                                                                       style="background-color: #fff3cd; border-color: #ffeeba;"
+                                                                       title="Download Sertifikat">
+                                                                        <i class="fas fa-certificate text-warning-700"></i>
+                                                                    </a>
 
-            <div class="mb-6 text-sm font-medium text-gray-700">
-                <label class="block mb-1 font-bold"><i class="fas fa-file-alt mr-2 text-blue-500"></i>Unggah Hasil Tes Lengkap (Detail)</label>
-                <input type="file" name="file_detail" class="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-50 file:text-green-700 hover:file:bg-green-100 cursor-pointer border rounded-lg" required>
-                <p class="text-[10px] text-gray-400 mt-1">*Format: PDF/DOC/DOCX</p>
-            </div>
+                                                                    <a href="{{ asset('uploads/hasil/' . $item->file_detail) }}"
+                                                                       download="{{ 'Detail_Hasil_' . $item->nama }}"
+                                                                       class="btn btn-success btn-sm p-2 text-success card-round shadow-sm"
+                                                                       style="background-color: #d1e7dd; border-color: #badbcc;"
+                                                                       title="Download Hasil Lengkap">
+                                                                        <i class="fas fa-file-alt"></i>
+                                                                    </a>
 
-            <div class="flex justify-end space-x-3 text-sm font-semibold">
-                <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-500 hover:text-gray-800 transition">Batal</button>
-                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md">Simpan & Selesaikan</button>
-            </div>
-        </form>
-    </div>
-</div>
+                                                                    <button type="button" onclick="previewFile('{{ asset('uploads/hasil/' . $item->file_hasil) }}')"
+                                                                            class="btn btn-primary btn-sm p-2 text-primary card-round shadow-sm"
+                                                                            style="background-color: #cfe2ff; border-color: #b6d4fe;"
+                                                                            title="Preview Sertifikat">
+                                                                        <i class="fas fa-eye"></i>
+                                                                    </button>
+                                                                </div>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="3" class="text-center py-5 text-muted fst-italic">
+                                                            <i class="fas fa-exclamation-circle d-block mb-2 style="font-size: 2rem;"></i>
+                                                            Data tidak ditemukan
+                                                        </td>
+                                                    </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-   <div id="modalPreview" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 z-50">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[95vh] flex flex-col overflow-hidden border border-gray-300">
-        
-        <div class="p-4 border-b flex justify-between items-center bg-white">
-            <div class="flex items-center space-x-2">
-                <div class="p-2 bg-blue-50 rounded-lg">
-                    <i class="fas fa-file-alt text-blue-600"></i>
                 </div>
-                <h3 class="font-bold text-gray-800">Preview Sertifikat Hasil Tes</h3>
             </div>
-            <button onclick="closePreview()" class="text-gray-400 hover:text-red-500 transition-colors text-3xl px-2">&times;</button>
-        </div>
 
-        <div class="flex-1 bg-slate-100 relative overflow-hidden">
-            <iframe id="previewFrame" src="" class="w-full h-full border-none shadow-inner" style="min-height: 60vh;"></iframe>
-        </div>
-
-        <div class="p-4 border-t bg-gray-50 flex justify-end items-center gap-3">
-            <span class="text-xs text-gray-500 mr-auto italic">*Gunakan tombol unduh di tabel jika ingin menyimpan file.</span>
-            
-            <button onclick="closePreview()" 
-                class="px-8 py-2.5 bg-slate-800 hover:bg-black text-white text-sm font-bold rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95">
-                Tutup
-            </button>
+            <footer class="footer">
+                <div class="container-fluid d-flex justify-content-between">
+                    <div class="copyright text-center w-100">
+                        2026, made with <i class="fa fa-heart text-danger"></i> by STIFIn Project
+                    </div>
+                </div>
+            </footer>
         </div>
     </div>
-</div>
+
+    <div class="modal fade" id="modalHasil" tabindex="-1" aria-labelledby="modalHasilLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content card-round p-2">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark" id="modalHasilLabel">Input Berkas Hasil: <span id="modalNama" class="text-primary"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="formHasil" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group p-0 mb-3">
+                            <label class="fw-bold small mb-1 text-dark"><i class="fas fa-certificate text-warning me-2"></i>Unggah Sertifikat (Ringkasan)</label>
+                            <input type="file" name="file_hasil" class="form-control" required>
+                            <small class="text-muted d-block mt-1" style="font-size: 11px;">*Format: PDF/JPG/PNG</small>
+                        </div>
+
+                        <div class="form-group p-0 mb-2">
+                            <label class="fw-bold small mb-1 text-dark"><i class="fas fa-file-alt text-primary me-2"></i>Unggah Hasil Tes Lengkap (Detail)</label>
+                            <input type="file" name="file_detail" class="form-control" required>
+                            <small class="text-muted d-block mt-1" style="font-size: 11px;">*Format: PDF/DOC/DOCX</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0">
+                        <button type="button" class="btn btn-light btn-sm fw-bold px-3 btn-round" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary btn-sm fw-bold px-4 btn-round shadow-sm">Simpan & Selesaikan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalPreview" tabindex="-1" aria-labelledby="modalPreviewLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content card-round overflow-hidden" style="max-height: 95vh;">
+                <div class="modal-header bg-white border-bottom py-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="p-2 bg-light rounded text-primary">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <h5 class="modal-title fw-bold text-dark" id="modalPreviewLabel">Preview Sertifikat Hasil Tes</h5>
+                    </div>
+                    <button type="button" class="btn-close fs-4 px-2" onclick="closePreview()" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0 bg-light" style="height: 65vh; min-height: 500px;">
+                    <iframe id="previewFrame" src="" class="w-100 h-100 border-0 m-0 p-0"></iframe>
+                </div>
+                <div class="modal-footer bg-light d-flex justify-content-between align-items-center py-3">
+                    <span class="text-muted small fst-italic">*Gunakan tombol unduh di tabel jika ingin menyimpan file.</span>
+                    <button type="button" onclick="closePreview()" class="btn btn-dark btn-round px-4 fw-bold shadow-sm">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ asset('assets/js/core/jquery-3.7.1.min.js') }}"></script>
+    <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
+    <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js') }}"></script>
+    <script src="{{ asset('assets/js/kaiadmin.min.js') }}"></script>
 
     <script>
-        // Logic Modal Input
+        // Logic Modal Input Berkas
         function openModal(id, nama) {
-    // 1. Munculkan Modal
-    document.getElementById('modalHasil').classList.remove('hidden');
-    document.getElementById('modalNama').innerText = nama;
-    
-    // 2. Set Action URL secara dinamis menggunakan named route 'hasil.update'
-    // Kita pakai replace untuk memasukkan ID ke dalam string route
-    let url = "{{ route('hasil.update', ':id') }}";
-    url = url.replace(':id', id);
-    
-    document.getElementById('formHasil').action = url;
-}
-        function closeModal() {
-            document.getElementById('modalHasil').classList.add('hidden');
+            document.getElementById('modalNama').innerText = nama;
+
+            // Set Action URL dinamis Laravel dengan penggantian placeholder ID
+            let url = "{{ route('hasil.update', ':id') }}";
+            url = url.replace(':id', id);
+            document.getElementById('formHasil').action = url;
+
+            // Trigger Modal Tampil ala Bootstrap 5
+            var modalInput = new bootstrap.Modal(document.getElementById('modalHasil'));
+            modalInput.show();
         }
 
-        // Logic Modal Preview
+        // Logic Modal Preview File Iframe
         function previewFile(url) {
-            const modal = document.getElementById('modalPreview');
             const frame = document.getElementById('previewFrame');
-    
             frame.src = url;
-            modal.classList.remove('hidden');
-            modal.classList.add('flex', 'animate-in', 'fade-in', 'duration-300'); // Tambahkan animasi tailwind
-            document.body.style.overflow = 'hidden';
+
+            // Trigger Modal Preview Tampil ala Bootstrap 5
+            var modalPreview = new bootstrap.Modal(document.getElementById('modalPreview'));
+            modalPreview.show();
         }
+
         function closePreview() {
-            const modal = document.getElementById('modalPreview');
-            const frame = document.getElementById('previewFrame');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            frame.src = "";
-            document.body.style.overflow = 'auto'; // Aktifkan scroll kembali
+            // Sembunyikan modal secara paksa dan bersihkan src iframe agar load ulang aman
+            var modalEl = document.getElementById('modalPreview');
+            var modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+            document.getElementById('previewFrame').src = "";
         }
     </script>
 </body>

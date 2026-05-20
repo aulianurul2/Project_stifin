@@ -1,165 +1,222 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>Laporan - STIFIn Admin</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta content="width=device-width, initial-scale=1.0, shrink-to-fit=no" name="viewport" />
+    <link rel="icon" href="{{ asset('assets/img/kaiadmin/favicon.ico') }}" type="image/x-icon" />
+
+    <script src="{{ asset('assets/js/plugin/webfont/webfont.min.js') }}"></script>
+    <script>
+        WebFont.load({
+            google: { families: ["Public Sans:300,400,500,600,700"] },
+            custom: {
+                families: ["Font Awesome 5 Solid", "Font Awesome 5 Regular", "Font Awesome 5 Brands", "simple-line-icons"],
+                urls: ["{{ asset('assets/css/fonts.min.css') }}"],
+            },
+            active: function () { sessionStorage.fonts = true; },
+        });
+    </script>
+
+    <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/css/plugins.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/css/kaiadmin.min.css') }}" />
+
     <style>
         @media print {
-            .no-print { display: none !important; }
-            .w-64 { display: none !important; }
+            .no-print, .sidebar, .main-header, .footer { display: none !important; }
+            .main-panel { width: 100% !important; float: none !important; padding: 0 !important; margin: 0 !important; }
+            .page-inner { padding: 0 !important; }
             body { background: white !important; }
-            main { padding: 0 !important; }
+            .card { border: 1px solid #dee2e6 !important; box-shadow: none !important; }
         }
     </style>
 </head>
-<body class="bg-gray-50 flex">
+<body>
+    <div class="wrapper">
 
-    <!-- Sidebar -->
-    <div class="w-64 bg-slate-900 min-h-screen text-white flex-shrink-0 no-print">
-        <div class="p-6 text-xl font-bold border-b border-slate-800 text-center">STIFIn Admin</div>
-        <nav class="mt-4">
-            <a href="{{ route('dashboard') }}" class="flex items-center py-3 px-6 text-gray-400 hover:bg-slate-800 transition">
-                <i class="fas fa-home mr-3"></i> Dashboard
-            </a>
-            <a href="{{ route('kelola-klien') }}" class="flex items-center py-3 px-6 text-gray-400 hover:bg-slate-800 transition">
-                <i class="fas fa-users mr-3"></i> Kelola Klien
-            </a>
-            <a href="{{ route('pendaftaran-tes') }}" class="flex items-center py-3 px-6 text-gray-400 hover:bg-slate-800 transition">
-                <i class="fas fa-edit mr-3"></i> Pendaftaran Tes
-            </a>
-            <a href="{{ route('jadwal-tes') }}" class="flex items-center py-3 px-6 text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fas fa-calendar-alt mr-3"></i> Jadwal Tes
-            </a>
-            
-            <a href="{{ route('kelola-konten.index') }}" class="flex items-center py-3 px-6 text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fas fa-file-medical mr-3"></i> Kelola Konten
-            </a>
-            
-            <a href="{{ route('hasil-tes') }}" class="flex items-center py-3 px-6 text-gray-400 hover:bg-slate-800 hover:text-white transition">
-                <i class="fas fa-file-medical mr-3"></i> Hasil Tes
-            </a>
-            <!-- Link Laporan Aktif -->
-            <a href="{{ route('laporan.index') }}" class="flex items-center py-3 px-6 bg-blue-600 text-white">
-                <i class="fas fa-chart-bar mr-3"></i> Laporan
-            </a>
-            <form action="{{ route('logout') }}" method="POST" class="border-t border-slate-800 mt-4 pt-4">
-                @csrf
-                <button type="submit" class="w-full text-left py-3 px-6 text-red-400 hover:bg-red-900/20 transition">
-                    <i class="fas fa-sign-out-alt mr-3"></i> Logout
-                </button>
-            </form>     
-        </nav>
-    </div>
+        <div class="no-print">
+            @include('partials.sidebar')
+        </div>
 
-    <div class="flex-1 flex flex-col">
-        <!-- HEADER DENGAN TOMBOL PDF & EXCEL -->
-        <header class="bg-white shadow-sm p-6 flex justify-between items-center no-print">
-            <h2 class="text-2xl font-bold text-gray-800">Laporan Statistik</h2>
-            <div class="flex gap-3">
-                <!-- Export PDF -->
-                <a href="{{ route('laporan.pdf') }}" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition flex items-center shadow-sm">
-                    <i class="fas fa-file-pdf mr-2"></i> PDF
-                </a>
-                <!-- Export Excel -->
-                <a href="{{ route('laporan.excel') }}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center shadow-sm">
-                    <i class="fas fa-file-excel mr-2"></i> Excel
-                </a>
-               
-            </div>
-        </header>
-
-        <main class="p-8">
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center transition hover:shadow-md">
-                    <div class="p-4 bg-blue-50 rounded-xl text-blue-600 mr-4"><i class="fas fa-users fa-2x"></i></div>
-                    <div>
-                        <p class="text-sm text-gray-500 font-medium uppercase tracking-wider">Total Klien</p>
-                        <h3 class="text-2xl font-bold text-gray-800">{{ $totalKlien }}</h3>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center transition hover:shadow-md">
-                    <div class="p-4 bg-green-50 rounded-xl text-green-600 mr-4"><i class="fas fa-check-circle fa-2x"></i></div>
-                    <div>
-                        <p class="text-sm text-gray-500 font-medium uppercase tracking-wider">Tes Selesai</p>
-                        <h3 class="text-2xl font-bold text-gray-800">{{ $totalTesSelesai }}</h3>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center transition hover:shadow-md">
-                    <div class="p-4 bg-amber-50 rounded-xl text-amber-600 mr-4"><i class="fas fa-wallet fa-2x"></i></div>
-                    <div>
-                        <p class="text-sm text-gray-500 font-medium uppercase tracking-wider">Pendapatan</p>
-                        <h3 class="text-2xl font-bold text-gray-800">Rp {{ number_format($totalPendapatan, 0, ',', '.') }}</h3>
-                    </div>
-                </div>
+        <div class="main-panel">
+            <div class="main-header no-print">
+                @include('partials.navbar')
             </div>
 
-            <!-- Charts and Tables -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 class="text-lg font-bold mb-6 text-gray-700 flex items-center">
-                        <i class="fas fa-pie-chart mr-2 text-blue-600"></i> Distribusi Hasil STIFIn
-                    </h3>
-                    <div class="space-y-5">
-                        @forelse($statistikHasil as $stat)
-                        @php 
-                            $persen = $totalTesSelesai > 0 ? ($stat->total / $totalTesSelesai) * 100 : 0;
-                        @endphp
+            <div class="container">
+                <div class="page-inner">
+
+                    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
                         <div>
-                            <div class="flex justify-between text-sm mb-2">
-                                <span class="font-bold text-gray-600 uppercase tracking-tight">{{ $stat->hasil }}</span>
-                                <span class="text-gray-500 font-medium">{{ $stat->total }} Orang</span>
-                            </div>
-                            <div class="w-full bg-gray-100 rounded-full h-3">
-                                <div class="bg-blue-600 h-3 rounded-full transition-all duration-500" style="width: {{ $persen }}%"></div>
+                            <h3 class="fw-bold mb-1">Laporan Statistik</h3>
+                            <ul class="breadcrumbs mb-0 p-0 no-print" style="background: transparent;">
+                                <li class="nav-home"><a href="{{ route('dashboard') }}"><i class="icon-home"></i></a></li>
+                                <li class="separator"><i class="icon-arrow-right"></i></li>
+                                <li class="nav-item"><a href="#" class="text-muted">Laporan</a></li>
+                            </ul>
+                        </div>
+                        <div class="d-flex gap-2 no-print">
+                            <a href="{{ route('laporan.pdf') }}" class="btn btn-danger btn-round btn-sm px-3 shadow-sm">
+                                <i class="fas fa-file-pdf me-1"></i> PDF
+                            </a>
+                            <a href="{{ route('laporan.excel') }}" class="btn btn-success btn-round btn-sm px-3 shadow-sm">
+                                <i class="fas fa-file-excel me-1"></i> Excel
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-sm-6 col-md-4">
+                            <div class="card card-stats card-round border border-light shadow-sm">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-icon">
+                                            <div class="icon-big text-center text-primary bubble-shadow-small">
+                                                <i class="fas fa-users"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col col-stats ms-3 ms-sm-0">
+                                            <div class="numbers">
+                                                <p class="card-category text-uppercase fw-bold text-muted small mb-1">Total Klien</p>
+                                                <h4 class="card-title fw-bold text-dark mb-0">{{ $totalKlien }}</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        @empty
-                        <p class="text-gray-400 italic text-center py-4">Belum ada data distribusi.</p>
-                        @endforelse
-                    </div>
-                </div>
 
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 class="text-lg font-bold mb-6 text-gray-700 flex items-center">
-                        <i class="fas fa-history mr-2 text-blue-600"></i> 10 Tes Terbaru
-                    </h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <thead>
-                                <tr class="text-gray-400 border-b uppercase text-[10px] tracking-widest">
-                                    <th class="pb-3 font-bold">Nama Klien</th>
-                                    <th class="pb-3 font-bold">Hasil</th>
-                                    <th class="pb-3 font-bold text-right">Tanggal</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-50">
-                                @forelse($riwayatLaporan as $row)
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="py-4 font-semibold text-gray-800">{{ $row->nama }}</td>
-                                    <td class="py-4">
-                                        <span class="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md text-[10px] font-black uppercase border border-blue-100">
-                                            {{ $row->hasil ?? 'N/A' }}
-                                        </span>
-                                    </td>
-                                    <td class="py-4 text-right text-gray-500 font-medium">
-                                        {{ date('d/m/Y', strtotime($row->tanggal)) }}
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="3" class="py-10 text-center text-gray-400 italic">Tidak ada data riwayat.</td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                        <div class="col-sm-6 col-md-4">
+                            <div class="card card-stats card-round border border-light shadow-sm">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-icon">
+                                            <div class="icon-big text-center text-success bubble-shadow-small">
+                                                <i class="far fa-check-circle"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col col-stats ms-3 ms-sm-0">
+                                            <div class="numbers">
+                                                <p class="card-category text-uppercase fw-bold text-muted small mb-1">Tes Selesai</p>
+                                                <h4 class="card-title fw-bold text-dark mb-0">{{ $totalTesSelesai }}</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="card card-stats card-round border border-light shadow-sm">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-icon">
+                                            <div class="icon-big text-center text-warning bubble-shadow-small">
+                                                <i class="fas fa-wallet"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col col-stats ms-3 ms-sm-0">
+                                            <div class="numbers">
+                                                <p class="card-category text-uppercase fw-bold text-muted small mb-1">Pendapatan</p>
+                                                <h4 class="card-title fw-bold text-dark mb-0">Rp {{ number_format($totalPendapatan, 0, ',', '.') }}</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    <div class="row">
+                        <div class="col-12 col-lg-6 mb-4">
+                            <div class="card card-round shadow-sm h-100">
+                                <div class="card-header border-0 pb-0 bg-transparent">
+                                    <div class="card-title fw-bold text-secondary d-flex align-items-center" style="font-size: 1.1rem;">
+                                        <i class="fas fa-chart-pie text-primary me-2"></i> Distribusi Hasil STIFIn
+                                    </div>
+                                </div>
+                                <div class="card-body pt-4">
+                                    <div class="d-flex flex-column gap-3">
+                                        @forelse($statistikHasil as $stat)
+                                            @php
+                                                $persen = $totalTesSelesai > 0 ? ($stat->total / $totalTesSelesai) * 100 : 0;
+                                            @endphp
+                                            <div>
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="fw-bold text-dark text-uppercase small">{{ $stat->hasil }}</span>
+                                                    <span class="text-muted fw-semibold small">{{ $stat->total }} Orang</span>
+                                                </div>
+                                                <div class="progress card-round" style="height: 10px; background-color: #f1f3f5;">
+                                                    <div class="progress-bar bg-primary card-round" role="progressbar" style="width: {{ $persen }}%"></div>
+                                                </div>
+                                            </div>
+                                        @empty
+                                            <div class="text-center py-4 text-muted fst-italic">Belum ada data distribusi.</div>
+                                        @endforelse
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-lg-6 mb-4">
+                            <div class="card card-round shadow-sm h-100">
+                                <div class="card-header border-0 pb-0 bg-transparent">
+                                    <div class="card-title fw-bold text-secondary d-flex align-items-center" style="font-size: 1.1rem;">
+                                        <i class="fas fa-history text-primary me-2"></i> 10 Tes Terbaru
+                                    </div>
+                                </div>
+                                <div class="card-body p-0 pt-3">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead class="bg-light text-secondary">
+                                                <tr>
+                                                    <th class="px-4 py-2 fw-bold text-uppercase small" style="font-size: 11px;">Nama Klien</th>
+                                                    <th class="px-4 py-2 fw-bold text-uppercase small" style="font-size: 11px;">Hasil</th>
+                                                    <th class="px-4 py-2 fw-bold text-uppercase small text-end" style="font-size: 11px;">Tanggal</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse($riwayatLaporan as $row)
+                                                    <tr>
+                                                        <td class="px-4 py-3 fw-bold text-dark" style="font-size: 0.9rem;">{{ $row->nama }}</td>
+                                                        <td class="px-4 py-3">
+                                                            <span class="badge bg-primary bg-opacity-10 text-primary fw-bold text-uppercase border border-primary border-opacity-20 px-2.5 py-1.5 rounded" style="font-size: 10px;">
+                                                                {{ $row->hasil ?? 'N/A' }}
+                                                            </span>
+                                                        </td>
+                                                        <td class="px-4 py-3 text-end text-muted small">{{ date('d/m/Y', strtotime($row->tanggal)) }}</td>
+                                                    </tr>
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="3" class="text-center py-5 text-muted fst-italic">Tidak ada data riwayat.</td>
+                                                    </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
-        </main>
+
+            <footer class="footer no-print">
+                <div class="container-fluid d-flex justify-content-between">
+                    <div class="copyright text-center w-100">
+                        2026, made with <i class="fa fa-heart text-danger"></i> by STIFIn Project
+                    </div>
+                </div>
+            </footer>
+        </div>
     </div>
+
+    <script src="{{ asset('assets/js/core/jquery-3.7.1.min.js') }}"></script>
+    <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
+    <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js') }}"></script>
+    <script src="{{ asset('assets/js/kaiadmin.min.js') }}"></script>
 </body>
 </html>

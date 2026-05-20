@@ -58,6 +58,12 @@
                         <p>Jadwal Tes</p>
                     </a>
                 </li>
+                <li class="nav-item {{ request()->routeIs('kelola-konten.*') ? 'active' : '' }}">
+                    <a href="{{ route('kelola-konten.index') }}">
+                        <i class="fas fa-laptop"></i>
+                        <p>Kelola Konten</p>
+                    </a>
+                </li>
                 <li class="nav-item {{ request()->routeIs('hasil-tes') ? 'active' : '' }}">
                     <a href="{{ route('hasil-tes') }}">
                         <i class="fas fa-file-medical"></i>
