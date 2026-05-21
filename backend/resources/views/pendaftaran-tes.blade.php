@@ -78,7 +78,7 @@
                                                     <td class="px-4 py-3">
                                                         @if($item->status == 'Diterima')
                                                             <span class="badge badge-success">Diterima</span>
-                                                        @elif($item->status == 'Ditolak')
+                                                        @elseif($item->status == 'Ditolak')
                                                             <span class="badge badge-danger">Ditolak</span>
                                                         @else
                                                             <span class="badge badge-warning text-white">Menunggu</span>

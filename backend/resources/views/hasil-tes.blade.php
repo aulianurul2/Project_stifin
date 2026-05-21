@@ -92,7 +92,7 @@
                                                         </td>
                                                         <td class="px-4 py-3">
                                                             @if($item->status_tes == 'Selesai')
-                                                                <span class="badge bg-success bg-opacity-10 text-success fw-bold px-3 py-2 card-round">
+                                                                <span class="badge bg-success bg-opacity-10  fw-bold px-3 py-2 card-round">
                                                                     <i class="fas fa-check-circle me-1"></i> Tersertifikasi
                                                                 </span>
                                                             @else
@@ -108,23 +108,23 @@
                                                                 <div class="d-flex justify-content-center align-items-center gap-2">
                                                                     <a href="{{ asset('uploads/hasil/' . $item->file_hasil) }}"
                                                                        download="{{ 'Sertifikat_' . $item->nama }}"
-                                                                       class="btn btn-warning btn-sm p-2 text-dark card-round shadow-sm"
+                                                                       span class="btn btn-warning btn-sm p-2 text-dark card-round shadow-sm"
                                                                        style="background-color: #fff3cd; border-color: #ffeeba;"
                                                                        title="Download Sertifikat">
-                                                                        <i class="fas fa-certificate text-warning-700"></i>
+                                                                        <i class="fas fa-file-download text-warning-700"></i>
                                                                     </a>
 
                                                                     <a href="{{ asset('uploads/hasil/' . $item->file_detail) }}"
                                                                        download="{{ 'Detail_Hasil_' . $item->nama }}"
-                                                                       class="btn btn-success btn-sm p-2 text-success card-round shadow-sm"
+                                                                       class="btn btn-success btn-sm p-2  card-round shadow-sm"
                                                                        style="background-color: #d1e7dd; border-color: #badbcc;"
                                                                        title="Download Hasil Lengkap">
                                                                         <i class="fas fa-file-alt"></i>
                                                                     </a>
 
                                                                     <button type="button" onclick="previewFile('{{ asset('uploads/hasil/' . $item->file_hasil) }}')"
-                                                                            class="btn btn-primary btn-sm p-2 text-primary card-round shadow-sm"
-                                                                            style="background-color: #cfe2ff; border-color: #b6d4fe;"
+                                                                            class="btn btn-primary btn-sm p-2  card-round shadow-sm"
+                                                                            style="background-color: #586983; border-color: #636d7c;"
                                                                             title="Preview Sertifikat">
                                                                         <i class="fas fa-eye"></i>
                                                                     </button>
