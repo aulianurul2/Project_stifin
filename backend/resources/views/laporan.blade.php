@@ -181,10 +181,20 @@
                                                     <tr>
                                                         <td class="px-4 py-3 fw-bold text-dark" style="font-size: 0.9rem;">{{ $row->nama }}</td>
                                                         <td class="px-4 py-3">
-                                                            <span class="badge bg-primary bg-opacity-10 text-primary fw-bold text-uppercase border border-primary border-opacity-20 px-2.5 py-1.5 rounded" style="font-size: 10px;">
-                                                                {{ $row->hasil ?? 'N/A' }}
-                                                            </span>
-                                                        </td>
+    @if(isset($row->hasil) && $row->hasil != '')
+        <span class="badge bg-primary text-white fw-bold text-uppercase px-3 py-1.5 rounded shadow-sm" style="font-size: 11px;">
+            {{ $row->hasil }}
+        </span>
+    @elseif(isset($row->status_tes))
+        <span class="badge {{ $row->status_tes == 'Selesai' ? 'bg-success' : 'bg-warning' }} text-white fw-bold text-uppercase px-3 py-1.5 rounded shadow-sm" style="font-size: 11px;">
+            {{ $row->status_tes }}
+        </span>
+    @else
+        <span class="badge bg-secondary text-white fw-bold px-3 py-1.5 rounded" style="font-size: 11px;">
+            N/A
+        </span>
+    @endif
+</td>
                                                         <td class="px-4 py-3 text-end text-muted small">{{ date('d/m/Y', strtotime($row->tanggal)) }}</td>
                                                     </tr>
                                                 @empty

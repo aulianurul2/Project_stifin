@@ -54,12 +54,15 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{id}', [PendaftaranController::class, 'updateStatus'])->name('pendaftaran.update');
     });
 
-    // 4. Jadwal Tes
-Route::prefix('jadwal-tes')->group(function () {
-    Route::get('/', [JadwalController::class, 'index'])->name('jadwal-tes');
-    Route::post('/store', [JadwalController::class, 'store'])->name('jadwal.store'); // Hapus prefix jadwal-tes di sini
-    Route::delete('/{id}', [JadwalController::class, 'destroy'])->name('jadwal.destroy');
-});
+// 4. Jadwal Tes
+    Route::prefix('jadwal-tes')->group(function () {
+        Route::get('/', [JadwalController::class, 'index'])->name('jadwal-tes');
+        Route::post('/store', [JadwalController::class, 'store'])->name('jadwal.store'); 
+        Route::delete('/{id}', [JadwalController::class, 'destroy'])->name('jadwal.destroy');
+        
+        // TAMBAHKAN ROUTE INI (Untuk AJAX Detail Klien)
+        Route::get('/{id}/klien', [JadwalController::class, 'getKlienByJadwal']);
+    });
 
     // 5. Hasil Tes
     Route::prefix('hasil-tes')->group(function () {

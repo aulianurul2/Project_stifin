@@ -52,8 +52,8 @@
                             </ul>
                         </div>
                         <div class="mb-3">
-                            <span class="badge badge-primary px-3 py-2 fs-7 btn-round">
-                                <i class="fas fa-calendar-check me-1"></i> {{ $jadwal->count() }} Slot Diterbitkan
+                            <span class="badge badge-primary px-3 py-2 fs-7 btn-round fw-normal">
+                                <i class="fas fa-calendar-check me-1"></i> {{ $jadwal->total() }} Slot Diterbitkan
                             </span>
                         </div>
                     </div>
@@ -76,28 +76,24 @@
                                 <div class="card-body">
                                     <form action="{{ route('jadwal.store') }}" method="POST">
                                         @csrf
+                                        <input type="hidden" name="kuota" value="1">
+
                                         <div class="row row-demo-grid align-items-end">
-                                            <div class="col-sm-6 col-md-3 mb-3 mb-md-0">
+                                            <div class="col-sm-6 col-md-4 mb-3 mb-md-0">
                                                 <div class="form-group p-0">
                                                     <label class="mb-2 text-uppercase font-weight-bold text-muted fs-8">Tanggal</label>
                                                     <input type="date" name="tanggal" class="form-control" required>
                                                 </div>
                                             </div>
-                                            <div class="col-sm-6 col-md-2 mb-3 mb-md-0">
+                                            <div class="col-sm-6 col-md-3 mb-3 mb-md-0">
                                                 <div class="form-group p-0">
                                                     <label class="mb-2 text-uppercase font-weight-bold text-muted fs-8">Waktu</label>
                                                     <input type="time" name="waktu" class="form-control" required>
                                                 </div>
                                             </div>
-                                            <div class="col-sm-6 col-md-2 mb-3 mb-md-0">
+                                            <div class="col-sm-12 col-md-3 mb-3 mb-md-0">
                                                 <div class="form-group p-0">
-                                                    <label class="mb-2 text-uppercase font-weight-bold text-muted fs-8">Kuota</label>
-                                                    <input type="number" name="kuota" value="1" min="1" class="form-control" required>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-6 col-md-3 mb-3 mb-md-0">
-                                                <div class="form-group p-0">
-                                                    <label class="mb-2 text-uppercase font-weight-bold text-muted fs-8">Lokasi / Metode</label>
+                                                    <label class="mb-2 text-uppercase font-weight-bold text-muted fs-8">Lokasi</label>
                                                     <select name="lokasi" class="form-select form-control">
                                                         <option value="Kantor Cabang">Kantor Cabang</option>
                                                         <option value="Home Visit">Home Visit</option>
@@ -126,7 +122,8 @@
                                                 <tr>
                                                     <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8">Waktu</th>
                                                     <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8">Lokasi</th>
-                                                    <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8">Status & Kuota</th>
+                                                    <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8">Status Slot</th>
+                                                    <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8">Pendaftar</th>
                                                     <th class="px-4 py-3 text-center text-uppercase font-weight-bold text-muted fs-8" style="width: 10%">Aksi</th>
                                                 </tr>
                                             </thead>
@@ -134,24 +131,57 @@
                                                 @forelse($jadwal as $item)
                                                 <tr>
                                                     <td class="px-4 py-3">
-                                                        <div class="fw-bold text-dark fs-6">{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</div>
+                                                        <div class="fw-bold text-dark fs-6">{{ \Carbon\Carbon::parse($item->tanggal)->translatedFormat('d M Y') }}</div>
                                                         <small class="text-muted"><i class="far fa-clock me-1"></i>{{ \Carbon\Carbon::parse($item->waktu)->format('H:i') }} WIB</small>
                                                     </td>
                                                     <td class="px-4 py-3">
                                                         @if($item->lokasi == 'Home Visit')
-                                                            <span class="badge badge-secondary px-3 py-1 btn-round text-uppercase fs-8 fw-bold">
-                                                                <i class="fas fa-house-user me-1"></i> Home Visit
+                                                            <span class="badge badge-secondary px-3 py-1 btn-round text-capitalize fs-8 fw-normal">
+                                                                <i class="fas fa-home me-1"></i> Home Visit
                                                             </span>
                                                         @else
-                                                            <span class="badge badge-info px-3 py-1 btn-round text-uppercase fs-8 fw-bold">
+                                                            <span class="badge badge-info px-3 py-1 btn-round text-capitalize fs-8 fw-normal">
                                                                 <i class="fas fa-building me-1"></i> Kantor Cabang
                                                             </span>
                                                         @endif
                                                     </td>
                                                     <td class="px-4 py-3">
-                                                        <span class="fw-bold {{ $item->status == 'Tersedia' ? 'text-success' : 'text-danger' }}">
-                                                            {{ $item->status }} <span class="text-muted fw-normal">({{ $item->kuota }} Slot)</span>
-                                                        </span>
+                                                        @if(!empty($item->nama_klien) && $item->nama_klien != '')
+                                                            @php
+                                                                $statusRaw = strtolower($item->status);
+                                                                $badgeClass = 'badge-warning'; 
+                                                                if(in_array($statusRaw, ['selesai', 'disetujui', 'diterima', 'sukses'])) {
+                                                                    $badgeClass = 'badge-success';
+                                                                } elseif(in_array($statusRaw, ['batal', 'ditolak'])) {
+                                                                    $badgeClass = 'badge-danger';
+                                                                }
+                                                            @endphp
+                                                            
+                                                            <span class="badge {{ $badgeClass }} px-3 py-1 btn-round text-capitalize fs-8 fw-normal">
+                                                                @if($statusRaw == 'menunggu' || $statusRaw == 'konfirmasi')
+                                                                    Menunggu
+                                                                @else
+                                                                    {{ ucfirst($item->status) }}
+                                                                @endif
+                                                            </span>
+                                                        @else
+                                                            <span class="badge badge-primary px-3 py-1 btn-round text-capitalize fs-8 fw-normal">
+                                                                Tersedia
+                                                            </span>
+                                                        @endif
+                                                    </td>
+                                                    <td class="px-4 py-3">
+                                                        @if(!empty($item->nama_klien) && $item->nama_klien != '')
+                                                            <button type="button" 
+                                                                    class="btn btn-sm btn-label-info btn-round btn-lihat-klien fw-normal"
+                                                                    data-id="{{ $item->id_jadwal }}"
+                                                                    data-waktu="{{ \Carbon\Carbon::parse($item->tanggal)->translatedFormat('d M Y') }} - {{ \Carbon\Carbon::parse($item->waktu)->format('H:i') }} WIB"
+                                                                    data-lokasi="{{ $item->lokasi }}">
+                                                                <i class="fas fa-user me-1"></i> Lihat Detail Klien
+                                                            </button>
+                                                        @else
+                                                            <span class="text-muted italic fs-8">Belum ada pemesan</span>
+                                                        @endif
                                                     </td>
                                                     <td class="px-4 py-3 text-center">
                                                         <form action="{{ route('jadwal.destroy', $item->id_jadwal) }}" method="POST" onsubmit="return confirm('Hapus slot ini?')">
@@ -165,12 +195,24 @@
                                                 </tr>
                                                 @empty
                                                 <tr>
-                                                    <td colspan="4" class="px-4 py-5 text-center text-muted italic">Belum ada slot jadwal yang diterbitkan.</td>
+                                                    <td colspan="5" class="px-4 py-5 text-center text-muted italic">Belum ada slot jadwal yang diterbitkan.</td>
                                                 </tr>
                                                 @endforelse
                                             </tbody>
                                         </table>
                                     </div>
+
+                                    @if($jadwal->hasPages())
+                                        <div class="card-footer d-flex justify-content-between align-items-center bg-white border-top py-3 px-4">
+                                            <div class="text-muted fs-8">
+                                                Menampilkan {{ $jadwal->firstItem() }} sampai {{ $jadwal->lastItem() }} dari {{ $jadwal->total() }} data
+                                            </div>
+                                            <div>
+                                                {{ $jadwal->links('pagination::bootstrap-5') }}
+                                            </div>
+                                        </div>
+                                    @endif
+
                                 </div>
                             </div>
                         </div>
@@ -189,6 +231,50 @@
         </div>
     </div>
 
+    <div class="modal fade" id="modalKlien" tabindex="-1" aria-labelledby="modalKlienLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content card-round border-0 shadow-lg">
+                <div class="modal-header bg-info text-white py-3">
+                    <h5 class="modal-title fw-bold" id="modalKlienLabel">
+                        <i class="fas fa-user me-2"></i> Detail Informasi Klien
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <small class="text-muted text-uppercase d-block fw-bold fs-8">Waktu Pelaksanaan</small>
+                            <span class="fw-bold text-dark fs-6" id="modal-waktu-jadwal">-</span>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted text-uppercase d-block fw-bold fs-8">Lokasi</small>
+                            <span class="badge badge-info px-3 py-1 btn-round text-capitalize fs-8 fw-normal" id="modal-lokasi-jadwal">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive border rounded card-round">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="px-3 py-2 text-muted fs-8 text-uppercase" style="width: 5%">No</th>
+                                    <th class="px-3 py-2 text-muted fs-8 text-uppercase">Nama Klien</th>
+                                    <th class="px-3 py-2 text-muted fs-8 text-uppercase">No. HP / WhatsApp</th>
+                                    <th class="px-3 py-2 text-muted fs-8 text-uppercase">Status</th>
+                                    <th class="px-3 py-2 text-muted fs-8 text-uppercase">Catatan Klien</th>
+                                </tr>
+                            </thead>
+                            <tbody id="container-list-klien">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
+                    <button type="button" class="btn btn-secondary btn-round w-100 fw-bold" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="{{ asset('assets/js/core/jquery-3.7.1.min.js') }}"></script>
     <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
     <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
@@ -197,8 +283,68 @@
 
     <script>
         $(document).ready(function(){
-            // Inisialisasi komponen Tooltip Bootstrap 5
             $('[data-bs-toggle="tooltip"]').tooltip();
+
+            $('.btn-lihat-klien').on('click', function() {
+                var idJadwal = $(this).data('id');
+                var infoWaktu = $(this).data('waktu');
+                var infoLokasi = $(this).data('lokasi');
+                
+                $('#modal-waktu-jadwal').text(infoWaktu);
+                $('#modal-lokasi-jadwal').html('<i class="fas fa-map-marker-alt me-1"></i> ' + infoLokasi);
+                
+                $('#container-list-klien').html('<tr><td colspan="5" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Memuat data pendaftar...</td></tr>');
+                $('#modalKlien').modal('show');
+
+                $.ajax({
+                    url: '/jadwal-tes/' + idJadwal + '/klien',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(data) {
+                        $('#container-list-klien').empty();
+                        
+                        if(data.length === 0) {
+                            $('#container-list-klien').html('<tr><td colspan="5" class="text-center py-4 text-muted italic">Belum ada klien yang memesan slot ini.</td></tr>');
+                            return;
+                        }
+
+                        $.each(data, function(index, item) {
+                            var statusLower = item.status_jadwal.toLowerCase();
+                            var badgeClass = 'badge-warning';
+                            var displayStatus = item.status_jadwal;
+                            
+                            if (['selesai', 'disetujui', 'diterima', 'sukses'].includes(statusLower)) {
+                                badgeClass = 'badge-success';
+                            } else if (['batal', 'ditolak'].includes(statusLower)) {
+                                badgeClass = 'badge-danger';
+                            }
+
+                            if (statusLower === 'menunggu' || statusLower === 'konfirmasi') {
+                                displayStatus = 'Menunggu';
+                            } else {
+                                displayStatus = displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1).toLowerCase();
+                            }
+
+                            var cleanPhone = item.no_hp ? item.no_hp.replace(/[^0-9]/g, '') : '';
+                            var waLink = item.no_hp ? `<a href="https://wa.me/${cleanPhone}" target="_blank" class="text-success fw-semibold"><i class="fab fa-whatsapp me-1"></i> ${item.no_hp}</a>` : '-';
+
+                            var row = `
+                                <tr>
+                                    <td class="px-3 py-2 fw-bold text-muted">${index + 1}</td>
+                                    <td class="px-3 py-2 fw-bold text-dark">${item.nama_klien}</td>
+                                    <td class="px-3 py-2">${waLink}</td>
+                                    <td class="px-3 py-2"><span class="badge ${badgeClass} fw-normal text-capitalize">${displayStatus}</span></td>
+                                    <td class="px-3 py-2 text-muted fs-8 italic">${item.komentar ? item.komentar : '-'}</td>
+                                </tr>
+                            `;
+                            $('#container-list-klien').append(row);
+                        });
+                    },
+                    error: function() {
+                        $('#container-list-klien').html('<tr><td colspan="5" class="text-center py-4 text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Gagal mengambil data klien.</td></tr>');
+                    }
+                });
+            });
         });
     </script>
 </body>

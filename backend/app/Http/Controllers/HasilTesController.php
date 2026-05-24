@@ -11,18 +11,19 @@ class HasilTesController extends Controller
 // Di HasilTesController.php
 public function index(Request $request)
 {
-    $tab = $request->get('tab', 'kelola');
+    $tab = $request->query('tab', 'kelola');
 
     $query = DB::table('hasiltes')
         // Gunakan leftJoin agar data hasiltes tidak hilang jika klien null
         ->leftJoin('klien', 'hasiltes.id_klien', '=', 'klien.id_klien')
-        ->select('hasiltes.*', 'klien.nama', 'klien.no_hp');
+        ->select('hasiltes.*', 'klien.nama', 'klien.no_hp')
+        ->orderBy('hasiltes.id_tes', 'desc');
 
     if ($tab == 'kelola') {
         // Gunakan status 'Proses' sesuai yang di-insert PendaftaranController
         $data = $query->where('hasiltes.status_tes', 'Proses')->get();
     } else {
-        $data = $query->where('hasiltes.status_tes', 'Selesai')->get();
+        $data = $query->where('hasiltes.status_tes', 'Selesai')->paginate(10)->withQueryString();
     }
 
     return view('hasil-tes', compact('data', 'tab'));

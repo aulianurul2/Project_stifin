@@ -13,7 +13,7 @@ class KlienController extends Controller
         $klien = DB::table('klien')
             ->leftJoin('jadwal', 'klien.id_klien', '=', 'jadwal.id_klien')
             ->select('klien.*', 'jadwal.status as status_jadwal')
-            ->get();
+            ->paginate(10);
 
         return view('kelola-klien', compact('klien'));
     }

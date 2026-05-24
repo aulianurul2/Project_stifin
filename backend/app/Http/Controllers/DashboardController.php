@@ -12,14 +12,19 @@ class DashboardController extends Controller
         // 1. Total Klien dari tabel klien
         $totalKlien = DB::table('klien')->count();
         
-        // 2. Pendaftaran: Total semua data di tabel pendaftaran
-        $pendaftaran = DB::table('jadwal')->count(); 
+        // 2. Pendaftaran: Menghitung slot jadwal yang SUDAH diisi oleh klien (bukan slot kosong)
+        $pendaftaran = DB::table('jadwal')
+            ->whereNotNull('nama_klien')
+            ->count(); 
         
         // 3. Hasil Tes: Diambil dari tabel hasiltes yang statusnya 'Selesai'
         $hasilTes = DB::table('hasiltes')->where('status_tes', 'Selesai')->count();
         
-        // 4. Jadwal Terkini: Data di tabel jadwal yang statusnya belum 'Selesai'
-        $jadwalTerkini = DB::table('jadwal')->where('status', '!=', 'Selesai')->count();
+        // 4. Jadwal Terkini: Jadwal aktif yang sudah diisi klien, namun tesnya belum selesai
+        $jadwalTerkini = DB::table('jadwal')
+            ->whereNotNull('nama_klien')
+            ->where('status', '!=', 'Selesai')
+            ->count();
 
         // --- LOGIKA GRAFIK ---
         $grafikData = DB::table('hasiltes')
@@ -33,14 +38,14 @@ class DashboardController extends Controller
             $dataBulanan[] = $grafikData[$i] ?? 0;
         }
 
-        // --- AKTIVITAS TERBARU (BAGIAN YANG DIPERBAIKI) ---
-      // --- AKTIVITAS TERBARU (VERSI PERBAIKAN) ---
-// --- AKTIVITAS TERBARU (BERDASARKAN TABEL JADWAL) ---
-$aktivitasTerbaru = DB::table('jadwal')
-    ->select('nama_klien', 'tanggal', 'status as status_tes')
-    ->orderBy('id_jadwal', 'desc') // Menggunakan id_jadwal sebagai urutan terbaru
-    ->limit(5)
-    ->get();
+        // --- AKTIVITAS TERBARU (PENDAFTARAN MASUK TERKINI) ---
+        // Mengambil 5 slot jadwal terbaru yang sudah diisi oleh klien
+        $aktivitasTerbaru = DB::table('jadwal')
+            ->select('nama_klien', 'tanggal', 'status as status_tes')
+            ->whereNotNull('nama_klien') // Pastikan hanya slot yang ada pendaftarnya
+            ->orderBy('id_jadwal', 'desc') 
+            ->limit(5)
+            ->get();
 
         return view('dashboard', compact(
             'totalKlien', 

@@ -328,7 +328,7 @@
             $statusRaw = strtolower($row->status_tes); 
             $badge = 'badge-warning'; 
             
-            if(in_array($statusRaw, ['selesai', 'konfirmasi', 'disetujui'])) {
+            if(in_array($statusRaw, ['selesai', 'konfirmasi', 'disetujui' , 'diterima'])) {
                 $badge = 'badge-success';
             } elseif(in_array($statusRaw, ['batal', 'ditolak'])) {
                 $badge = 'badge-danger';

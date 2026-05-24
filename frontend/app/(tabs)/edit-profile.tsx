@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
 import axiosInstance from '@/src/api/axiosConfig';
 
 interface ProfileData {
@@ -106,28 +107,45 @@ export default function EditProfile() {
 
   // 2. Kirim Perubahan ke Backend
   const handleSimpan = async () => {
-    if (!formData.nama || !formData.no_hp || !formData.email || !formData.alamat) {
-      Alert.alert("Perhatian", "Nama, No HP, Email, dan Alamat wajib diisi.");
-      return;
-    }
+  if (!formData.nama || !formData.no_hp || !formData.email || !formData.alamat) {
+    Toast.show({
+      type: 'error',
+      text1: 'Perhatian',
+      text2: 'Nama, No HP, Email, dan Alamat wajib diisi.'
+    });
+    return;
+  }
 
-    setLoading(true);
-    try {
-      const response = await axiosInstance.put('/profile/update', formData);
-      if (response.status === 200) {
-        Alert.alert("Sukses", "Data berhasil diperbarui");
-      }
-    } catch (error: any) {
-      console.log("Error Update Profil:", error.response?.data || error.message);
-      if (error.response?.status === 422 && error.response?.data?.errors?.email) {
-        Alert.alert("Gagal", "Email sudah digunakan oleh pengguna lain.");
-      } else {
-        Alert.alert("Gagal", "Terjadi kesalahan saat memperbarui profil.");
-      }
-    } finally {
-      setLoading(false);
+  setLoading(true);
+  try {
+    const response = await axiosInstance.put('/profile/update', formData);
+    if (response.status === 200) {
+      // GANTI ALERT DENGAN TOAST SUKSES
+      Toast.show({
+        type: 'success',
+        text1: 'Sukses',
+        text2: 'Data berhasil diperbarui',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+      
+      // Opsional: kembali ke home setelah 1-2 detik
+      setTimeout(() => router.replace('/home'), 1500);
     }
-  };
+  } catch (error: any) {
+    console.log("Error Update Profil:", error.response?.data || error.message);
+    
+    Toast.show({
+      type: 'error',
+      text1: 'Gagal',
+      text2: error.response?.status === 422 
+        ? 'Email sudah digunakan orang lain.' 
+        : 'Terjadi kesalahan saat memperbarui profil.'
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (fetching) {
     return (

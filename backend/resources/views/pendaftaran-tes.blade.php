@@ -50,9 +50,6 @@
                                 <li class="nav-item"><a href="#">Pendaftaran Tes</a></li>
                             </ul>
                         </div>
-                        <div class="mb-3 text-muted">
-                            Admin: <span class="fw-bold text-dark">{{ Auth::user()->nama }}</span>
-                        </div>
                     </div>
 
                     <div class="row">
@@ -65,6 +62,8 @@
                                                 <tr>
                                                     <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8">Nama</th>
                                                     <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8">No. HP</th>
+                                                    <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8">Jadwal Tes</th>
+                                                    <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8">Lokasi</th>
                                                     <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8">Status</th>
                                                     <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8">Komentar</th>
                                                     <th class="px-4 py-3 text-center text-uppercase font-weight-bold text-muted fs-8" style="width: 15%">Aksi</th>
@@ -75,6 +74,24 @@
                                                 <tr>
                                                     <td class="px-4 py-3 fw-bold text-dark">{{ $item->nama_klien }}</td>
                                                     <td class="px-4 py-3 text-muted">{{ $item->no_hp }}</td>
+                                                    
+                                                    <td class="px-4 py-3 text-dark">
+                                                        <span class="d-block fw-semibold">{{ \Carbon\Carbon::parse($item->tanggal)->translatedFormat('d F Y') }}</span>
+                                                        <small class="text-muted"><i class="far fa-clock me-1"></i>{{ \Carbon\Carbon::parse($item->waktu)->format('H:i') }} WIB</small>
+                                                    </td>
+                                                    
+                                                    <td class="px-4 py-3">
+                                                        @if($item->lokasi == 'Home Visit')
+                                                            <span class="badge badge-secondary px-3 py-1 btn-round text-uppercase fs-8 fw-bold">
+                                                                <i class="fas fa-home me-1"></i> Home Visit
+                                                            </span>
+                                                        @else
+                                                            <span class="badge badge-info px-3 py-1 btn-round text-uppercase fs-8 fw-bold">
+                                                                <i class="fas fa-building me-1"></i> Kantor Cabang
+                                                            </span>
+                                                        @endif
+                                                    </td>
+
                                                     <td class="px-4 py-3">
                                                         @if($item->status == 'Diterima')
                                                             <span class="badge badge-success">Diterima</span>
@@ -84,12 +101,12 @@
                                                             <span class="badge badge-warning text-white">Menunggu</span>
                                                         @endif
                                                     </td>
-                                                    <td class="px-4 py-3 text-muted italic text-truncate" style="max-w-xs: 200px;">
+                                                    <td class="px-4 py-3 text-muted italic text-truncate" style="max-width: 200px;">
                                                         {{ $item->komentar ?? 'Tidak ada komen' }}
                                                     </td>
                                                     <td class="px-4 py-3 text-center">
                                                         <button type="button"
-                                                                onclick="openModalStatus('{{ $item->id_jadwal }}', '{{ $item->nama_klien }}', '{{ $item->status ?? 'Menunggu' }}', '{{ $item->komentar ?? '' }}')"
+                                                                onclick="openModalStatus('{{ $item->id_jadwal }}', '{{ $item->nama_klien }}', '{{ ($item->status == 'Diterima' || $item->status == 'Ditolak') ? $item->status : 'Menunggu' }}', '{{ $item->komentar ?? '' }}')"
                                                                 class="btn btn-sm btn-light-primary btn-round fw-bold px-3">
                                                             <i class="fas fa-edit me-1"></i> Update Status
                                                         </button>
@@ -97,12 +114,15 @@
                                                 </tr>
                                                 @empty
                                                 <tr>
-                                                    <td colspan="5" class="px-4 py-5 text-center text-muted italic">Belum ada data pendaftaran.</td>
+                                                    <td colspan="7" class="px-4 py-5 text-center text-muted italic">Belum ada data pendaftaran.</td>
                                                 </tr>
                                                 @endforelse
                                             </tbody>
                                         </table>
                                     </div>
+                                    <div class="card-footer d-flex justify-content-center">
+    {{ $pendaftaran->links('pagination::bootstrap-5') }}
+</div>
                                 </div>
                             </div>
                         </div>
@@ -162,23 +182,16 @@
     <script src="{{ asset('assets/js/kaiadmin.min.js') }}"></script>
 
     <script>
-        // Inisialisasi Instance Modal Bootstrap 5
         const modalStatusBS = new bootstrap.Modal(document.getElementById('modalStatus'));
 
-        // Fungsi Trigger Modal menggunakan Native JavaScript (Menggantikan AlpineJS)
         function openModalStatus(id, nama, status, komentar) {
-            // 1. Set informasi nama klien di judul modal
             document.getElementById('modalNama').innerText = nama;
-
-            // 2. Set isi value input sesuai data row yang dipilih
             document.getElementById('inputStatus').value = status;
             document.getElementById('inputKomentar').value = komentar;
 
-            // 3. Set Route Action Form secara dinamis
             const baseUrl = "{{ url('pendaftaran-tes') }}";
             document.getElementById('formStatus').action = `${baseUrl}/${id}`;
 
-            // 4. Tampilkan Modal ke layar
             modalStatusBS.show();
         }
     </script>

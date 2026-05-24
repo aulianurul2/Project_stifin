@@ -108,11 +108,12 @@ export default function FormPendaftaran() {
     setLoading(true);
 
     try {
+      const jadwalIdParsed = id_jadwal ? parseInt(id_jadwal as string, 10) : null;
       const response = await axiosInstance.post(
         '/pendaftaran/submit',
         {
-          id_jadwal: id_jadwal,
-          nama_lengkap: formData.nama,
+          id_jadwal: jadwalIdParsed,
+          nama_klien: formData.nama,
           no_hp: formData.no_hp,
           email: formData.email,
           alamat: formData.alamat,
@@ -138,15 +139,24 @@ export default function FormPendaftaran() {
           router.replace('/riwayat');
         }, 300);
       }
-    } catch (error) {
-      console.log(error);
-      Alert.alert(
-        'Gagal',
-        'Terjadi kesalahan saat mengirim data.'
-      );
-    } finally {
-      setLoading(false);
-    }
+    } catch (error: any) {
+  console.log("=== ERROR SUBMIT ===");
+  if (error.response) {
+    // Backend merespons dengan status code di luar 2xx
+    console.log("Data Error:", error.response.data);
+    console.log("Status Error:", error.response.status);
+    
+    // Tampilkan pesan error dari backend jika ada
+    Alert.alert(
+      'Gagal',
+      error.response.data.message || 'Terjadi kesalahan pada validasi data.'
+    );
+  } else {
+    // Masalah jaringan atau tidak ada respon dari backend
+    console.log("Pesan Error:", error.message);
+    Alert.alert('Gagal', 'Tidak dapat terhubung ke server.');
+  }
+}
   };
 
   if (fetchingData) {

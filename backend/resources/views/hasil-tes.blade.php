@@ -142,7 +142,13 @@
                                                 @endforelse
                                             </tbody>
                                         </table>
+                                                                        @if($tab == 'riwayat')
+    <div class="card-footer d-flex justify-content-center border-0 pt-3">
+        {{ $data->links('pagination::bootstrap-5') }}
+    </div>
+@endif
                                     </div>
+    
                                 </div>
                             </div>
                         </div>

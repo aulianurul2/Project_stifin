@@ -140,12 +140,24 @@
                                                 </tr>
                                                 @empty
                                                 <tr>
-                                                    <td colspan="4" class="text-center">Belum ada data klien.</td>
+                                                    <td colspan="4" class="text-center text-muted italic">Belum ada data klien.</td>
                                                 </tr>
                                                 @endforelse
                                             </tbody>
                                         </table>
                                     </div>
+
+                                    @if($klien->hasPages())
+                                        <div class="card-footer d-flex justify-content-between align-items-center bg-white border-top py-3 px-0">
+                                            <div class="text-muted small">
+                                                Menampilkan {{ $klien->firstItem() }} sampai {{ $klien->lastItem() }} dari {{ $klien->total() }} klien
+                                            </div>
+                                            <div>
+                                                {{ $klien->links('pagination::bootstrap-5') }}
+                                            </div>
+                                        </div>
+                                    @endif
+
                                 </div>
                             </div>
                         </div>

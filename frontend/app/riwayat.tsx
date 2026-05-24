@@ -17,7 +17,7 @@ import axiosInstance from '@/src/api/axiosConfig';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 interface RiwayatItem {
-  id: number;
+  id_jadwal: number; 
   tanggal: string;
   jam?: string;
   waktu?: string;
@@ -70,22 +70,43 @@ export default function RiwayatJadwal() {
     return nilaiJam;
   };
 
+  // FIX: Mengamankan mapping status agar seragam dengan data backend
   const dapatkanStatusValid = (item: RiwayatItem): string => {
-    return item.status_tes || item.status || "Menunggu";
+    const statusUtama = item.status ? item.status.trim() : "";
+    const statusHasil = item.status_tes ? item.status_tes.trim() : "";
+
+    // Jika pendaftaran ditolak atau masih menunggu, pakai status dari tabel jadwal
+    if (statusUtama === "Ditolak") return "Ditolak";
+    if (statusUtama === "Menunggu" || statusUtama === "Konfirmasi") return "Menunggu";
+
+    // Jika sudah diterima admin, tampilkan status progres tesnya
+    if (statusHasil) {
+      if (statusHasil.toLowerCase() === 'proses') return "Diproses";
+      if (statusHasil.toLowerCase() === 'selesai') return "Selesai";
+      return statusHasil;
+    }
+
+    return statusUtama || "Menunggu";
   };
 
+  // FIX: Sinkronisasi warna hex pembacaan status baru
   const warnaStatus = (status: string) => {
     const s = status.toLowerCase();
-    if (s === "selesai") return "#16a34a";
-    if (s === "menunggu" || s === "proses") return "#eab308";
-    if (s === "ditolak") return "#dc2626";
+    if (s === "selesai") return "#16a34a"; // Hijau
+    if (s === "menunggu" || s === "konfirmasi") return "#eab308"; // Kuning
+    if (s === "diproses" || s === "proses" || s === "diterima") return "#2563eb"; // Biru
+    if (s === "ditolak") return "#dc2626"; // Merah
+    if (s === "dibatalkan") return "#64748b"; // Abu-abu
     return "#2563eb";
   };
 
   const handleRowPress = (item: RiwayatItem) => {
+    console.log("ITEM =", item);
+    
     router.push({
       pathname: '/hasil-tes',
       params: {
+        id_jadwal: item.id_jadwal.toString(),
         tanggal: item.tanggal || '',
         jam: dapatkanJamValid(item) || '',
         file_hasil: item.file_hasil ? item.file_hasil : 'null',
@@ -112,7 +133,6 @@ export default function RiwayatJadwal() {
           <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 40 }} />
         ) : riwayat.length === 0 ? (
           
-          /* Tampilan Elegan & Interaktif Saat Riwayat Kosong */
           <View style={styles.emptyContainer}>
             <View style={styles.iconCircleBackground}>
               <Ionicons name="document-text-outline" size={48} color="#94a3b8" />
@@ -133,7 +153,6 @@ export default function RiwayatJadwal() {
           </View>
 
         ) : (
-          /* Tampilan Tabel Jika Data Riwayat Ada */
           <View style={styles.tableContainer}>
             <View style={styles.tableHeaderRow}>
               <Text style={[styles.th, { flex: 2.5 }]}>Jadwal Tes</Text>
@@ -147,7 +166,7 @@ export default function RiwayatJadwal() {
 
               return (
                 <TouchableOpacity
-                  key={item.id || index}
+                  key={item.id_jadwal || index}
                   style={styles.tableRow}
                   onPress={() => handleRowPress(item)}
                   activeOpacity={0.7}
@@ -185,57 +204,12 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: 'bold', color: '#0f172a' },
   subTitle: { fontSize: 14, color: '#64748b', marginTop: 4 },
   content: { padding: 20, flexGrow: 1 },
-  
-  // Styles Baru untuk Empty State
-  emptyContainer: { 
-    flex: 1, 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    paddingHorizontal: 20,
-    marginTop: 60
-  },
-  iconCircleBackground: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#f1f5f9',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  emptyTitle: { 
-    fontSize: 18, 
-    fontWeight: '700', 
-    color: '#1e293b', 
-    marginBottom: 8 
-  },
-  emptySubtitle: { 
-    fontSize: 13, 
-    color: '#94a3b8', 
-    textAlign: 'center', 
-    lineHeight: 20,
-    marginBottom: 25
-  },
-  emptyButton: {
-    flexDirection: 'row',
-    backgroundColor: '#2563eb',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#2563eb',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-  },
-  emptyButtonText: { 
-    color: '#ffffff', 
-    fontWeight: '700', 
-    fontSize: 14 
-  },
-
-  // Styles Tabel Eksisting
+  emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, marginTop: 60 },
+  iconCircleBackground: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#1e293b', marginBottom: 8 },
+  emptySubtitle: { fontSize: 13, color: '#94a3b8', textAlign: 'center', lineHeight: 20, marginBottom: 25 },
+  emptyButton: { flexDirection: 'row', backgroundColor: '#2563eb', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12, alignItems: 'center', elevation: 2, shadowColor: '#2563eb', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4 },
+  emptyButtonText: { color: '#ffffff', fontWeight: '700', fontSize: 14 },
   tableContainer: { backgroundColor: '#ffffff', borderRadius: 16, overflow: 'hidden', elevation: 2, shadowColor: '#0f172a', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8 },
   tableHeaderRow: { flexDirection: 'row', backgroundColor: '#f1f5f9', paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderColor: '#e2e8f0' } as ViewStyle,
   th: { fontSize: 13, fontWeight: '700', color: '#475569' },
