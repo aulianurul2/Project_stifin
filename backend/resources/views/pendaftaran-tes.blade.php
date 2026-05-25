@@ -70,62 +70,67 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @forelse($pendaftaran as $item)
-                                                <tr>
-                                                    <td class="px-4 py-3 fw-bold text-dark">{{ $item->nama_klien }}</td>
-                                                    <td class="px-4 py-3 text-muted">{{ $item->no_hp }}</td>
-                                                    
-                                                    <td class="px-4 py-3 text-dark">
-                                                        <span class="d-block fw-semibold">{{ \Carbon\Carbon::parse($item->tanggal)->translatedFormat('d F Y') }}</span>
-                                                        <small class="text-muted"><i class="far fa-clock me-1"></i>{{ \Carbon\Carbon::parse($item->waktu)->format('H:i') }} WIB</small>
-                                                    </td>
-                                                    
-                                                    <td class="px-4 py-3">
-                                                        @if($item->lokasi == 'Home Visit')
-                                                            <span class="badge badge-secondary px-3 py-1 btn-round text-uppercase fs-8 fw-bold">
-                                                                <i class="fas fa-home me-1"></i> Home Visit
-                                                            </span>
-                                                        @else
-                                                            <span class="badge badge-info px-3 py-1 btn-round text-uppercase fs-8 fw-bold">
-                                                                <i class="fas fa-building me-1"></i> Kantor Cabang
-                                                            </span>
-                                                        @endif
-                                                    </td>
+    @forelse($pendaftaran as $item)
+    <tr>
+        <td class="px-4 py-3 fw-bold text-dark">{{ $item->nama_klien }}</td>
+        <td class="px-4 py-3 text-muted">{{ $item->no_hp }}</td>
+        
+        <td class="px-4 py-3 text-dark">
+            <span class="d-block fw-semibold">{{ \Carbon\Carbon::parse($item->tanggal)->translatedFormat('d F Y') }}</span>
+            <small class="text-muted"><i class="far fa-clock me-1"></i>{{ \Carbon\Carbon::parse($item->waktu)->format('H:i') }} WIB</small>
+        </td>
+        
+        <td class="px-4 py-3">
+            @if($item->lokasi == 'Home Visit')
+                <span class="badge badge-secondary px-3 py-1 btn-round text-uppercase fs-8 fw-bold">
+                    <i class="fas fa-home me-1"></i> Home Visit
+                </span>
+            @else
+                <span class="badge badge-info px-3 py-1 btn-round text-uppercase fs-8 fw-bold">
+                    <i class="fas fa-building me-1"></i> Kantor Cabang
+                </span>
+            @endif
+        </td>
 
-                                                    <td class="px-4 py-3">
-                                                        @if($item->status == 'Diterima')
-                                                            <span class="badge badge-success">Diterima</span>
-                                                        @elseif($item->status == 'Ditolak')
-                                                            <span class="badge badge-danger">Ditolak</span>
-                                                        @else
-                                                            <span class="badge badge-warning text-white">Menunggu</span>
-                                                        @endif
-                                                    </td>
-                                                    <td class="px-4 py-3 text-muted italic text-truncate" style="max-width: 200px;">
-                                                        {{ $item->komentar ?? 'Tidak ada komen' }}
-                                                    </td>
-                                                    <td class="px-4 py-3 text-center">
-                                                        <div class="d-flex justify-content-center gap-2">
-        <button type="button"
-                onclick="openModalView('{{ $item->nama_klien }}', '{{ $item->no_hp }}', '{{ $item->email }}', '{{ $item->tanggal_lahir }}', '{{ $item->jenis_kelamin }}', '{{ $item->golongan_darah }}', '{{ $item->institusi ?? '-' }}', '{{ $item->sosmed ?? '-' }}', '{{ $item->domisili ?? '-' }}', '{{ $item->alamat }}')"
-                class="btn btn-sm btn-info btn-round fw-bold px-3">
-            <i class="fas fa-eye me-1"></i> View
-        </button>
+        <td class="px-4 py-3">
+            @if($item->status == 'Diterima')
+                <span class="badge badge-success">Diterima</span>
+            @elseif($item->status == 'Ditolak')
+                <span class="badge badge-danger">Ditolak</span>
+            @else
+                <span class="badge badge-warning text-white">Menunggu</span>
+            @endif
+        </td>
+        <td class="px-4 py-3 text-muted italic text-truncate" style="max-width: 200px;">
+            {{ $item->komentar ?? 'Tidak ada komen' }}
+        </td>
+        
+        <td class="px-4 py-3 text-center">
+            <div class="form-button-action">
+                <button type="button" 
+                        class="btn btn-link btn-info btn-lg"
+                        data-bs-toggle="tooltip"
+                        title="Lihat Detail Klien"
+                        onclick="openModalView('{{ $item->nama_klien }}', '{{ $item->no_hp }}', '{{ $item->email }}', '{{ $item->tanggal_lahir }}', '{{ $item->jenis_kelamin }}', '{{ $item->golongan_darah }}', '{{ $item->institusi ?? '-' }}', '{{ $item->sosmed ?? '-' }}', '{{ $item->domisili ?? '-' }}', '{{ $item->alamat }}')">
+                    <i class="fa fa-eye"></i>
+                </button>
 
-        <button type="button"
-                onclick="openModalStatus('{{ $item->id_jadwal }}', '{{ $item->nama_klien }}', '{{ ($item->status == 'Diterima' || $item->status == 'Ditolak') ? $item->status : 'Menunggu' }}', '{{ $item->komentar ?? '' }}')"
-                class="btn btn-sm btn-light-primary btn-round fw-bold px-3">
-            <i class="fas fa-edit me-1"></i> Update Status
-        </button>
-    </div>
-                                                    </td>
-                                                </tr>
-                                                @empty
-                                                <tr>
-                                                    <td colspan="7" class="px-4 py-5 text-center text-muted italic">Belum ada data pendaftaran.</td>
-                                                </tr>
-                                                @endforelse
-                                            </tbody>
+                <button type="button" 
+                        class="btn btn-link btn-primary btn-lg"
+                        data-bs-toggle="tooltip"
+                        title="Ubah Status Pendaftaran"
+                        onclick="openModalStatus('{{ $item->id_jadwal }}', '{{ $item->nama_klien }}', '{{ ($item->status == 'Diterima' || $item->status == 'Ditolak') ? $item->status : 'Menunggu' }}', '{{ $item->komentar ?? '' }}')">
+                    <i class="fa fa-edit"></i>
+                </button>
+            </div>
+        </td>
+    </tr>
+    @empty
+    <tr>
+        <td colspan="7" class="px-4 py-5 text-center text-muted italic">Belum ada data pendaftaran.</td>
+    </tr>
+    @endforelse
+</tbody>
                                         </table>
                                     </div>
                                     <div class="card-footer d-flex justify-content-center">

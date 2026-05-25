@@ -234,10 +234,7 @@ public function updateStatus(Request $request, $id)
     }
 
     // WAJIB: Gunakan json response agar AJAX Anda membaca blok `success` dengan benar
-    return response()->json([
-        'success' => true,
-        'message' => 'Status berhasil diperbarui dan data telah dibersihkan.'
-    ], 200);
+  return redirect()->back()->with('success', 'Status berhasil diperbarui dan data telah dibersihkan.');
 }
     // =======================================================
     // PERBAIKAN LOGIKA: API PEMBATALAN JADWAL DARI SISI KLIEN
