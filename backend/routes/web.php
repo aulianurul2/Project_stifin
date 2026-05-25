@@ -62,6 +62,7 @@ Route::middleware(['auth'])->group(function () {
         
         // TAMBAHKAN ROUTE INI (Untuk AJAX Detail Klien)
         Route::get('/{id}/klien', [JadwalController::class, 'getKlienByJadwal']);
+        Route::put('/{id}/update-status', [JadwalController::class, 'updateStatus'])->name('jadwal.updateStatus');
     });
 
     // 5. Hasil Tes

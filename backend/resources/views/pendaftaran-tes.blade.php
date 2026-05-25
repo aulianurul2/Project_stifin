@@ -105,11 +105,19 @@
                                                         {{ $item->komentar ?? 'Tidak ada komen' }}
                                                     </td>
                                                     <td class="px-4 py-3 text-center">
-                                                        <button type="button"
-                                                                onclick="openModalStatus('{{ $item->id_jadwal }}', '{{ $item->nama_klien }}', '{{ ($item->status == 'Diterima' || $item->status == 'Ditolak') ? $item->status : 'Menunggu' }}', '{{ $item->komentar ?? '' }}')"
-                                                                class="btn btn-sm btn-light-primary btn-round fw-bold px-3">
-                                                            <i class="fas fa-edit me-1"></i> Update Status
-                                                        </button>
+                                                        <div class="d-flex justify-content-center gap-2">
+        <button type="button"
+                onclick="openModalView('{{ $item->nama_klien }}', '{{ $item->no_hp }}', '{{ $item->email }}', '{{ $item->tanggal_lahir }}', '{{ $item->jenis_kelamin }}', '{{ $item->golongan_darah }}', '{{ $item->institusi ?? '-' }}', '{{ $item->sosmed ?? '-' }}', '{{ $item->domisili ?? '-' }}', '{{ $item->alamat }}')"
+                class="btn btn-sm btn-info btn-round fw-bold px-3">
+            <i class="fas fa-eye me-1"></i> View
+        </button>
+
+        <button type="button"
+                onclick="openModalStatus('{{ $item->id_jadwal }}', '{{ $item->nama_klien }}', '{{ ($item->status == 'Diterima' || $item->status == 'Ditolak') ? $item->status : 'Menunggu' }}', '{{ $item->komentar ?? '' }}')"
+                class="btn btn-sm btn-light-primary btn-round fw-bold px-3">
+            <i class="fas fa-edit me-1"></i> Update Status
+        </button>
+    </div>
                                                     </td>
                                                 </tr>
                                                 @empty
@@ -140,7 +148,68 @@
             </footer>
         </div>
     </div>
+    <div class="modal fade" id="modalView" tabindex="-1" aria-labelledby="modalViewLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content card-round">
+            <div class="modal-header bg-light border-bottom-0">
+                <h5 class="modal-title fw-bold" id="modalViewLabel">
+                    <i class="fas fa-user-circle text-info me-2"></i>Detail Pendaftaran Klien
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <h6 class="fw-bold text-info border-bottom pb-2 mb-3">1. DATA PERSONAL</h6>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small text-uppercase fw-bold mb-1">Nama Lengkap</label>
+                        <p id="viewNama" class="fw-bold text-dark fs-6 mb-0">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small text-uppercase fw-bold mb-1">Nomor WhatsApp</label>
+                        <p id="viewNoHp" class="fw-semibold text-dark mb-0">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small text-uppercase fw-bold mb-1">Email</label>
+                        <p id="viewEmail" class="text-dark mb-0">-</p>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="text-muted small text-uppercase fw-bold mb-1">Tanggal Lahir</label>
+                        <p id="viewTglLahir" class="text-dark mb-0">-</p>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="text-muted small text-uppercase fw-bold mb-1">Gol. Darah / JK</label>
+                        <p id="viewGoldarJK" class="text-dark mb-0">-</p>
+                    </div>
 
+                    <div class="col-md-12 mt-4">
+                        <h6 class="fw-bold text-info border-bottom pb-2 mb-3">2. DATA TAMBAHAN</h6>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small text-uppercase fw-bold mb-1">Institusi / Pekerjaan</label>
+                        <p id="viewInstitusi" class="text-dark mb-0">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small text-uppercase fw-bold mb-1">Username Sosmed</label>
+                        <p id="viewSosmed" class="text-dark mb-0">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small text-uppercase fw-bold mb-1">Kota Domisili</label>
+                        <p id="viewDomisili" class="text-dark mb-0">-</p>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="text-muted small text-uppercase fw-bold mb-1">Alamat Lengkap</label>
+                        <p id="viewAlamat" class="text-dark bg-light p-3 rounded mb-0" style="white-space: pre-line;">-</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 bg-light-gradient">
+                <button type="button" class="btn btn-secondary btn-round px-4" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
     <div class="modal fade" id="modalStatus" tabindex="-1" aria-labelledby="modalStatusLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content card-round">
@@ -182,7 +251,27 @@
     <script src="{{ asset('assets/js/kaiadmin.min.js') }}"></script>
 
     <script>
+        const modalViewBS = new bootstrap.Modal(document.getElementById('modalView'));
         const modalStatusBS = new bootstrap.Modal(document.getElementById('modalStatus'));
+
+        function openModalView(nama, noHp, email, tglLahir, jk, goldar, institusi, sosmed, domisili, alamat) {
+    // Format visual Jenis Kelamin
+    const jkText = jk === 'L' ? 'Laki-laki' : (jk === 'P' ? 'Perempuan' : jk);
+    
+    // Terapkan data ke teks elemen modal
+    document.getElementById('viewNama').innerText = nama;
+    document.getElementById('viewNoHp').innerText = noHp;
+    document.getElementById('viewEmail').innerText = email;
+    document.getElementById('viewTglLahir').innerText = tglLahir;
+    document.getElementById('viewGoldarJK').innerText = `${goldar} / ${jkText}`;
+    document.getElementById('viewInstitusi').innerText = institusi;
+    document.getElementById('viewSosmed').innerText = sosmed;
+    document.getElementById('viewDomisili').innerText = domisili;
+    document.getElementById('viewAlamat').innerText = alamat;
+
+    // Tampilkan modal detail
+    modalViewBS.show();
+}
 
         function openModalStatus(id, nama, status, komentar) {
             document.getElementById('modalNama').innerText = nama;

@@ -18,48 +18,62 @@ class PendaftaranController extends Controller
     }
 
     // API untuk Submit Pendaftaran dari React Native
-    public function storeAPI(Request $request)
-    {
-        $request->validate([
-            'id_jadwal' => 'required',
-            'nama_klien' => 'required',
-            'no_hp' => 'required',
-            'email' => 'required|email',
-            'alamat' => 'required',
+   public function storeAPI(Request $request)
+{
+    // 1. Tambahkan field baru ke dalam validasi (gunakan 'nullable' agar tidak crash jika kosong)
+    $request->validate([
+        'id_jadwal'      => 'required',
+        'nama_klien'     => 'required',
+        'no_hp'          => 'required',
+        'email'          => 'required|email',
+        'tanggal_lahir'  => 'nullable|date',
+        'jenis_kelamin'  => 'nullable|string',
+        'golongan_darah' => 'nullable|string',
+        'domisili'       => 'nullable|string',
+        'institusi'      => 'nullable|string',
+        'sosmed'         => 'nullable|string',
+        'alamat'         => 'required',
+    ]);
+
+    $user = $request->user();
+
+    $klien = DB::table('klien')
+        ->where('id_user', $user->id_user)
+        ->first();
+
+    if (!$klien) {
+        return response()->json([
+            'message' => 'Data klien tidak ditemukan'
+        ], 404);
+    }
+
+    // Ambil kuota jadwal saat ini untuk memastikan slot masih ada
+    $jadwal = DB::table('jadwal')->where('id_jadwal', $request->id_jadwal)->first();
+    if (!$jadwal || $jadwal->kuota <= 0) {
+        return response()->json([
+            'message' => 'Slot kuota untuk jadwal ini sudah penuh'
+        ], 400);
+    }
+
+    // 2. Masukkan semua variabel baru ke dalam proses update database
+    $update = DB::table('jadwal')
+        ->where('id_jadwal', $request->id_jadwal)
+        ->update([
+            'id_klien'       => $klien->id_klien, 
+            'nama_klien'     => $request->nama_klien,
+            'no_hp'          => $request->no_hp,
+            'email'          => $request->email,
+            'tanggal_lahir'  => $request->tanggal_lahir,  // <-- Ditambahkan
+            'jenis_kelamin'  => $request->jenis_kelamin,  // <-- Ditambahkan
+            'golongan_darah' => $request->golongan_darah, // <-- Ditambahkan
+            'domisili'       => $request->domisili,       // <-- Ditambahkan
+            'institusi'      => $request->institusi,      // <-- Ditambahkan
+            'sosmed'         => $request->sosmed,         // <-- Ditambahkan
+            'alamat'         => $request->alamat,
+            'status'         => 'Menunggu',
+            'kuota'          => $jadwal->kuota - 1, 
+            'updated_at'     => now(),
         ]);
-
-        $user = $request->user();
-
-        $klien = DB::table('klien')
-            ->where('id_user', $user->id_user)
-            ->first();
-
-        if (!$klien) {
-            return response()->json([
-                'message' => 'Data klien tidak ditemukan'
-            ], 404);
-        }
-
-        // Ambil kuota jadwal saat ini untuk memastikan slot masih ada
-        $jadwal = DB::table('jadwal')->where('id_jadwal', $request->id_jadwal)->first();
-        if (!$jadwal || $jadwal->kuota <= 0) {
-            return response()->json([
-                'message' => 'Slot kuota untuk jadwal ini sudah penuh'
-            ], 400);
-        }
-
-        $update = DB::table('jadwal')
-            ->where('id_jadwal', $request->id_jadwal)
-            ->update([
-                'id_klien'   => $klien->id_klien, 
-                'nama_klien' => $request->nama_klien,
-                'no_hp'      => $request->no_hp,
-                'email'      => $request->email,
-                'alamat'     => $request->alamat,
-                'status'     => 'Menunggu',
-                'kuota'      => $jadwal->kuota - 1, // Kurangi kuota saat mendaftar
-                'updated_at' => now(),
-            ]);
 
         if ($update) {
             return response()->json([
@@ -73,31 +87,22 @@ class PendaftaranController extends Controller
     }
 
     // API untuk mengambil Riwayat di React Native
-    public function getRiwayat(Request $request)
-    {
-        $user = $request->user();
+   public function getRiwayat(Request $request)
+{
+    $user = $request->user();
+    $klien = DB::table('klien')->where('id_user', $user->id_user)->first();
 
-        $klien = DB::table('klien')
-            ->where('id_user', $user->id_user)
-            ->first();
+    if (!$klien) return response()->json([]);
 
-        if (!$klien) {
-            return response()->json([]);
-        }
+    // Query ini sekarang akan menampilkan semua riwayat karena id_klien tidak dihapus
+    $riwayat = DB::table('jadwal')
+        ->leftJoin('hasiltes', 'jadwal.id_jadwal', '=', 'hasiltes.id_jadwal')
+        ->select('jadwal.*', 'hasiltes.status_tes', 'hasiltes.file_hasil', 'hasiltes.file_detail')
+        ->where('jadwal.id_klien', $klien->id_klien) // Kunci agar user melihat riwayatnya sendiri
+        ->orderBy('jadwal.updated_at', 'desc')
+        ->get();
 
-        $riwayat = DB::table('jadwal')
-            ->leftJoin('hasiltes', 'jadwal.id_jadwal', '=', 'hasiltes.id_jadwal')
-            ->select(
-                'jadwal.*',
-                'hasiltes.status_tes',
-                'hasiltes.file_hasil',
-                'hasiltes.file_detail'
-            )
-            ->where('jadwal.id_klien', $klien->id_klien)
-            ->orderBy('jadwal.updated_at', 'desc')
-            ->get();
-
-        return response()->json($riwayat);
+    return response()->json($riwayat);
     }
 
     public function hasilTesSaya(Request $request)
@@ -130,80 +135,110 @@ class PendaftaranController extends Controller
     }
 
     // Update Status dari Dashboard Web Admin
-    public function updateStatus(Request $request, $id)
-    {
-        $request->validate([
-            'status' => 'required',
-            'komentar' => 'nullable|string'
+public function updateStatus(Request $request, $id)
+{
+    $request->validate([
+        'status' => 'required',
+        'komentar' => 'nullable|string'
+    ]);
+
+    // AMAN: Ubah input menjadi huruf kecil semua dan hapus spasi tak terlihat
+    $statusInput = strtolower(trim($request->status));
+
+    $jadwalLama = DB::table('jadwal')->where('id_jadwal', $id)->first();
+
+    if (!$jadwalLama) {
+        return response()->json(['message' => 'Data jadwal tidak ditemukan'], 404);
+    }
+
+    // 1. JIKA ADMIN MENOLAK PENDAFTARAN
+    if ($statusInput == 'ditolak') {
+        $kuotaBaru = ($jadwalLama->status == 'Ditolak') ? $jadwalLama->kuota : $jadwalLama->kuota + 1;
+
+        DB::table('jadwal')->where('id_jadwal', $id)->update([
+            'status' => 'Ditolak',
+            'komentar' => $request->komentar,
+            'kuota' => $kuotaBaru,
+            'updated_at' => now(),
         ]);
 
-        $jadwalLama = DB::table('jadwal')->where('id_jadwal', $id)->first();
+        DB::table('hasiltes')->where('id_jadwal', $id)->delete();
 
+    // 2. JIKA ADMIN MEMILIH "BUKA KEMBALI" (Status dikirim: 'Tersedia' atau 'tersedia')
+    } else if ($statusInput == 'tersedia') {
+
+
+        DB::table('jadwal')->where('id_jadwal', $id)->update([
+            'id_klien'       => null,
+            'nama_klien'     => null,
+            'no_hp'          => null,
+            'email'          => null,
+            'alamat'         => null,
+            'tanggal_lahir'  => null, 
+            'jenis_kelamin'  => null,
+            'golongan_darah' => null,
+            'domisili'       => null,
+            'institusi'      => null,
+            'sosmed'         => null,
+            'status'         => 'Tersedia', // Simpan string asli ke DB
+            'komentar'       => null,
+            'kuota'          => 1,
+            'updated_at'     => now()
+        ]);
+
+
+        DB::table('hasiltes')->where('id_jadwal', $id)->delete();
+
+    // 3. UNTUK STATUS LAINNYA
+    } else {
         DB::table('jadwal')->where('id_jadwal', $id)->update([
             'status' => $request->status,
             'komentar' => $request->komentar,
             'updated_at' => now(),
         ]);
-
-        // LOGIKA BARU JIKA ADMIN MENOLAK PENDAFTARAN DI WEB
-        if ($request->status == 'Ditolak') {
-            // Kembalikan kuota dan kosongkan data pendaftaran karena ditolak
-            DB::table('jadwal')->where('id_jadwal', $id)->update([
-                'id_klien'   => null,
-                'nama_klien' => null,
-                'no_hp'      => null,
-                'email'      => null,
-                'alamat'     => null,
-                'status'     => 'Tersedia',
-                'kuota'      => $jadwalLama->kuota + 1,
-                'updated_at' => now(),
-            ]);
-
-            // Hapus record di hasiltes jika ada
-            DB::table('hasiltes')->where('id_jadwal', $id)->delete();
-        }
-
-        if ($request->status == 'Diterima') {
-            $jadwal = DB::table('jadwal')->where('id_jadwal', $id)->first();
-
-            $klien = DB::table('klien')
-                ->where('id_klien', $jadwal->id_klien)
-                ->first();
-            
-            if (!$klien) {
-                $id_klien = DB::table('klien')->insertGetId([
-                    'nama' => $jadwal->nama_klien,
-                    'no_hp' => $jadwal->no_hp,
-                    'email' => $jadwal->email,
-                    'alamat' => $jadwal->alamat,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            } else {
-                $id_klien = $klien->id_klien;
-            }
-
-            $exists = DB::table('hasiltes')->where('id_jadwal', $id)->exists();
-
-            if (!$exists) {
-                DB::table('hasiltes')->insert([
-                    'id_jadwal'  => $id,
-                    'id_klien'   => $id_klien, 
-                    'status_tes' => 'Proses',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            } else {
-                DB::table('hasiltes')->where('id_jadwal', $id)->update([
-                    'status_tes' => 'Proses',
-                    'updated_at' => now()
-                ]);
-            }
-        }
-
-        return redirect()->back()->with('success', 'Status pendaftaran berhasil diperbarui');
     }
 
+    // 4. JIKA STATUS DITERIMA
+    if ($request->status == 'Diterima') {
+        $klien = DB::table('klien')->where('id_klien', $jadwalLama->id_klien)->first();
+        
+        if (!$klien) {
+            $id_klien = DB::table('klien')->insertGetId([
+                'nama' => $jadwalLama->nama_klien,
+                'no_hp' => $jadwalLama->no_hp,
+                'email' => $jadwalLama->email,
+                'alamat' => $jadwalLama->alamat,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } else {
+            $id_klien = $klien->id_klien;
+        }
+
+        $exists = DB::table('hasiltes')->where('id_jadwal', $id)->exists();
+
+        if (!$exists) {
+            DB::table('hasiltes')->insert([
+                'id_jadwal'  => $id,
+                'id_klien'   => $id_klien, 
+                'status_tes' => 'Proses',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } else {
+            DB::table('hasiltes')->where('id_jadwal', $id)->update([
+                'status_tes' => 'Proses',
+                'updated_at' => now()
+            ]);
+        }
+    }
+
+    // WAJIB: Gunakan json response agar AJAX Anda membaca blok `success` dengan benar
+    return response()->json([
+        'success' => true,
+        'message' => 'Status berhasil diperbarui dan data telah dibersihkan.'
+    ], 200);
+}
     // =======================================================
     // PERBAIKAN LOGIKA: API PEMBATALAN JADWAL DARI SISI KLIEN
     // =======================================================
@@ -223,6 +258,12 @@ class PendaftaranController extends Controller
                 'nama_klien' => null,
                 'no_hp'      => null,
                 'email'      => null,
+                'tanggal_lahir' => null,
+                'jenis_kelamin' => null,
+                'golongan_darah' => null,
+                'domisili' => null,
+                'institusi' => null,
+                'sosmed' => null,
                 'alamat'     => null,
                 'status'     => 'Tersedia',
                 'komentar'   => null,
@@ -269,6 +310,12 @@ class PendaftaranController extends Controller
                 'nama_klien' => $pendaftaranLama->nama_klien,
                 'no_hp'      => $pendaftaranLama->no_hp,
                 'email'      => $pendaftaranLama->email,
+                'tanggal_lahir' => $pendaftaranLama->tanggal_lahir,
+                'jenis_kelamin' => $pendaftaranLama->jenis_kelamin,
+                'golongan_darah' => $pendaftaranLama->golongan_darah,
+                'domisili' => $pendaftaranLama->domisili,
+                'institusi' => $pendaftaranLama->institusi,
+                'sosmed' => $pendaftaranLama->sosmed,
                 'alamat'     => $pendaftaranLama->alamat,
                 'status'     => 'Menunggu', 
                 'kuota'      => $jadwalBaru->kuota - 1,
@@ -284,6 +331,12 @@ class PendaftaranController extends Controller
                 'no_hp'      => null,
                 'email'      => null,
                 'alamat'     => null,
+                'tanggal_lahir' => null,
+                'jenis_kelamin' => null,
+                'golongan_darah' => null,
+                'domisili' => null,
+                'institusi' => null,
+                'sosmed' => null,
                 'status'     => 'Tersedia',
                 'komentar'   => null,
                 'kuota'      => $pendaftaranLama->kuota + 1,

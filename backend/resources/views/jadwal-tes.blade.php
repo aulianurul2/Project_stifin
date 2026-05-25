@@ -260,7 +260,8 @@
                                     <th class="px-3 py-2 text-muted fs-8 text-uppercase">Nama Klien</th>
                                     <th class="px-3 py-2 text-muted fs-8 text-uppercase">No. HP / WhatsApp</th>
                                     <th class="px-3 py-2 text-muted fs-8 text-uppercase">Status</th>
-                                    <th class="px-3 py-2 text-muted fs-8 text-uppercase">Catatan Klien</th>
+                                    <th class="px-3 py-2 text-muted fs-8 text-uppercase">Catatan</th>
+                                    <th class="px-3 py-2 text-muted fs-8 text-uppercase">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="container-list-klien">
@@ -270,6 +271,13 @@
                 </div>
                 <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
                     <button type="button" class="btn btn-secondary btn-round w-100 fw-bold" data-bs-dismiss="modal">Tutup</button>
+
+                    <form id="formUpdateStatus" method="POST" style="display:none;">
+        @csrf
+        @method('PUT')
+        <input type="hidden" name="status" id="inputStatus">
+        <button type="submit" id="btnSubmitStatus" class="btn btn-round fw-bold"></button>
+    </form>
                 </div>
             </div>
         </div>
@@ -327,7 +335,16 @@
 
                             var cleanPhone = item.no_hp ? item.no_hp.replace(/[^0-9]/g, '') : '';
                             var waLink = item.no_hp ? `<a href="https://wa.me/${cleanPhone}" target="_blank" class="text-success fw-semibold"><i class="fab fa-whatsapp me-1"></i> ${item.no_hp}</a>` : '-';
-
+                            var aksiHtml = '';
+if (statusLower === 'menunggu') {
+    // Menggunakan item.id_jadwal yang sekarang sudah dikirim oleh Controller
+    aksiHtml = `<button onclick="updateStatus(${item.id_jadwal}, 'Ditolak')" class="btn btn-danger btn-sm btn-round">Tolak</button>`;
+} else if (statusLower === 'ditolak') {
+    // Menggunakan item.id_jadwal yang sekarang sudah dikirim oleh Controller
+    aksiHtml = `<button onclick="updateStatus(${item.id_jadwal}, 'Tersedia')" class="btn btn-success btn-sm btn-round"><i class="fas fa-sync-alt me-1"></i> Buka Kembali</button>`;
+} else {
+    aksiHtml = `<span class="text-muted fs-8">Tidak ada aksi</span>`;
+}
                             var row = `
                                 <tr>
                                     <td class="px-3 py-2 fw-bold text-muted">${index + 1}</td>
@@ -335,6 +352,7 @@
                                     <td class="px-3 py-2">${waLink}</td>
                                     <td class="px-3 py-2"><span class="badge ${badgeClass} fw-normal text-capitalize">${displayStatus}</span></td>
                                     <td class="px-3 py-2 text-muted fs-8 italic">${item.komentar ? item.komentar : '-'}</td>
+                                    <td class="px-3 py-2">${aksiHtml}</td>
                                 </tr>
                             `;
                             $('#container-list-klien').append(row);
@@ -346,6 +364,27 @@
                 });
             });
         });
+        function updateStatus(id, status) {
+    if(confirm('Yakin ingin mengubah status jadwal ini menjadi ' + status + '?')) {
+        $.ajax({
+            url: '/jadwal-tes/' + id + '/update-status',
+            type: 'POST', // Atau PUT
+            data: {
+                _token: '{{ csrf_token() }}',
+                _method: 'PUT',
+                status: status
+            },
+            success: function(response) {
+                alert('Status berhasil diubah!');
+                location.reload(); // Refresh halaman untuk melihat perubahan
+            },
+            error: function(xhr) {
+                alert('Gagal mengubah status.');
+                console.log(xhr.responseText);
+            }
+        });
+    }
+}
     </script>
 </body>
 </html>

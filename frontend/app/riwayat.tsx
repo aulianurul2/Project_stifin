@@ -72,32 +72,39 @@ export default function RiwayatJadwal() {
   };
 
   // FIX: Mengamankan mapping status agar seragam dengan data backend
-  const dapatkanStatusValid = (item: RiwayatItem): string => {
-    const statusUtama = item.status ? item.status.trim() : "";
-    const statusHasil = item.status_tes ? item.status_tes.trim() : "";
+ const dapatkanStatusValid = (item: RiwayatItem): string => {
+  const statusUtama = item.status ? item.status.trim() : "";
+  const statusHasil = item.status_tes ? item.status_tes.trim() : "";
 
-    if (statusUtama === "Ditolak") return "Ditolak";
-    if (statusUtama === "Menunggu" || statusUtama === "Konfirmasi") return "Menunggu";
+  // Pastikan status "Ditolak" dari kolom 'status' (jadwal) diutamakan
+  if (statusUtama.toLowerCase() === "ditolak") return "Ditolak";
+  
+  if (statusUtama === "Menunggu" || statusUtama === "Konfirmasi") return "Menunggu";
 
-    if (statusHasil) {
-      if (statusHasil.toLowerCase() === 'proses') return "Diproses";
-      if (statusHasil.toLowerCase() === 'selesai') return "Selesai";
-      return statusHasil;
-    }
+  if (statusHasil) {
+    if (statusHasil.toLowerCase() === 'proses') return "Diproses";
+    if (statusHasil.toLowerCase() === 'selesai') return "Selesai";
+    // Tambahan: jika ada status ditolak di tabel hasil tes
+    if (statusHasil.toLowerCase() === 'ditolak') return "Ditolak"; 
+    return statusHasil;
+  }
 
-    return statusUtama || "Menunggu";
-  };
+  return statusUtama || "Menunggu";
+};
 
   // FIX: Sinkronisasi warna hex pembacaan status baru
-  const warnaStatus = (status: string) => {
-    const s = status.toLowerCase();
-    if (s === "selesai") return "#00AA5B";
-    if (s === "menunggu" || s === "konfirmasi") return "#f57c00";
-    if (s === "diproses" || s === "proses" || s === "diterima") return "#0288d1";
-    if (s === "ditolak") return "#e53935";
-    if (s === "dibatalkan") return "#78909c";
-    return "#0288d1";
-  };
+ const warnaStatus = (status: string) => {
+  const s = status.toLowerCase();
+  if (s === "selesai") return "#00AA5B"; // Hijau (Selesai)
+  if (s === "menunggu" || s === "konfirmasi") return "#f57c00"; // Oranye (Menunggu)
+  if (s === "diproses" || s === "proses" || s === "diterima") return "#0288d1"; // Biru (Diproses)
+  
+  // Pastikan ini ada dan warnanya kontras (Merah)
+  if (s === "ditolak") return "#e53935"; 
+  
+  if (s === "dibatalkan") return "#78909c"; // Abu-abu
+  return "#0288d1";
+};
 
   const warnaBgStatus = (status: string) => {
     const s = status.toLowerCase();

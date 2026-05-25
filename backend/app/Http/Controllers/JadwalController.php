@@ -53,14 +53,13 @@ class JadwalController extends Controller
    /**
      * API Internal untuk mengambil daftar pendaftar berdasarkan ID Jadwal (Untuk Popup Modal)
      */
-   public function getKlienByJadwal($id)
+ public function getKlienByJadwal($id)
 {
     // Mengambil baris jadwal tersebut jika nama_klien tidak null dan tidak kosong
     $jadwal = DB::table('jadwal')
         ->where('id_jadwal', $id)
-        ->whereNotNull('nama_klien')
-        ->where('nama_klien', '!=', '') // Tambahan antisipasi string kosong
         ->select(
+            'id_jadwal', // <-- WAJIB TAMBAHKAN INI
             'nama_klien', 
             'no_hp', 
             'status as status_jadwal', 
@@ -76,7 +75,6 @@ class JadwalController extends Controller
 {
     $data = DB::table('jadwal')
         ->where('status', 'Tersedia')
-        ->whereNull('nama_klien') // KRUSIAL: Hanya ambil slot yang belum ada nama kliennya
         ->orderBy('tanggal', 'asc')
         ->orderBy('waktu', 'asc')
         ->get()
@@ -86,5 +84,36 @@ class JadwalController extends Controller
         });
         
     return response()->json($data);
+}
+public function updateStatus(Request $request, $id)
+{
+    if ($request->status == 'Ditolak') {
+        DB::table('jadwal')->where('id_jadwal', $id)->update([
+            'status' => 'Ditolak',
+        ]);
+    } else if ($request->status == 'Tersedia') {
+    // Logika untuk MEMBUKA KEMBALI slot secara bersih
+    DB::table('jadwal')
+        ->where('id_jadwal', $id) // Pastikan ID Jadwal benar
+        ->update([
+            'status'        => 'Tersedia',
+            'nama_klien'    => null, 
+            'no_hp'         => null,
+            'email'         => null,
+            'alamat'        => null,
+            'komentar'      => null,
+            'id_klien'      => null,
+            'tanggal_lahir' => null, // <-- TAMBAHKAN INI
+            'jenis_kelamin' => null, // <-- TAMBAHKAN INI
+            'golongan_darah'=> null, // <-- TAMBAHKAN INI
+            'domisili'      => null, // <-- TAMBAHKAN INI
+            'institusi'     => null, // <-- TAMBAHKAN INI
+            'sosmed'        => null, // <-- TAMBAHKAN INI
+            'kuota'         => 1     // Kembalikan kuota menjadi 1 secara eksplisit, jangan pakai DB::raw jika nilainya absolut
+        ]);
+}
+
+    // <-- TAMBAHKAN RESPONS INI AGAR AJAX JAVASCRIPT MENGETAHUI PROSES BERHASIL
+    return response()->json(['success' => true, 'message' => 'Status berhasil diperbarui!']);
 }
 }
