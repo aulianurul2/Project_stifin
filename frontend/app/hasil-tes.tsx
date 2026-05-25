@@ -40,7 +40,6 @@ export default function HasilTes() {
     komentar: string;
   }>();
 
-  // State Management
   const [modalRescheduleVisible, setModalRescheduleVisible] = useState(false);
   const [listJadwal, setListJadwal] = useState<SlotJadwal[]>([]);
   const [loadingJadwal, setLoadingJadwal] = useState(false);
@@ -56,7 +55,6 @@ export default function HasilTes() {
   const belumMengajukan = (!tanggal || tanggal.trim() === '' || tanggal === 'null') && 
                           (!jam || jam.trim() === '' || jam === 'null');
 
-  // Ambal Jadwal Kosong yang Tersedia dari API
   const fetchJadwalTersedia = async () => {
     setLoadingJadwal(true);
     try {
@@ -82,7 +80,6 @@ export default function HasilTes() {
     }
   }, [modalRescheduleVisible]);
 
-  // Fungsi Download Dokumen Hasil
   const downloadFile = async (fileName: string | undefined, titleText: string) => {
     try {
       if (!fileName || fileName.trim() === '' || fileName === 'null') {
@@ -119,9 +116,6 @@ export default function HasilTes() {
     }
   };
 
-  // ==========================================
-  // FIX: BLOK AKSI PEMBATALAN JADWAL
-  // ==========================================
   const handleBatalkanJadwal = () => {
     console.log("--> TOMBOL BATALKAN DIKLIK! ID JADWAL:", id_jadwal);
 
@@ -178,9 +172,6 @@ export default function HasilTes() {
     }
   };
 
-  // ==========================================
-  // FIX: BLOK AKSI RESCHEDULE JADWAL
-  // ==========================================
   const handleConfirmReschedule = async (idJadwalBaru: number) => {
     if (!id_jadwal || id_jadwal === 'undefined' || id_jadwal === 'null') {
       if (Platform.OS === 'web') window.alert("ID Jadwal asal tidak valid");
@@ -229,6 +220,7 @@ export default function HasilTes() {
   interface StatusCardConfig {
     icon: keyof typeof Ionicons.glyphMap;
     color: string;
+    bgColor: string;
     title: string;
     sub: string;
   }
@@ -237,7 +229,8 @@ export default function HasilTes() {
     if (belumMengajukan) {
       return {
         icon: "alert-circle-outline",
-        color: "#64748b",
+        color: "#546e7a",
+        bgColor: "#f5f5f5",
         title: "Belum Ada Pendaftaran",
         sub: "Anda belum mengajukan atau memilih jadwal pendaftaran tes pemeriksaan genetik STIFIn saat ini."
       };
@@ -245,7 +238,8 @@ export default function HasilTes() {
     if (berkasTersedia) {
       return {
         icon: "checkmark-circle",
-        color: "#16a34a",
+        color: "#00AA5B",
+        bgColor: "#e8f5e9",
         title: "Selamat! Tes Anda Selesai",
         sub: "Silakan unduh dokumen berkas resmi hasil tes pemeriksaan genetik STIFIn Anda."
       };
@@ -253,7 +247,8 @@ export default function HasilTes() {
     if (isDitolak) {
       return {
         icon: "close-circle",
-        color: "#dc2626",
+        color: "#e53935",
+        bgColor: "#ffebee",
         title: "Maaf, Tes Anda Ditolak",
         sub: "Pendaftaran jadwal tes Anda ditolak oleh pihak admin. Silakan periksa Catatan Promotor di bawah."
       };
@@ -261,14 +256,16 @@ export default function HasilTes() {
     if (isDibatalkan) {
       return {
         icon: "close-circle-outline",
-        color: "#64748b",
+        color: "#78909c",
+        bgColor: "#f5f5f5",
         title: "Pendaftaran Dibatalkan",
         sub: "Jadwal pendaftaran ini telah Anda batalkan."
       };
     }
     return {
       icon: "time-outline",
-      color: "#eab308",
+      color: "#f57c00",
+      bgColor: "#fff3e0",
       title: "Tes Sedang Diproses",
       sub: "Menunggu verifikasi admin atau pengerjaan dokumen berkas sertifikat genetik Anda selesai di-upload."
     };
@@ -278,160 +275,235 @@ export default function HasilTes() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back-outline" size={26} color="#1e293b" />
-          <Text style={styles.headerTitle}>Detail Hasil Tes</Text>
+
+      {/* Green Top Bar */}
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Ionicons name="arrow-back-outline" size={22} color="#fff" />
         </TouchableOpacity>
+        <View style={styles.topBarCenter}>
+          <Text style={styles.topBarTitle}>Detail Hasil Tes</Text>
+          <Text style={styles.topBarSub}>STIFIn Genetic Test</Text>
+        </View>
+        <View style={{ width: 38 }} />
       </View>
 
       {prosesLoading && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#2563eb" />
-          <Text style={{ marginTop: 10, color: '#fff', fontWeight: '600' }}>Memproses Permintaan...</Text>
+          <View style={styles.loadingBox}>
+            <ActivityIndicator size="large" color="#00AA5B" />
+            <Text style={styles.loadingText}>Memproses Permintaan...</Text>
+          </View>
         </View>
       )}
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.infoCard}>
-          <Ionicons name={cardInfo.icon} size={48} color={cardInfo.color} style={{ marginBottom: 10 }} />
-          <Text style={styles.successTitle}>{cardInfo.title}</Text>
-          <Text style={styles.successSub}>{cardInfo.sub}</Text>
-          
-          <View style={styles.divider} />
-          
+
+        {/* Status Card */}
+        <View style={[styles.statusCard, { borderLeftColor: cardInfo.color }]}>
+          <View style={[styles.statusIconWrap, { backgroundColor: cardInfo.bgColor }]}>
+            <Ionicons name={cardInfo.icon} size={36} color={cardInfo.color} />
+          </View>
+          <View style={styles.statusCardRight}>
+            <Text style={[styles.statusTitle, { color: cardInfo.color }]}>{cardInfo.title}</Text>
+            <Text style={styles.statusSub}>{cardInfo.sub}</Text>
+          </View>
+        </View>
+
+        {/* Meta Info */}
+        <View style={styles.metaCard}>
           <View style={styles.metaRow}>
+            <View style={styles.metaIconWrap}>
+              <Ionicons name="calendar-outline" size={14} color="#00AA5B" />
+            </View>
             <Text style={styles.metaLabel}>Tanggal Pelaksanaan</Text>
             <Text style={styles.metaValue}>{belumMengajukan ? '—' : (tanggal || '—')}</Text>
           </View>
+
+          <View style={styles.metaDivider} />
           
           <View style={styles.metaRow}>
+            <View style={styles.metaIconWrap}>
+              <Ionicons name="time-outline" size={14} color="#00AA5B" />
+            </View>
             <Text style={styles.metaLabel}>Waktu Pemeriksaan</Text>
             <Text style={styles.metaValue}>
               {belumMengajukan ? '—' : (jam && jam.trim() !== '' && jam !== 'null' ? `${jam} WIB` : '—')}
             </Text>
           </View>
-          
+
+          <View style={styles.metaDivider} />
+
           <View style={styles.metaRow}>
+            <View style={styles.metaIconWrap}>
+              <Ionicons name="pulse-outline" size={14} color="#00AA5B" />
+            </View>
             <Text style={styles.metaLabel}>Status Tes</Text>
-            <Text style={[styles.metaValue, { color: cardInfo.color, fontWeight: '700' }]}>
-              {belumMengajukan ? 'Belum Mendaftar' : (status || 'Menunggu')}
-            </Text>
+            <View style={[styles.statusPill, { backgroundColor: cardInfo.bgColor }]}>
+              <Text style={[styles.statusPillText, { color: cardInfo.color }]}>
+                {belumMengajukan ? 'Belum Mendaftar' : (status || 'Menunggu')}
+              </Text>
+            </View>
           </View>
         </View>
 
+        {/* Komentar */}
         {isKomentarAda && !belumMengajukan && (
-          <View style={[styles.commentContainer, isDitolak && styles.commentContainerDitolak]}>
+          <View style={[styles.commentCard, isDitolak && styles.commentCardDitolak]}>
             <View style={styles.commentHeader}>
-              <Ionicons name="chatbubble-ellipses-outline" size={20} color={isDitolak ? "#dc2626" : "#2563eb"} />
-              <Text style={[styles.commentHeaderTitle, isDitolak && { color: '#991b1b' }]}>
-                {isDitolak ? "Alasan Penolakan / Catatan" : "Catatan & Komentar Promotor"}
+              <Ionicons
+                name="chatbubble-ellipses-outline"
+                size={16}
+                color={isDitolak ? "#e53935" : "#00AA5B"}
+              />
+              <Text style={[styles.commentTitle, isDitolak && { color: '#c62828' }]}>
+                {isDitolak ? "Alasan Penolakan" : "Catatan Promotor"}
               </Text>
             </View>
             <Text style={styles.commentText}>{komentar}</Text>
           </View>
         )}
 
-        {/* TOMBOL AKSI PEMBATALAN & RESCHEDULE UNTUK KLIEN */}
+        {/* Action Buttons (Batalkan / Reschedule) */}
         {!belumMengajukan && !berkasTersedia && !isDibatalkan && !isDitolak && (
-          <View style={styles.clientActionSection} pointerEvents="box-none">
-            <Text style={styles.sectionLabel}>Kelola Agenda Jadwal</Text>
-            <View style={styles.actionRowContainer}>
+          <View style={styles.actionSection}>
+            <Text style={styles.sectionLabel}>Kelola Jadwal</Text>
+            <View style={styles.actionRow}>
               <TouchableOpacity 
-                style={[styles.actionBtnOutline, { borderColor: '#dc2626' }]} 
+                style={styles.btnBatal}
                 onPress={handleBatalkanJadwal}
-                activeOpacity={0.6}
+                activeOpacity={0.7}
               >
-                <Ionicons name="close-circle-outline" size={18} color="#dc2626" />
-                <Text style={[styles.actionBtnText, { color: '#dc2626' }]}>Batalkan Tes</Text>
+                <Ionicons name="close-circle-outline" size={17} color="#e53935" />
+                <Text style={styles.btnBatalText}>Batalkan Tes</Text>
               </TouchableOpacity>
 
               <TouchableOpacity 
-                style={[styles.actionBtnSolid, { backgroundColor: '#eab308' }]} 
+                style={styles.btnReschedule}
                 onPress={() => setModalRescheduleVisible(true)}
-                activeOpacity={0.6}
+                activeOpacity={0.7}
               >
-                <Ionicons name="calendar-outline" size={18} color="#fff" />
-                <Text style={styles.actionBtnText}>Reschedule</Text>
+                <Ionicons name="calendar-outline" size={17} color="#fff" />
+                <Text style={styles.btnRescheduleText}>Reschedule</Text>
               </TouchableOpacity>
             </View>
           </View>
         )}
 
+        {/* Document Section */}
         <Text style={styles.sectionLabel}>Berkas Dokumen STIFIn</Text>
 
         {belumMengajukan ? (
-          <View style={styles.emptyFileBox}>
-            <Ionicons name="add-circle-outline" size={36} color="#64748b" />
-            <Text style={styles.emptyFileText}>Silakan Daftarkan Diri Anda</Text>
-            <Text style={[styles.emptyFileSub, { marginBottom: 15 }]}>
-              Anda harus memilih jadwal dan lokasi pelaksanaan tes terlebih dahulu.
+          <View style={styles.emptyDoc}>
+            <View style={styles.emptyDocIcon}>
+              <Ionicons name="document-outline" size={36} color="#90a4ae" />
+            </View>
+            <Text style={styles.emptyDocTitle}>Belum Ada Dokumen</Text>
+            <Text style={styles.emptyDocSub}>
+              Daftarkan diri Anda terlebih dahulu untuk mendapatkan hasil tes genetik STIFIn.
             </Text>
-            <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/pendaftaran')}>
-              <Text style={styles.actionButtonText}>Daftar Tes Sekarang</Text>
+            <TouchableOpacity style={styles.btnDaftar} onPress={() => router.push('/pendaftaran')} activeOpacity={0.85}>
+              <Ionicons name="add-circle-outline" size={16} color="#fff" />
+              <Text style={styles.btnDaftarText}>Daftar Tes Sekarang</Text>
             </TouchableOpacity>
           </View>
         ) : !berkasTersedia ? (
-          <View style={styles.emptyFileBox}>
-            <Ionicons name="document-lock-outline" size={32} color="#94a3b8" />
-            <Text style={styles.emptyFileText}>
-              {isDitolak || isDibatalkan ? "Berkas Tidak Tersedia" : "Belum Ada Berkas yang Di-upload"}
+          <View style={styles.emptyDoc}>
+            <View style={styles.emptyDocIcon}>
+              <Ionicons name="document-lock-outline" size={36} color="#90a4ae" />
+            </View>
+            <Text style={styles.emptyDocTitle}>
+              {isDitolak || isDibatalkan ? "Berkas Tidak Tersedia" : "Berkas Belum Di-upload"}
             </Text>
-            <Text style={styles.emptyFileSub}>
+            <Text style={styles.emptyDocSub}>
               {isDitolak || isDibatalkan 
-                ? "Jadwal tidak aktif, tidak ada dokumen hasil analisis genetik yang diterbitkan."
+                ? "Jadwal tidak aktif, tidak ada dokumen yang diterbitkan."
                 : "Admin belum mengunggah dokumen hasil tes untuk jadwal ini."}
             </Text>
           </View>
         ) : (
-          <View>
+          <View style={styles.docButtons}>
             {isFileHasilAda && (
-              <TouchableOpacity style={styles.btnBlue} onPress={() => downloadFile(file_hasil, "Sertifikat")}>
-                <Ionicons name="document-text" size={22} color="#fff" />
-                <Text style={styles.btnText}>Download Sertifikat Resmi</Text>
+              <TouchableOpacity
+                style={styles.btnDownloadGreen}
+                onPress={() => downloadFile(file_hasil, "Sertifikat")}
+                activeOpacity={0.85}
+              >
+                <View style={styles.btnDownloadIcon}>
+                  <Ionicons name="document-text" size={22} color="#00AA5B" />
+                </View>
+                <View style={styles.btnDownloadInfo}>
+                  <Text style={styles.btnDownloadTitle}>Sertifikat Resmi</Text>
+                  <Text style={styles.btnDownloadSub}>Unduh dokumen sertifikat</Text>
+                </View>
+                <Ionicons name="download-outline" size={20} color="#00AA5B" />
               </TouchableOpacity>
             )}
 
             {isFileDetailAda && (
-              <TouchableOpacity style={styles.btnGreen} onPress={() => downloadFile(file_detail, "Detail Tes")}>
-                <Ionicons name="analytics" size={22} color="#fff" />
-                <Text style={styles.btnText}>Download Hasil Detail Analisis</Text>
+              <TouchableOpacity
+                style={styles.btnDownloadBlue}
+                onPress={() => downloadFile(file_detail, "Detail Tes")}
+                activeOpacity={0.85}
+              >
+                <View style={styles.btnDownloadIconBlue}>
+                  <Ionicons name="analytics" size={22} color="#0288d1" />
+                </View>
+                <View style={styles.btnDownloadInfo}>
+                  <Text style={[styles.btnDownloadTitle, { color: '#01579b' }]}>Hasil Detail Analisis</Text>
+                  <Text style={styles.btnDownloadSub}>Unduh hasil analisis lengkap</Text>
+                </View>
+                <Ionicons name="download-outline" size={20} color="#0288d1" />
               </TouchableOpacity>
             )}
           </View>
         )}
+
       </ScrollView>
 
-      {/* POPUP MODAL PILIH JADWAL RESCHEDULE BARU */}
+      {/* Reschedule Modal */}
       <Modal animationType="slide" transparent={true} visible={modalRescheduleVisible} onRequestClose={() => setModalRescheduleVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Pilih Slot Jadwal Baru</Text>
-              <TouchableOpacity onPress={() => setModalRescheduleVisible(false)}>
-                <Ionicons name="close-circle" size={24} color="#94a3b8" />
+              <TouchableOpacity style={styles.modalClose} onPress={() => setModalRescheduleVisible(false)}>
+                <Ionicons name="close" size={20} color="#90a4ae" />
               </TouchableOpacity>
             </View>
 
             {loadingJadwal ? (
-              <ActivityIndicator size="large" color="#2563eb" style={{ marginVertical: 40 }} />
+              <View style={{ padding: 40, alignItems: 'center', gap: 10 }}>
+                <ActivityIndicator size="large" color="#00AA5B" />
+                <Text style={{ color: '#90a4ae', fontSize: 13 }}>Memuat jadwal...</Text>
+              </View>
             ) : (
               <FlatList
                 data={listJadwal}
                 keyExtractor={(item) => item.id_jadwal.toString()}
                 renderItem={({ item }) => (
-                  <TouchableOpacity style={styles.jadwalItemCard} onPress={() => handleConfirmReschedule(item.id_jadwal)}>
-                    <View>
-                      <Text style={{ fontWeight: '700', color: '#1e293b', fontSize: 14 }}>{item.tanggal}</Text>
-                      <Text style={{ color: '#64748b', fontSize: 12, marginTop: 2 }}>{item.waktu} WIB • {item.lokasi}</Text>
+                  <TouchableOpacity
+                    style={styles.jadwalItem}
+                    onPress={() => handleConfirmReschedule(item.id_jadwal)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.jadwalItemLeft}>
+                      <View style={styles.jadwalIconWrap}>
+                        <Ionicons name="calendar-outline" size={16} color="#00AA5B" />
+                      </View>
+                      <View>
+                        <Text style={styles.jadwalTanggal}>{item.tanggal}</Text>
+                        <Text style={styles.jadwalDetail}>{item.waktu} WIB • {item.lokasi}</Text>
+                      </View>
                     </View>
                     <View style={styles.kuotaBadge}>
-                      <Text style={{ color: '#1e40af', fontSize: 11, fontWeight: '700' }}>Kuota: {item.kuota}</Text>
+                      <Text style={styles.kuotaText}>Kuota: {item.kuota}</Text>
                     </View>
                   </TouchableOpacity>
                 )}
                 ListEmptyComponent={
-                  <Text style={{ textAlign: 'center', color: '#64748b', marginVertical: 30, fontStyle: 'italic' }}>
+                  <Text style={styles.emptyModal}>
                     Tidak ada slot jadwal kosong lain yang tersedia saat ini.
                   </Text>
                 }
@@ -445,71 +517,305 @@ export default function HasilTes() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#e2e8f0', paddingTop: 40 },
-  backButton: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: '#1e293b' },
-  content: { padding: 20 },
-  infoCard: { backgroundColor: '#fff', borderRadius: 16, padding: 24, alignItems: 'center', elevation: 3, shadowColor: '#0f172a', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 12, marginBottom: 20 },
-  successTitle: { fontSize: 18, fontWeight: '700', color: '#0f172a', marginBottom: 6, textAlign: 'center' },
-  successSub: { fontSize: 13, color: '#64748b', textAlign: 'center', lineHeight: 18, paddingHorizontal: 10 },
-  divider: { width: '100%', height: 1, backgroundColor: '#f1f5f9', marginVertical: 18 },
-  metaRow: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 10 } as ViewStyle,
-  metaLabel: { fontSize: 13, color: '#64748b' },
-  metaValue: { fontSize: 13, fontWeight: '600', color: '#1e293b' },
-  commentContainer: { backgroundColor: '#eff6ff', borderRadius: 16, padding: 16, borderLeftWidth: 4, borderLeftColor: '#2563eb', marginBottom: 20 },
-  commentContainerDitolak: { backgroundColor: '#fef2f2', borderLeftColor: '#dc2626' },
-  commentHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  commentHeaderTitle: { fontSize: 14, fontWeight: '700', color: '#1e40af' },
-  commentText: { fontSize: 13, color: '#1e293b', lineHeight: 20, fontStyle: 'italic' },
-  sectionLabel: { fontSize: 14, fontWeight: '700', color: '#475569', marginBottom: 12, paddingLeft: 4 },
-  clientActionSection: { 
-    marginTop: 15,
-    marginBottom: 15,
-    zIndex: 10,
-    elevation: 5,
-  },
-  actionRowContainer: {
-    flexDirection: 'row', 
-    gap: 12, 
-    width: '100%',
-    zIndex: 20,
+  container: { flex: 1, backgroundColor: '#f5faf7' },
+
+  topBar: {
+    backgroundColor: '#00AA5B',
+    paddingTop: Platform.OS === 'ios' ? 0 : 10,
+    paddingBottom: 18,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
     elevation: 6,
   },
-  actionBtnOutline: { 
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  topBarCenter: { flex: 1, alignItems: 'center' },
+  topBarTitle: { fontSize: 18, fontWeight: '800', color: '#fff' },
+  topBarSub: { fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+
+  content: { padding: 16, paddingBottom: 48 },
+
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
+  },
+  loadingBox: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    gap: 12,
+  },
+  loadingText: { fontSize: 14, fontWeight: '600', color: '#546e7a' },
+
+  statusCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    gap: 14,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#e8f5e9',
+    borderLeftWidth: 4,
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  statusIconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  statusCardRight: { flex: 1 },
+  statusTitle: { fontSize: 15, fontWeight: '800', marginBottom: 4 },
+  statusSub: { fontSize: 12, color: '#78909c', lineHeight: 17 },
+
+  metaCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#e8f5e9',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  metaIconWrap: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    backgroundColor: '#e8f5e9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  metaLabel: { flex: 1, fontSize: 13, color: '#78909c', fontWeight: '600' },
+  metaValue: { fontSize: 13, fontWeight: '700', color: '#1a1a2e' },
+  metaDivider: { height: 1, backgroundColor: '#f5faf7', marginVertical: 12 },
+  statusPill: {
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  statusPillText: { fontSize: 12, fontWeight: '800' },
+
+  commentCard: {
+    backgroundColor: '#e8f5e9',
+    borderRadius: 14,
+    padding: 14,
+    borderLeftWidth: 3,
+    borderLeftColor: '#00AA5B',
+    marginBottom: 14,
+  },
+  commentCardDitolak: {
+    backgroundColor: '#ffebee',
+    borderLeftColor: '#e53935',
+  },
+  commentHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
+  commentTitle: { fontSize: 13, fontWeight: '800', color: '#00AA5B' },
+  commentText: { fontSize: 13, color: '#37474f', lineHeight: 19, fontStyle: 'italic' },
+
+  sectionLabel: { fontSize: 13, fontWeight: '800', color: '#546e7a', marginBottom: 10, paddingLeft: 2 },
+
+  actionSection: { marginBottom: 16 },
+  actionRow: { flexDirection: 'row', gap: 10 },
+  btnBatal: {
     flex: 1,
-    borderWidth: 1, 
-    borderRadius: 10, 
-    padding: 14, 
-    flexDirection: 'row', 
-    justifyContent: 'center', 
-    alignItems: 'center', 
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#ffffff'
+    paddingVertical: 13,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#e53935',
+    backgroundColor: '#fff',
   },
-  actionBtnSolid: { 
+  btnBatalText: { color: '#e53935', fontWeight: '700', fontSize: 13 },
+  btnReschedule: {
     flex: 1,
-    borderRadius: 10, 
-    padding: 14, 
-    flexDirection: 'row', 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    gap: 6 
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 13,
+    borderRadius: 12,
+    backgroundColor: '#f57c00',
+    shadowColor: '#f57c00',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  actionBtnText: { fontWeight: '700', fontSize: 13, color: '#fff' },
-  emptyFileBox: { backgroundColor: '#f1f5f9', borderRadius: 14, padding: 24, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#e2e8f0', borderStyle: 'dashed', marginTop: 5 },
-  emptyFileText: { fontSize: 15, fontWeight: '700', color: '#475569', marginTop: 10, marginBottom: 4 },
-  emptyFileSub: { fontSize: 12, color: '#94a3b8', textAlign: 'center', lineHeight: 16, paddingHorizontal: 15 },
-  actionButton: { backgroundColor: '#2563eb', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 10 },
-  actionButtonText: { color: '#fff', fontSize: 13, fontWeight: '700' },
-  btnBlue: { backgroundColor: '#2563eb', padding: 16, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 14 } as ViewStyle,
-  btnGreen: { backgroundColor: '#16a34a', padding: 16, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10 } as ViewStyle,
-  btnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
-  loadingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', zIndex: 999 },
+  btnRescheduleText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+
+  emptyDoc: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 28,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#e0f2ec',
+    borderStyle: 'dashed',
+  },
+  emptyDocIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#f5faf7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  emptyDocTitle: { fontSize: 15, fontWeight: '800', color: '#546e7a', marginBottom: 6 },
+  emptyDocSub: { fontSize: 12, color: '#90a4ae', textAlign: 'center', lineHeight: 17, marginBottom: 16 },
+  btnDaftar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#00AA5B',
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  btnDaftarText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+
+  docButtons: { gap: 10 },
+  btnDownloadGreen: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: '#a5d6a7',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  btnDownloadBlue: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: '#81d4fa',
+    shadowColor: '#0288d1',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  btnDownloadIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#e8f5e9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  btnDownloadIconBlue: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#e1f5fe',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  btnDownloadInfo: { flex: 1 },
+  btnDownloadTitle: { fontSize: 14, fontWeight: '800', color: '#1a1a2e', marginBottom: 2 },
+  btnDownloadSub: { fontSize: 11, color: '#90a4ae' },
+
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '60%' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 16, fontWeight: '700', color: '#0f172a' },
-  jadwalItemCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14, backgroundColor: '#f8fafc', borderRadius: 12, marginBottom: 10, borderWidth: 1, borderColor: '#e2e8f0' },
-  kuotaBadge: { backgroundColor: '#eff6ff', paddingVertical: 4, paddingHorizontal: 8, borderRadius: 6 }
+  modalSheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    maxHeight: '60%',
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#e0f2ec',
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  modalTitle: { fontSize: 16, fontWeight: '800', color: '#1a1a2e' },
+  modalClose: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f5faf7',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  jadwalItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 14,
+    backgroundColor: '#f5faf7',
+    borderRadius: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#e8f5e9',
+  },
+  jadwalItemLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  jadwalIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: '#e8f5e9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  jadwalTanggal: { fontSize: 14, fontWeight: '700', color: '#1a1a2e' },
+  jadwalDetail: { fontSize: 11, color: '#90a4ae', marginTop: 2 },
+  kuotaBadge: {
+    backgroundColor: '#e8f5e9',
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+  },
+  kuotaText: { fontSize: 11, color: '#00AA5B', fontWeight: '800' },
+  emptyModal: { textAlign: 'center', color: '#90a4ae', marginVertical: 30, fontSize: 13, fontStyle: 'italic' },
 });

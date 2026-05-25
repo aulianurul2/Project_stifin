@@ -9,7 +9,8 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
-  KeyboardTypeOptions
+  KeyboardTypeOptions,
+  Platform
 } from 'react-native';
 
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -37,6 +38,7 @@ interface CustomInputProps {
   keyboardType?: KeyboardTypeOptions;
   multiline?: boolean;
   placeholder?: string;
+  icon?: keyof typeof Ionicons.glyphMap;
 }
 
 export default function FormPendaftaran() {
@@ -98,10 +100,7 @@ export default function FormPendaftaran() {
       !formData.email ||
       !formData.alamat
     ) {
-      Alert.alert(
-        'Perhatian',
-        'Mohon isi Nama, Nomor HP, Email, dan Alamat.'
-      );
+      Alert.alert('Perhatian', 'Mohon isi Nama, Nomor HP, Email, dan Alamat.');
       return;
     }
 
@@ -109,267 +108,194 @@ export default function FormPendaftaran() {
 
     try {
       const jadwalIdParsed = id_jadwal ? parseInt(id_jadwal as string, 10) : null;
-      const response = await axiosInstance.post(
-        '/pendaftaran/submit',
-        {
-          id_jadwal: jadwalIdParsed,
-          nama_klien: formData.nama,
-          no_hp: formData.no_hp,
-          email: formData.email,
-          alamat: formData.alamat,
-          tanggal_lahir: formData.tanggal_lahir,
-          jenis_kelamin: formData.jenis_kelamin,
-          golongan_darah: formData.golongan_darah,
-          domisili: formData.domisili,
-          institusi: formData.institusi,
-          sosmed: formData.sosmed
-        }
-      );
+      const response = await axiosInstance.post('/pendaftaran/submit', {
+        id_jadwal: jadwalIdParsed,
+        nama_klien: formData.nama,
+        no_hp: formData.no_hp,
+        email: formData.email,
+        alamat: formData.alamat,
+        tanggal_lahir: formData.tanggal_lahir,
+        jenis_kelamin: formData.jenis_kelamin,
+        golongan_darah: formData.golongan_darah,
+        domisili: formData.domisili,
+        institusi: formData.institusi,
+        sosmed: formData.sosmed
+      });
 
-      if (
-        response.status === 200 ||
-        response.status === 201
-      ) {
-        Alert.alert(
-          'Berhasil',
-          'Pendaftaran berhasil dikirim!'
-        );
-
-        setTimeout(() => {
-          router.replace('/riwayat');
-        }, 300);
+      if (response.status === 200 || response.status === 201) {
+        Alert.alert('Berhasil', 'Pendaftaran berhasil dikirim!');
+        setTimeout(() => { router.replace('/riwayat'); }, 300);
       }
     } catch (error: any) {
-  console.log("=== ERROR SUBMIT ===");
-  if (error.response) {
-    // Backend merespons dengan status code di luar 2xx
-    console.log("Data Error:", error.response.data);
-    console.log("Status Error:", error.response.status);
-    
-    // Tampilkan pesan error dari backend jika ada
-    Alert.alert(
-      'Gagal',
-      error.response.data.message || 'Terjadi kesalahan pada validasi data.'
-    );
-  } else {
-    // Masalah jaringan atau tidak ada respon dari backend
-    console.log("Pesan Error:", error.message);
-    Alert.alert('Gagal', 'Tidak dapat terhubung ke server.');
-  }
-}
+      console.log("=== ERROR SUBMIT ===");
+      if (error.response) {
+        console.log("Data Error:", error.response.data);
+        console.log("Status Error:", error.response.status);
+        Alert.alert('Gagal', error.response.data.message || 'Terjadi kesalahan pada validasi data.');
+      } else {
+        console.log("Pesan Error:", error.message);
+        Alert.alert('Gagal', 'Tidak dapat terhubung ke server.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (fetchingData) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator
-          size="large"
-          color="#1e40af"
-        />
-        <Text style={{ marginTop: 10 }}>
-          Menyiapkan formulir...
-        </Text>
+        <View style={styles.loadingCard}>
+          <ActivityIndicator size="large" color="#00AA5B" />
+          <Text style={styles.loadingText}>Menyiapkan formulir...</Text>
+        </View>
       </View>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* HEADER */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-        >
-          <Ionicons
-            name="arrow-back"
-            size={24}
-            color="#000"
-          />
-        </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>
-          Konfirmasi Data Diri
-        </Text>
+      {/* Green Top Bar */}
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={22} color="#fff" />
+        </TouchableOpacity>
+        <View style={styles.topBarCenter}>
+          <Text style={styles.topBarTitle}>Konfirmasi Data</Text>
+          <Text style={styles.topBarSub}>Periksa dan lengkapi data Anda</Text>
+        </View>
+        <View style={{ width: 38 }} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* INFO JADWAL */}
-        <View style={styles.infoJadwal}>
-          <Ionicons
-            name="time-outline"
-            size={20}
-            color="#fff"
-          />
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-          <Text style={styles.infoJadwalText}>
-            Jadwal: {tanggal} | {waktu} WIB
-          </Text>
+        {/* Schedule Banner */}
+        <View style={styles.schedBanner}>
+          <View style={styles.schedIconWrap}>
+            <Ionicons name="calendar" size={22} color="#fff" />
+          </View>
+          <View style={styles.schedInfo}>
+            <Text style={styles.schedLabel}>Jadwal Tes Terpilih</Text>
+            <Text style={styles.schedValue}>{tanggal} • {waktu} WIB</Text>
+          </View>
+          <View style={styles.schedCheck}>
+            <Ionicons name="checkmark-circle" size={20} color="rgba(255,255,255,0.8)" />
+          </View>
         </View>
 
-        {/* DATA PERSONAL */}
-        <Text style={styles.sectionTitle}>
-          Data Personal
-        </Text>
-
-        <CustomInput
-          label="Nama Lengkap"
-          value={formData.nama}
-          onChange={(val) =>
-            setFormData({
-              ...formData,
-              nama: val
-            })
-          }
-        />
-
-        <CustomInput
-          label="Nomor WhatsApp"
-          value={formData.no_hp}
-          keyboardType="phone-pad"
-          onChange={(val) =>
-            setFormData({
-              ...formData,
-              no_hp: val
-            })
-          }
-        />
-
-        {/* TANGGAL + GOL DARAH */}
-        <View style={styles.row}>
-          <View style={{ flex: 1, marginRight: 10 }}>
-            <CustomInput
-              label="Tgl Lahir (Tahun-Bulan-Tanggal)"
-              value={formData.tanggal_lahir}
-              onChange={(val) =>
-                setFormData({
-                  ...formData,
-                  tanggal_lahir: val
-                })
-              }
-            />
+        {/* Section 1: Data Personal */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNum}><Text style={styles.sectionNumText}>1</Text></View>
+            <Text style={styles.sectionTitle}>Data Personal</Text>
           </View>
 
-          <View style={{ width: 150 }}>
-            <Text style={styles.labelSimple}>
-              Gol. Darah
-            </Text>
+          <CustomInput
+            label="Nama Lengkap"
+            value={formData.nama}
+            icon="person-outline"
+            onChange={(val) => setFormData({ ...formData, nama: val })}
+          />
 
-            <View style={styles.bloodRow}>
-              {['A', 'B', 'AB', 'O'].map(
-                (item) => (
+          <CustomInput
+            label="Nomor WhatsApp"
+            value={formData.no_hp}
+            keyboardType="phone-pad"
+            icon="call-outline"
+            onChange={(val) => setFormData({ ...formData, no_hp: val })}
+          />
+
+          {/* Tgl Lahir + Goldar */}
+          <View style={styles.row}>
+            <View style={{ flex: 1, marginRight: 10 }}>
+              <CustomInput
+                label="Tgl Lahir (YYYY-MM-DD)"
+                value={formData.tanggal_lahir}
+                icon="calendar-outline"
+                onChange={(val) => setFormData({ ...formData, tanggal_lahir: val })}
+              />
+            </View>
+
+            <View style={{ width: 145 }}>
+              <Text style={styles.fieldLabel}>Gol. Darah</Text>
+              <View style={styles.bloodRow}>
+                {['A', 'B', 'AB', 'O'].map((item) => (
                   <TouchableOpacity
                     key={item}
-                    style={[
-                      styles.bloodBtn,
-                      formData.golongan_darah ===
-                        item &&
-                        styles.bloodBtnActive
-                    ]}
-                    onPress={() =>
-                      setFormData({
-                        ...formData,
-                        golongan_darah: item
-                      })
-                    }
+                    style={[styles.bloodBtn, formData.golongan_darah === item && styles.bloodBtnActive]}
+                    onPress={() => setFormData({ ...formData, golongan_darah: item })}
+                    activeOpacity={0.7}
                   >
-                    <Text
-                      style={[
-                        styles.bloodText,
-                        formData.golongan_darah ===
-                          item &&
-                          styles.bloodTextActive
-                      ]}
-                    >
+                    <Text style={[styles.bloodText, formData.golongan_darah === item && styles.bloodTextActive]}>
                       {item}
                     </Text>
                   </TouchableOpacity>
-                )
-              )}
+                ))}
+              </View>
             </View>
           </View>
+
+          <CustomInput
+            label="Email Aktif"
+            value={formData.email}
+            keyboardType="email-address"
+            icon="mail-outline"
+            onChange={(val) => setFormData({ ...formData, email: val })}
+          />
         </View>
 
-        <CustomInput
-          label="Email Aktif"
-          value={formData.email}
-          keyboardType="email-address"
-          onChange={(val) =>
-            setFormData({
-              ...formData,
-              email: val
-            })
-          }
-        />
+        {/* Section 2: Data Tambahan */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionNum}><Text style={styles.sectionNumText}>2</Text></View>
+            <Text style={styles.sectionTitle}>Data Tambahan</Text>
+          </View>
 
-        {/* DATA TAMBAHAN */}
-        <Text style={styles.sectionTitle}>
-          Data Tambahan
-        </Text>
+          <CustomInput
+            label="Institusi / Pekerjaan"
+            value={formData.institusi}
+            icon="business-outline"
+            onChange={(val) => setFormData({ ...formData, institusi: val })}
+          />
 
-        <CustomInput
-          label="Institusi / Pekerjaan"
-          value={formData.institusi}
-          onChange={(val) =>
-            setFormData({
-              ...formData,
-              institusi: val
-            })
-          }
-        />
+          <CustomInput
+            label="Username Sosmed (FB/IG)"
+            value={formData.sosmed}
+            icon="logo-instagram"
+            onChange={(val) => setFormData({ ...formData, sosmed: val })}
+          />
 
-        <CustomInput
-          label="Username Sosmed (FB/IG)"
-          value={formData.sosmed}
-          onChange={(val) =>
-            setFormData({
-              ...formData,
-              sosmed: val
-            })
-          }
-        />
+          <CustomInput
+            label="Kota Domisili"
+            value={formData.domisili}
+            icon="map-outline"
+            onChange={(val) => setFormData({ ...formData, domisili: val })}
+          />
 
-        <CustomInput
-          label="Kota Domisili"
-          value={formData.domisili}
-          onChange={(val) =>
-            setFormData({
-              ...formData,
-              domisili: val
-            })
-          }
-        />
+          <CustomInput
+            label="Alamat Lengkap"
+            value={formData.alamat}
+            multiline
+            icon="location-outline"
+            onChange={(val) => setFormData({ ...formData, alamat: val })}
+          />
+        </View>
 
-        <CustomInput
-          label="Alamat Lengkap"
-          value={formData.alamat}
-          multiline
-          onChange={(val) =>
-            setFormData({
-              ...formData,
-              alamat: val
-            })
-          }
-        />
-
-        {/* BUTTON */}
+        {/* Submit Button */}
         <View style={styles.footer}>
           <TouchableOpacity
-            style={[
-              styles.btnSubmit,
-              loading && { opacity: 0.7 }
-            ]}
+            style={[styles.btnSubmit, loading && { opacity: 0.7 }]}
             onPress={handleKirim}
             disabled={loading}
+            activeOpacity={0.85}
           >
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.btnText}>
-                Konfirmasi & Daftar
-              </Text>
+              <View style={styles.btnInner}>
+                <Ionicons name="send-outline" size={18} color="#fff" />
+                <Text style={styles.btnText}>Konfirmasi & Daftar</Text>
+              </View>
             )}
           </TouchableOpacity>
         </View>
@@ -378,172 +304,156 @@ export default function FormPendaftaran() {
   );
 }
 
-const CustomInput = ({
-  label,
-  value,
-  onChange,
-  keyboardType = 'default',
-  multiline = false,
-  placeholder
-}: CustomInputProps) => (
+const CustomInput = ({ label, value, onChange, keyboardType = 'default', multiline = false, placeholder, icon }: CustomInputProps) => (
   <View style={styles.inputGroup}>
-    <Text style={styles.labelSimple}>
-      {label}
-    </Text>
-
-    <TextInput
-      style={[
-        styles.input,
-        multiline && styles.textArea
-      ]}
-      value={value}
-      onChangeText={onChange}
-      keyboardType={keyboardType}
-      multiline={multiline}
-      placeholder={
-        placeholder ||
-        `Masukkan ${label.toLowerCase()}`
-      }
-      placeholderTextColor="#94a3b8"
-    />
+    <Text style={styles.fieldLabel}>{label}</Text>
+    <View style={styles.inputRow}>
+      {icon && <Ionicons name={icon} size={16} color="#00AA5B" style={styles.inputIcon} />}
+      <TextInput
+        style={[styles.input, multiline && styles.textArea]}
+        value={value}
+        onChangeText={onChange}
+        keyboardType={keyboardType}
+        multiline={multiline}
+        placeholder={placeholder || `Masukkan ${label.toLowerCase()}`}
+        placeholderTextColor="#b0bec5"
+      />
+    </View>
   </View>
 );
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8fafc'
-  },
+  container: { flex: 1, backgroundColor: '#f5faf7' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5faf7' },
+  loadingCard: { alignItems: 'center', gap: 12 },
+  loadingText: { fontSize: 14, color: '#546e7a', fontWeight: '600' },
 
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-
-  header: {
-    padding: 20,
-    backgroundColor: '#fff',
+  topBar: {
+    backgroundColor: '#00AA5B',
+    paddingTop: Platform.OS === 'ios' ? 0 : 10,
+    paddingBottom: 18,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 15,
-    borderBottomWidth: 1,
-    borderColor: '#e2e8f0'
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
   },
-
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#0f172a'
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
+  topBarCenter: { flex: 1, alignItems: 'center' },
+  topBarTitle: { fontSize: 18, fontWeight: '800', color: '#fff' },
+  topBarSub: { fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
 
-  content: {
-    padding: 20
+  content: { padding: 16, paddingBottom: 48 },
+
+  schedBanner: {
+    backgroundColor: '#00AA5B',
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 5,
   },
-
-  infoJadwal: {
-    backgroundColor: '#1e40af',
-    padding: 15,
+  schedIconWrap: {
+    width: 44,
+    height: 44,
     borderRadius: 12,
-    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 25
   },
+  schedInfo: { flex: 1 },
+  schedLabel: { fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginBottom: 3 },
+  schedValue: { fontSize: 15, fontWeight: '800', color: '#fff' },
+  schedCheck: {},
 
-  infoJadwalText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 14
-  },
-
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1e40af',
-    marginBottom: 15,
-    marginTop: 5
-  },
-
-  inputGroup: {
-    marginBottom: 15
-  },
-
-  labelSimple: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#475569',
-    marginBottom: 6,
-    marginLeft: 2
-  },
-
-  input: {
+  section: {
     backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 15,
-    color: '#1e293b'
+    borderColor: '#e8f5e9',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
-
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top'
-  },
-
-  row: {
+  sectionHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    marginBottom: 15
+    alignItems: 'center',
+    marginBottom: 18,
+    gap: 10,
   },
+  sectionNum: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#00AA5B',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sectionNumText: { color: '#fff', fontSize: 12, fontWeight: '800' },
+  sectionTitle: { fontSize: 15, fontWeight: '800', color: '#1a1a2e' },
 
-  bloodRow: {
+  inputGroup: { marginBottom: 14 },
+  fieldLabel: { fontSize: 11, fontWeight: '700', color: '#546e7a', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.6 },
+  inputRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8
+    alignItems: 'center',
+    backgroundColor: '#f5faf7',
+    borderWidth: 1.5,
+    borderColor: '#e0f2ec',
+    borderRadius: 12,
+    paddingHorizontal: 12,
   },
+  inputIcon: { marginRight: 8 },
+  input: { flex: 1, color: '#1a1a2e', paddingVertical: 12, fontSize: 14 },
+  textArea: { height: 80, textAlignVertical: 'top' },
 
+  row: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 14 },
+
+  bloodRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
   bloodBtn: {
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 10,
-    backgroundColor: '#fff'
+    backgroundColor: '#f5faf7',
+    borderWidth: 1.5,
+    borderColor: '#e0f2ec',
   },
+  bloodBtnActive: { backgroundColor: '#00AA5B', borderColor: '#00AA5B' },
+  bloodText: { color: '#546e7a', fontWeight: '700', fontSize: 12 },
+  bloodTextActive: { color: '#fff' },
 
-  bloodBtnActive: {
-    backgroundColor: '#1e40af',
-    borderColor: '#1e40af'
-  },
-
-  bloodText: {
-    color: '#334155',
-    fontWeight: '600'
-  },
-
-  bloodTextActive: {
-    color: '#fff'
-  },
-
-  footer: {
-    marginTop: 20,
-    marginBottom: 40
-  },
-
+  footer: { marginTop: 6, marginBottom: 16 },
   btnSubmit: {
-    backgroundColor: '#1e40af',
+    backgroundColor: '#00AA5B',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
-    elevation: 4
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
-
-  btnText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16
-  }
+  btnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  btnText: { color: '#fff', fontWeight: '800', fontSize: 16 },
 });

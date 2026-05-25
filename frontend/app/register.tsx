@@ -94,79 +94,118 @@ export default function RegisterScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{flex: 1}}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.card}>
-            
-            {/* Bagian Header dengan Tombol Kembali */}
-            <View style={styles.header}>
-              <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                <Ionicons name="arrow-back-outline" size={24} color="#94a3b8" />
-              </TouchableOpacity>
-              <Text style={styles.title}>Registrasi Klien</Text>
-              <Text style={styles.subtitle}>Silakan lengkapi profil STIFIn Anda</Text>
+        
+        {/* Green Header Bar */}
+        <View style={styles.topBar}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+            <Ionicons name="arrow-back-outline" size={22} color="#fff" />
+          </TouchableOpacity>
+          <View style={styles.topBarCenter}>
+            <Text style={styles.topBarTitle}>Registrasi Klien</Text>
+            <Text style={styles.topBarSub}>Lengkapi profil STIFIn Anda</Text>
+          </View>
+          <View style={{ width: 38 }} />
+        </View>
+
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          
+          {/* Progress Hint */}
+          <View style={styles.progressHint}>
+            <Ionicons name="shield-checkmark-outline" size={16} color="#00AA5B" />
+            <Text style={styles.progressHintText}>Data Anda aman dan terenkripsi</Text>
+          </View>
+
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionBadge}>
+                <Text style={styles.sectionBadgeText}>01</Text>
+              </View>
+              <Text style={styles.sectionTitle}>Akun & Identitas</Text>
             </View>
 
-            <View style={styles.form}>
-              <InputBox label="Nama Lengkap" icon="person-outline" placeholder="Nama Lengkap" onChangeText={(v) => setForm({...form, nama: v})} />
-              <InputBox label="Username" icon="at-outline" placeholder="Username" onChangeText={(v) => setForm({...form, username: v})} />
-              <InputBox label="Password" icon="lock-closed-outline" placeholder="Password" secureTextEntry onChangeText={(v) => setForm({...form, password: v})} />
-              
-              <View style={styles.inputGroupOuter}>
-                <Text style={styles.inputLabel}>Tanggal Lahir (Tanggal/Bulan/Tahun)</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="calendar-outline" size={18} color="#64748b" style={styles.fieldIcon} />
-                  <TextInput style={styles.textInput} placeholder="17/08/1945" value={form.tanggal_lahir} onChangeText={handleDateChange} keyboardType="numeric" maxLength={10} placeholderTextColor="#64748b" />
+            <InputBox label="Nama Lengkap" icon="person-outline" placeholder="Nama Lengkap" onChangeText={(v) => setForm({...form, nama: v})} />
+            <InputBox label="Username" icon="at-outline" placeholder="Username" onChangeText={(v) => setForm({...form, username: v})} />
+            <InputBox label="Password" icon="lock-closed-outline" placeholder="Password" secureTextEntry onChangeText={(v) => setForm({...form, password: v})} />
+            
+            <View style={styles.inputGroupOuter}>
+              <Text style={styles.inputLabel}>Tanggal Lahir (Tanggal/Bulan/Tahun)</Text>
+              <View style={styles.inputWrapper}>
+                <Ionicons name="calendar-outline" size={18} color="#00AA5B" style={styles.fieldIcon} />
+                <TextInput style={styles.textInput} placeholder="17/08/1945" value={form.tanggal_lahir} onChangeText={handleDateChange} keyboardType="numeric" maxLength={10} placeholderTextColor="#b0bec5" />
+              </View>
+            </View>
+
+            <View style={styles.row}>
+              <View style={{ flex: 1, marginRight: 10 }}>
+                <Text style={styles.inputLabel}>Gender</Text>
+                <View style={styles.genderContainer}>
+                  <TouchableOpacity
+                    style={[styles.genderBox, form.jenis_kelamin === 'L' && styles.boxActive]}
+                    onPress={() => setForm({ ...form, jenis_kelamin: 'L' })}
+                  >
+                    <Ionicons name="male-outline" size={14} color={form.jenis_kelamin === 'L' ? '#fff' : '#78909c'} />
+                    <Text style={[styles.boxText, form.jenis_kelamin === 'L' && styles.textActive]}> L</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.genderBox, form.jenis_kelamin === 'P' && styles.boxActive]}
+                    onPress={() => setForm({ ...form, jenis_kelamin: 'P' })}
+                  >
+                    <Ionicons name="female-outline" size={14} color={form.jenis_kelamin === 'P' ? '#fff' : '#78909c'} />
+                    <Text style={[styles.boxText, form.jenis_kelamin === 'P' && styles.textActive]}> P</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
 
-              <View style={styles.row}>
-                <View style={{ flex: 1, marginRight: 10 }}>
-                  <Text style={styles.inputLabel}>Gender</Text>
-                  <View style={styles.genderContainer}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.inputLabel}>Gol. Darah</Text>
+                <View style={styles.goldarContainer}>
+                  {['A', 'B', 'AB', 'O'].map((item) => (
                     <TouchableOpacity
-                      style={[styles.genderBox, form.jenis_kelamin === 'L' && styles.boxActive]}
-                      onPress={() => setForm({ ...form, jenis_kelamin: 'L' })}
+                      key={item}
+                      style={[styles.goldarBox, form.golongan_darah === item && styles.boxActive]}
+                      onPress={() => setForm({ ...form, golongan_darah: item })}
                     >
-                      <Text style={[styles.boxText, form.jenis_kelamin === 'L' && styles.textActive]}>Laki-laki</Text>
+                      <Text style={[styles.boxText, form.golongan_darah === item && styles.textActive]}>{item}</Text>
                     </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[styles.genderBox, form.jenis_kelamin === 'P' && styles.boxActive]}
-                      onPress={() => setForm({ ...form, jenis_kelamin: 'P' })}
-                    >
-                      <Text style={[styles.boxText, form.jenis_kelamin === 'P' && styles.textActive]}>Perempuan</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.inputLabel}>Gol. Darah</Text>
-                  <View style={styles.goldarContainer}>
-                    {['A', 'B', 'AB', 'O'].map((item) => (
-                      <TouchableOpacity
-                        key={item}
-                        style={[styles.goldarBox, form.golongan_darah === item && styles.boxActive]}
-                        onPress={() => setForm({ ...form, golongan_darah: item })}
-                      >
-                        <Text style={[styles.boxText, form.golongan_darah === item && styles.textActive]}>{item}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
+                  ))}
                 </View>
               </View>
-
-              <InputBox label="No. HP" icon="call-outline" placeholder="812xxx" keyboardType="numeric" onChangeText={(v) => setForm({...form, no_hp: v})} />
-              <InputBox label="Email" icon="mail-outline" placeholder="email@anda.com" keyboardType="email-address" onChangeText={(v) => setForm({...form, email: v})} />
-              <InputBox label="Institusi" icon="business-outline" placeholder="Nama Sekolah/Kantor" onChangeText={(v) => setForm({...form, institusi: v})} />
-              <InputBox label="FB/Instagram" icon="logo-instagram" placeholder="@username" onChangeText={(v) => setForm({...form, sosmed: v})} />
-              <InputBox label="Domisili" icon="map-outline" placeholder="Kota saat ini" onChangeText={(v) => setForm({...form, domisili: v})} />
-              <InputBox label="Alamat Lengkap" icon="location-outline" placeholder="Alamat detail" multiline onChangeText={(v) => setForm({...form, alamat: v})} />
-
-              <TouchableOpacity style={styles.primaryBtn} onPress={handleRegister} disabled={loading}>
-                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Daftar Sekarang</Text>}
-              </TouchableOpacity>
             </View>
           </View>
+
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionBadge}>
+                <Text style={styles.sectionBadgeText}>02</Text>
+              </View>
+              <Text style={styles.sectionTitle}>Kontak & Lainnya</Text>
+            </View>
+
+            <InputBox label="No. HP / WhatsApp" icon="call-outline" placeholder="812xxx" keyboardType="numeric" onChangeText={(v) => setForm({...form, no_hp: v})} />
+            <InputBox label="Email" icon="mail-outline" placeholder="email@anda.com" keyboardType="email-address" onChangeText={(v) => setForm({...form, email: v})} />
+            <InputBox label="Institusi" icon="business-outline" placeholder="Nama Sekolah/Kantor" onChangeText={(v) => setForm({...form, institusi: v})} />
+            <InputBox label="FB/Instagram" icon="logo-instagram" placeholder="@username" onChangeText={(v) => setForm({...form, sosmed: v})} />
+            <InputBox label="Domisili" icon="map-outline" placeholder="Kota saat ini" onChangeText={(v) => setForm({...form, domisili: v})} />
+            <InputBox label="Alamat Lengkap" icon="location-outline" placeholder="Alamat detail" multiline onChangeText={(v) => setForm({...form, alamat: v})} />
+          </View>
+
+          <TouchableOpacity style={styles.primaryBtn} onPress={handleRegister} disabled={loading} activeOpacity={0.85}>
+            {loading ? <ActivityIndicator color="#fff" /> : (
+              <View style={styles.btnInner}>
+                <Text style={styles.btnText}>Daftar Sekarang</Text>
+                <Ionicons name="arrow-forward" size={18} color="#fff" />
+              </View>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.loginLink}>
+            <Text style={styles.loginLinkText}>Sudah punya akun? </Text>
+            <TouchableOpacity onPress={() => router.push('/login')}>
+              <Text style={styles.loginLinkBold}>Masuk di sini</Text>
+            </TouchableOpacity>
+          </View>
+
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -177,45 +216,132 @@ const InputBox = ({ label, icon, ...props }: InputBoxProps) => (
   <View style={styles.inputGroupOuter}>
     <Text style={styles.inputLabel}>{label}</Text>
     <View style={styles.inputWrapper}>
-      <Ionicons name={icon} size={18} color="#64748b" style={styles.fieldIcon} />
-      <TextInput style={styles.textInput} placeholderTextColor="#64748b" {...props} />
+      <Ionicons name={icon} size={18} color="#00AA5B" style={styles.fieldIcon} />
+      <TextInput style={styles.textInput} placeholderTextColor="#b0bec5" {...props} />
     </View>
   </View>
 );
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0f172a' },
-  scrollContent: { padding: 20, paddingBottom: 40 },
-  card: { backgroundColor: '#1e293b', borderRadius: 20, padding: 20 },
-  
-  // Modifikasi header agar elemen-elemen bertumpu ke kiri rapi
-  header: { marginBottom: 20, alignItems: 'flex-start' },
-  
-  // Style baru untuk tombol back
-  backButton: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    marginBottom: 12,
-    marginLeft: -4 // Sedikit kompensasi padding ikon biar sejajar teks bawah
-  },
-  backText: { color: '#94a3b8', fontSize: 14, marginLeft: 6, fontWeight: '500' },
+  container: { flex: 1, backgroundColor: '#f5faf7' },
 
-  title: { fontSize: 22, fontWeight: 'bold', color: '#fff', marginBottom: 2 },
-  subtitle: { color: '#94a3b8', fontSize: 13 },
-  form: { width: '100%' },
-  inputGroupOuter: { marginBottom: 15 },
-  inputLabel: { color: '#94a3b8', fontSize: 11, fontWeight: '600', marginBottom: 5, textTransform: 'uppercase' },
-  inputWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0f172a', borderRadius: 10, paddingHorizontal: 12, borderWidth: 1, borderColor: '#334155' },
+  topBar: {
+    backgroundColor: '#00AA5B',
+    paddingTop: Platform.OS === 'ios' ? 0 : 10,
+    paddingBottom: 18,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  topBarCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  topBarTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#fff',
+  },
+  topBarSub: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
+  },
+
+  scrollContent: { padding: 16, paddingBottom: 48 },
+
+  progressHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e8f5e9',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 16,
+    gap: 6,
+  },
+  progressHintText: {
+    fontSize: 12,
+    color: '#2e7d32',
+    fontWeight: '600',
+  },
+
+  section: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 14,
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 18,
+    gap: 10,
+  },
+  sectionBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#00AA5B',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sectionBadgeText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1a1a2e',
+  },
+
+  inputGroupOuter: { marginBottom: 14 },
+  inputLabel: { color: '#546e7a', fontSize: 11, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.6 },
+  inputWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f5faf7', borderRadius: 12, paddingHorizontal: 12, borderWidth: 1.5, borderColor: '#e0f2ec' },
   fieldIcon: { marginRight: 10 },
-  textInput: { flex: 1, color: '#fff', paddingVertical: 10, fontSize: 14 },
+  textInput: { flex: 1, color: '#1a1a2e', paddingVertical: 12, fontSize: 14 },
+  
   row: { flexDirection: 'row', justifyContent: 'space-between' },
-  genderContainer: { flexDirection: 'row', justifyContent: 'space-between' },
-  genderBox: { flex: 1, backgroundColor: '#0f172a', borderRadius: 10, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#334155', paddingVertical: 10, marginRight: 6 },
-  goldarContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  goldarBox: { width: '48%', backgroundColor: '#0f172a', borderRadius: 10, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#334155', paddingVertical: 10, marginBottom: 8 },
-  boxActive: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
-  boxText: { color: '#64748b', fontWeight: "bold", fontSize: 11 },
+  genderContainer: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
+  genderBox: { flex: 1, backgroundColor: '#f5faf7', borderRadius: 10, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#e0f2ec', paddingVertical: 10 },
+  goldarContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  goldarBox: { width: '47%', backgroundColor: '#f5faf7', borderRadius: 10, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#e0f2ec', paddingVertical: 9 },
+  boxActive: { backgroundColor: '#00AA5B', borderColor: '#00AA5B' },
+  boxText: { color: '#78909c', fontWeight: '700', fontSize: 11 },
   textActive: { color: '#fff' },
-  primaryBtn: { backgroundColor: '#3b82f6', paddingVertical: 15, borderRadius: 10, alignItems: 'center', marginTop: 10 },
-  btnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 }
+
+  primaryBtn: {
+    backgroundColor: '#00AA5B',
+    paddingVertical: 16,
+    borderRadius: 14,
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 4,
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  btnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  btnText: { color: '#fff', fontWeight: '800', fontSize: 16 },
+
+  loginLink: { flexDirection: 'row', justifyContent: 'center', marginTop: 16 },
+  loginLinkText: { color: '#90a4ae', fontSize: 14 },
+  loginLinkBold: { color: '#00AA5B', fontWeight: '800', fontSize: 14 },
 });

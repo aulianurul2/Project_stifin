@@ -18,7 +18,6 @@ import axiosInstance from '@/src/api/axiosConfig';
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.75; 
 
-// Mengambil baseUrl otomatis dari config axios kamu (menghapus '/api' agar mengarah ke root storage)
 const AXIOS_BASE_URL = axiosInstance.defaults.baseURL;
 const BACKEND_ROOT = AXIOS_BASE_URL ? AXIOS_BASE_URL.replace('/api', '') : '';
 
@@ -37,7 +36,6 @@ export default function HomeSTIFIn() {
   const [infoCards, setInfoCards] = useState<InfoCard[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Mengambil data dari API backend Laravel secara real-time
   useEffect(() => {
     const fetchInformasi = async () => {
       try {
@@ -55,54 +53,75 @@ export default function HomeSTIFIn() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Welcome Header */}
+
+      {/* Compact Green Header */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.welcomeText}>Selamat Datang,</Text>
-          <Text style={styles.brandText}>STIFIn Information System</Text>
+        <View style={styles.headerLeft}>
+          <View>
+            <Text style={styles.brandText}>STIFIn</Text>
+            <Text style={styles.brandSub}>Information System</Text>
+          </View>
         </View>
         <TouchableOpacity style={styles.profileButton} onPress={() => router.push('/edit-profile')}>
-          <Ionicons name="person-circle-outline" size={32} color="#1e40af" />
+          <View style={styles.profileAvatar}>
+            <Ionicons name="person-outline" size={20} color="#00AA5B" />
+          </View>
         </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        {/* Section Judul Slider */}
-        <Text style={styles.sectionTitle}>Informasi Tes & Layanan</Text>
 
-        {/* Indikator Loading saat memproses data internet */}
-        {loading ? (
-          <View style={{ padding: 40, alignItems: 'center' }}>
-            <ActivityIndicator size="small" color="#1e40af" />
-            <Text style={{ marginTop: 8, fontSize: 12, color: '#64748b' }}>Memuat informasi...</Text>
+        {/* Hero Banner */}
+        <View style={styles.heroBanner}>
+          <View style={styles.heroBannerContent}>
+            <Text style={styles.heroBannerTag}>🧬 Genetik Tes</Text>
+            <Text style={styles.heroBannerTitle}>Kenali Potensi{'\n'}Genetik Anda</Text>
+            <Text style={styles.heroBannerSub}>Temukan kekuatan tersembunyi lewat metode STIFIn</Text>
           </View>
-        ) : (
-          /* Horizontal Carousel / Slider Card */
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false} 
-            snapToInterval={CARD_WIDTH + 16}
-            decelerationRate="fast"
-            contentContainerStyle={styles.sliderContainer}
-          >
-            {infoCards.map((card) => (
-              <View key={card.id} style={[styles.card, { backgroundColor: card.color || '#eff6ff' }]}>
-                <View>
-                  <View style={styles.cardHeader}>
-                    <Ionicons name={(card.icon || 'information-circle-outline') as any} size={28} color={card.textColor || '#1e40af'} />
+          <View style={styles.heroBannerDeco}>
+            <Text style={{ fontSize: 64 }}>🧬</Text>
+          </View>
+        </View>
+
+        {/* Info Cards Slider */}
+        <View style={styles.sliderSection}>
+          <View style={styles.sliderTitleRow}>
+            <Text style={styles.sectionTitle}>Informasi Layanan</Text>
+            <View style={styles.liveDot}>
+              <View style={styles.liveDotInner} />
+              <Text style={styles.liveText}>Live</Text>
+            </View>
+          </View>
+
+          {loading ? (
+            <View style={styles.loadingBox}>
+              <ActivityIndicator size="small" color="#00AA5B" />
+              <Text style={styles.loadingText}>Memuat informasi...</Text>
+            </View>
+          ) : (
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false} 
+              snapToInterval={CARD_WIDTH + 16}
+              decelerationRate="fast"
+              contentContainerStyle={styles.sliderContainer}
+            >
+              {infoCards.map((card) => (
+                <View key={card.id} style={styles.card}>
+                  <View style={styles.cardIconRow}>
+                    <View style={styles.cardIconBg}>
+                      <Ionicons name={(card.icon || 'information-circle-outline') as any} size={22} color="#00AA5B" />
+                    </View>
                   </View>
 
-                  {/* TAMPILAN GAMBAR PREMIUM DENGAN BLUR BACKGROUND */}
                   {card.image && (
                     <View style={styles.imageContainer}>
-                      {/* Lapisan Belakang: Gambar Duplikat di-Blur */}
                       <Image 
                         source={{ uri: `${BACKEND_ROOT}/storage/${card.image}` }} 
                         style={styles.cardImageBlur} 
                         blurRadius={15}
                         resizeMode="cover"
                       />
-                      {/* Lapisan Depan: Gambar Utama Asli */}
                       <Image 
                         source={{ uri: `${BACKEND_ROOT}/storage/${card.image}` }} 
                         style={styles.cardImageMain} 
@@ -111,25 +130,31 @@ export default function HomeSTIFIn() {
                     </View>
                   )}
 
-                  <Text style={[styles.cardTitle, { color: card.textColor || '#1e40af' }]}>{card.title}</Text>
+                  <Text style={styles.cardTitle}>{card.title}</Text>
                   <Text style={styles.cardDescription}>{card.description}</Text>
                 </View>
-              </View>
-            ))}
-          </ScrollView>
-        )}
-
-        {/* Container Aksi Tombol Daftar Sekarang */}
-        <View style={styles.actionContainer}>
-          <Text style={styles.actionPrompt}>Sudah siap mengetahui potensi genetik Anda?</Text>
-          <TouchableOpacity 
-            style={styles.btnDaftar} 
-            onPress={() => router.push('/pendaftaran')}
-          >
-            <Text style={styles.btnText}>Daftar Sekarang</Text>
-            <Ionicons name="arrow-forward" size={20} color="#fff" />
-          </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
         </View>
+
+        {/* CTA Section */}
+        <View style={styles.ctaSection}>
+          <View style={styles.ctaCard}>
+            <View style={styles.ctaLeft}>
+              <Text style={styles.ctaLabel}>Siap Memulai?</Text>
+              <Text style={styles.ctaTitle}>Daftarkan diri Anda sekarang</Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.ctaButton} 
+              onPress={() => router.push('/pendaftaran')}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="arrow-forward" size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -138,75 +163,170 @@ export default function HomeSTIFIn() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '#f8fafc' 
+    backgroundColor: '#f5faf7',
   },
   header: { 
     paddingHorizontal: 20, 
-    paddingTop: 20, 
-    paddingBottom: 15, 
-    backgroundColor: '#fff', 
+    paddingTop: 16, 
+    paddingBottom: 14, 
+    backgroundColor: '#fff',
     flexDirection: 'row', 
     justifyContent: 'space-between', 
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderColor: '#e2e8f0'
+    borderColor: '#e8f5e9',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 3,
   } as ViewStyle,
-  welcomeText: { 
-    fontSize: 14, 
-    color: '#64748b' 
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
+  logoMini: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#00AA5B',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoMiniText: { fontSize: 18 },
   brandText: { 
-    fontSize: 18, 
-    fontWeight: 'bold', 
-    color: '#0f172a' 
+    fontSize: 16, 
+    fontWeight: '900', 
+    color: '#1a1a2e',
+    letterSpacing: 1,
   },
-  profileButton: {
-    padding: 4,
+  brandSub: {
+    fontSize: 10,
+    color: '#90a4ae',
+    marginTop: 1,
   },
-  content: { 
-    paddingVertical: 20 
+  profileButton: { padding: 2 },
+  profileAvatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#e8f5e9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#00AA5B',
+  },
+  content: { paddingVertical: 20 },
+
+  heroBanner: {
+    marginHorizontal: 16,
+    marginBottom: 24,
+    backgroundColor: '#00AA5B',
+    borderRadius: 20,
+    padding: 22,
+    flexDirection: 'row',
+    overflow: 'hidden',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  heroBannerContent: { flex: 1 },
+  heroBannerTag: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  heroBannerTitle: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#fff',
+    lineHeight: 28,
+    marginBottom: 8,
+  },
+  heroBannerSub: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.75)',
+    lineHeight: 17,
+  },
+  heroBannerDeco: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    opacity: 0.4,
+  },
+
+  sliderSection: { marginBottom: 20 },
+  sliderTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginBottom: 14,
   },
   sectionTitle: { 
     fontSize: 16, 
-    fontWeight: 'bold', 
-    color: '#334155', 
-    paddingHorizontal: 20,
-    marginBottom: 12 
+    fontWeight: '800', 
+    color: '#1a1a2e',
+  },
+  liveDot: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e8f5e9',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    gap: 4,
+  },
+  liveDotInner: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#00AA5B',
+  },
+  liveText: { fontSize: 11, color: '#00AA5B', fontWeight: '700' },
+
+  loadingBox: {
+    padding: 40,
+    alignItems: 'center',
+    gap: 8,
+  },
+  loadingText: {
+    fontSize: 12,
+    color: '#90a4ae',
   },
   sliderContainer: { 
-    paddingLeft: 20, 
+    paddingLeft: 16, 
     paddingRight: 4,
-    paddingBottom: 10
+    paddingBottom: 8,
   },
   card: { 
     width: CARD_WIDTH, 
-    borderRadius: 16, 
-    padding: 20, 
-    marginRight: 16, 
-    shadowColor: '#0f172a',
+    borderRadius: 18, 
+    padding: 18, 
+    marginRight: 14, 
+    backgroundColor: '#fff',
+    shadowColor: '#00AA5B',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.08,
     shadowRadius: 10,
-    elevation: 2,
-    minHeight: 180
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#e8f5e9',
   } as ViewStyle,
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  cardIconRow: {
+    marginBottom: 12,
+  },
+  cardIconBg: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: '#e8f5e9',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12
-  } as ViewStyle,
-  badge: {
-    backgroundColor: 'rgba(255,255,255,0.6)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8
   },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '700'
-  },
-  // STYLING BARU UNTUK KOMPONEN GAMBAR BLUR BALUTAN
   imageContainer: {
     width: '100%',
     aspectRatio: 16 / 9,
@@ -216,58 +336,80 @@ const styles = StyleSheet.create({
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f5faf7',
   },
   cardImageBlur: {
     width: '100%',
     height: '100%',
     position: 'absolute',
-    opacity: 0.35, // Transparansi latar belakang agar tidak terlalu mencolok
+    opacity: 0.35,
   },
   cardImageMain: {
     width: '100%',
     height: '100%',
   },
   cardTitle: { 
-    fontSize: 16, 
-    fontWeight: 'bold', 
-    lineHeight: 22,
-    marginBottom: 6
+    fontSize: 15, 
+    fontWeight: '800', 
+    color: '#1a1a2e',
+    lineHeight: 21,
+    marginBottom: 6,
   },
   cardDescription: { 
-    fontSize: 13, 
-    color: '#475569', 
-    lineHeight: 18 
+    fontSize: 12, 
+    color: '#78909c', 
+    lineHeight: 17,
   },
-  actionContainer: { 
-    marginTop: 35, 
-    paddingHorizontal: 20, 
-    alignItems: 'center' 
+
+  ctaSection: {
+    paddingHorizontal: 16,
+    marginTop: 6,
   },
-  actionPrompt: {
-    fontSize: 14,
-    color: '#64748b',
-    marginBottom: 15,
-    textAlign: 'center'
-  },
-  btnDaftar: { 
-    backgroundColor: '#1e40af', 
-    width: '100%',
-    padding: 16, 
-    borderRadius: 14, 
-    flexDirection: 'row', 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    gap: 8,
-    shadowColor: '#1e40af',
+  ctaCard: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1.5,
+    borderColor: '#00AA5B',
+    shadowColor: '#00AA5B',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 4 
-  } as ViewStyle,
+    elevation: 3,
+  },
+  ctaLeft: { flex: 1 },
+  ctaLabel: {
+    fontSize: 11,
+    color: '#00AA5B',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 4,
+  },
+  ctaTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1a1a2e',
+  },
+  ctaButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#00AA5B',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
   btnText: { 
     color: '#fff', 
-    fontWeight: 'bold', 
-    fontSize: 16 
-  }
+    fontWeight: '800', 
+    fontSize: 15,
+  },
 });

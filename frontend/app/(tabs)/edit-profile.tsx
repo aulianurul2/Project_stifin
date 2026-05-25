@@ -11,7 +11,8 @@ import {
   ActivityIndicator,
   KeyboardTypeOptions,
   Modal,
-  FlatList
+  FlatList,
+  Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -38,6 +39,7 @@ interface InputGroupProps {
   keyboardType?: KeyboardTypeOptions;
   multiline?: boolean;
   editable?: boolean;
+  icon?: keyof typeof Ionicons.glyphMap;
 }
 
 export default function EditProfile() {
@@ -58,7 +60,6 @@ export default function EditProfile() {
     domisili: ''
   });
 
-  // State untuk mengontrol Modal Picker Kustom
   const [activePicker, setActivePicker] = useState<'jk' | 'golDarah' | null>(null);
 
   const opsiJK = [
@@ -74,7 +75,6 @@ export default function EditProfile() {
     { label: 'O', value: 'O' }
   ];
 
-  // 1. Load Data Profil Saat Ini
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -105,53 +105,50 @@ export default function EditProfile() {
     fetchProfile();
   }, []);
 
-  // 2. Kirim Perubahan ke Backend
   const handleSimpan = async () => {
-  if (!formData.nama || !formData.no_hp || !formData.email || !formData.alamat) {
-    Toast.show({
-      type: 'error',
-      text1: 'Perhatian',
-      text2: 'Nama, No HP, Email, dan Alamat wajib diisi.'
-    });
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const response = await axiosInstance.put('/profile/update', formData);
-    if (response.status === 200) {
-      // GANTI ALERT DENGAN TOAST SUKSES
+    if (!formData.nama || !formData.no_hp || !formData.email || !formData.alamat) {
       Toast.show({
-        type: 'success',
-        text1: 'Sukses',
-        text2: 'Data berhasil diperbarui',
-        position: 'top',
-        visibilityTime: 3000,
+        type: 'error',
+        text1: 'Perhatian',
+        text2: 'Nama, No HP, Email, dan Alamat wajib diisi.'
       });
-      
-      // Opsional: kembali ke home setelah 1-2 detik
-      setTimeout(() => router.replace('/home'), 1500);
+      return;
     }
-  } catch (error: any) {
-    console.log("Error Update Profil:", error.response?.data || error.message);
-    
-    Toast.show({
-      type: 'error',
-      text1: 'Gagal',
-      text2: error.response?.status === 422 
-        ? 'Email sudah digunakan orang lain.' 
-        : 'Terjadi kesalahan saat memperbarui profil.'
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+
+    setLoading(true);
+    try {
+      const response = await axiosInstance.put('/profile/update', formData);
+      if (response.status === 200) {
+        Toast.show({
+          type: 'success',
+          text1: 'Sukses',
+          text2: 'Data berhasil diperbarui',
+          position: 'top',
+          visibilityTime: 3000,
+        });
+        setTimeout(() => router.replace('/home'), 1500);
+      }
+    } catch (error: any) {
+      console.log("Error Update Profil:", error.response?.data || error.message);
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal',
+        text2: error.response?.status === 422 
+          ? 'Email sudah digunakan orang lain.' 
+          : 'Terjadi kesalahan saat memperbarui profil.'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (fetching) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#1e40af" />
-        <Text style={{ marginTop: 10 }}>Memuat data profil...</Text>
+        <View style={styles.loadingCard}>
+          <ActivityIndicator size="large" color="#00AA5B" />
+          <Text style={styles.loadingText}>Memuat data profil...</Text>
+        </View>
       </View>
     );
   }
@@ -160,115 +157,150 @@ export default function EditProfile() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.replace('/home')}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
+
+      {/* Green Top Bar */}
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.replace('/home')}>
+          <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Edit Profil</Text>
+        <View style={styles.topBarCenter}>
+          <Text style={styles.topBarTitle}>Edit Profil</Text>
+          <Text style={styles.topBarSub}>Perbarui informasi Anda</Text>
+        </View>
+        <View style={{ width: 38 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.sectionTitle}>Data Akun & Personal</Text>
 
-        <InputGroup 
-          label="Email Aktif" 
-          value={formData.email} 
-          keyboardType="email-address"
-          onChange={(val) => setFormData({...formData, email: val})} 
-          editable={true} 
-        />
-
-        <InputGroup 
-          label="Nama Lengkap" 
-          value={formData.nama} 
-          onChange={(val) => setFormData({...formData, nama: val})} 
-        />
-
-        <InputGroup 
-          label="Nomor WhatsApp" 
-          value={formData.no_hp} 
-          keyboardType="phone-pad"
-          onChange={(val) => setFormData({...formData, no_hp: val})} 
-        />
-
-        {/* BARU: Dropdown Menggunakan Selector Box Kustom yang Aman */}
-        <View style={styles.row}>
-          <View style={{ flex: 1, marginRight: 10 }}>
-            <Text style={styles.labelSimple}>Jenis Kelamin</Text>
-            <TouchableOpacity 
-              style={styles.selectorField} 
-              activeOpacity={0.7}
-              onPress={() => setActivePicker('jk')}
-            >
-              <Text style={styles.selectorValueText}>{labelJenisKelaminAktif}</Text>
-              <Ionicons name="chevron-down" size={16} color="#64748b" />
-            </TouchableOpacity>
+        {/* Section 1: Akun */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIcon}>
+              <Ionicons name="person-outline" size={16} color="#00AA5B" />
+            </View>
+            <Text style={styles.sectionTitle}>Data Akun & Personal</Text>
           </View>
 
-          <View style={{ width: 120 }}>
-            <Text style={styles.labelSimple}>Gol. Darah</Text>
-            <TouchableOpacity 
-              style={styles.selectorField} 
-              activeOpacity={0.7}
-              onPress={() => setActivePicker('golDarah')}
-            >
-              <Text style={styles.selectorValueText}>{formData.golongan_darah}</Text>
-              <Ionicons name="chevron-down" size={16} color="#64748b" />
-            </TouchableOpacity>
+          <InputGroup 
+            label="Email Aktif" 
+            value={formData.email} 
+            keyboardType="email-address"
+            onChange={(val) => setFormData({...formData, email: val})}
+            icon="mail-outline"
+          />
+
+          <InputGroup 
+            label="Nama Lengkap" 
+            value={formData.nama} 
+            onChange={(val) => setFormData({...formData, nama: val})}
+            icon="person-outline"
+          />
+
+          <InputGroup 
+            label="Nomor WhatsApp" 
+            value={formData.no_hp} 
+            keyboardType="phone-pad"
+            onChange={(val) => setFormData({...formData, no_hp: val})}
+            icon="call-outline"
+          />
+
+          {/* Gender & Goldar Row */}
+          <View style={styles.row}>
+            <View style={{ flex: 1, marginRight: 10 }}>
+              <Text style={styles.labelSimple}>Jenis Kelamin</Text>
+              <TouchableOpacity 
+                style={styles.selectorField} 
+                activeOpacity={0.7}
+                onPress={() => setActivePicker('jk')}
+              >
+                <Ionicons name={formData.jenis_kelamin === 'L' ? 'male-outline' : 'female-outline'} size={16} color="#00AA5B" />
+                <Text style={styles.selectorValueText}>{labelJenisKelaminAktif}</Text>
+                <Ionicons name="chevron-down" size={14} color="#90a4ae" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ width: 120 }}>
+              <Text style={styles.labelSimple}>Gol. Darah</Text>
+              <TouchableOpacity 
+                style={styles.selectorField} 
+                activeOpacity={0.7}
+                onPress={() => setActivePicker('golDarah')}
+              >
+                <Ionicons name="water-outline" size={16} color="#00AA5B" />
+                <Text style={styles.selectorValueText}>{formData.golongan_darah}</Text>
+                <Ionicons name="chevron-down" size={14} color="#90a4ae" />
+              </TouchableOpacity>
+            </View>
           </View>
+
+          <InputGroup 
+            label="Tanggal Lahir (Tahun-Bulan-Tanggal)" 
+            value={formData.tanggal_lahir} 
+            onChange={(val) => setFormData({...formData, tanggal_lahir: val})}
+            icon="calendar-outline"
+          />
         </View>
 
-        <InputGroup 
-          label="Tanggal Lahir (Tahun-Bulan-Tanggal)" 
-          value={formData.tanggal_lahir} 
-          onChange={(val) => setFormData({...formData, tanggal_lahir: val})} 
-        />
+        {/* Section 2: Tambahan */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIcon}>
+              <Ionicons name="information-circle-outline" size={16} color="#00AA5B" />
+            </View>
+            <Text style={styles.sectionTitle}>Data Tambahan</Text>
+          </View>
 
-        <Text style={styles.sectionTitle}>Data Tambahan</Text>
+          <InputGroup 
+            label="Institusi / Pekerjaan" 
+            value={formData.institusi} 
+            onChange={(val) => setFormData({...formData, institusi: val})}
+            icon="business-outline"
+          />
 
-        <InputGroup 
-          label="Institusi / Pekerjaan" 
-          value={formData.institusi} 
-          onChange={(val) => setFormData({...formData, institusi: val})} 
-        />
+          <InputGroup 
+            label="Username Sosial Media" 
+            value={formData.sosmed} 
+            onChange={(val) => setFormData({...formData, sosmed: val})}
+            icon="logo-instagram"
+          />
 
-        <InputGroup 
-          label="Username Sosial Media" 
-          value={formData.sosmed} 
-          onChange={(val) => setFormData({...formData, sosmed: val})} 
-        />
+          <InputGroup 
+            label="Kota Domisili" 
+            value={formData.domisili} 
+            onChange={(val) => setFormData({...formData, domisili: val})}
+            icon="map-outline"
+          />
 
-        <InputGroup 
-          label="Kota Domisili" 
-          value={formData.domisili} 
-          onChange={(val) => setFormData({...formData, domisili: val})} 
-        />
+          <InputGroup 
+            label="Alamat Lengkap" 
+            value={formData.alamat} 
+            multiline
+            onChange={(val) => setFormData({...formData, alamat: val})}
+            icon="location-outline"
+          />
+        </View>
 
-        <InputGroup 
-          label="Alamat Lengkap" 
-          value={formData.alamat} 
-          multiline
-          onChange={(val) => setFormData({...formData, alamat: val})} 
-        />
-
-        {/* Tombol Simpan */}
+        {/* Save Button */}
         <View style={styles.footer}>
           <TouchableOpacity 
             style={[styles.btnSubmit, loading && { opacity: 0.7 }]} 
             onPress={handleSimpan}
             disabled={loading}
+            activeOpacity={0.85}
           >
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.btnText}>Simpan Perubahan</Text>
+              <View style={styles.btnInner}>
+                <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+                <Text style={styles.btnText}>Simpan Perubahan</Text>
+              </View>
             )}
           </TouchableOpacity>
         </View>
       </ScrollView>
 
-      {/* KUSTOM PICKER BOTTOM SHEET MODAL */}
+      {/* Custom Picker Modal */}
       <Modal
         visible={activePicker !== null}
         transparent={true}
@@ -281,39 +313,40 @@ export default function EditProfile() {
           onPress={() => setActivePicker(null)}
         >
           <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
                 {activePicker === 'jk' ? 'Pilih Jenis Kelamin' : 'Pilih Golongan Darah'}
               </Text>
-              <TouchableOpacity onPress={() => setActivePicker(null)}>
-                <Ionicons name="close-circle" size={24} color="#94a3b8" />
+              <TouchableOpacity onPress={() => setActivePicker(null)} style={styles.modalClose}>
+                <Ionicons name="close" size={20} color="#90a4ae" />
               </TouchableOpacity>
             </View>
 
             <FlatList
               data={activePicker === 'jk' ? opsiJK : opsiGolDarah}
               keyExtractor={(item) => item.value}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.modalItem,
-                    ((activePicker === 'jk' ? formData.jenis_kelamin : formData.golongan_darah) === item.value) && styles.modalItemOptionSelected
-                  ]}
-                  onPress={() => {
-                    if (activePicker === 'jk') {
-                      setFormData({ ...formData, jenis_kelamin: item.value });
-                    } else {
-                      setFormData({ ...formData, golongan_darah: item.value });
-                    }
-                    setActivePicker(null);
-                  }}
-                >
-                  <Text style={styles.modalItemText}>{item.label}</Text>
-                  {((activePicker === 'jk' ? formData.jenis_kelamin : formData.golongan_darah) === item.value) && (
-                    <Ionicons name="checkmark-circle" size={20} color="#1e40af" />
-                  )}
-                </TouchableOpacity>
-              )}
+              renderItem={({ item }) => {
+                const isSelected = (activePicker === 'jk' ? formData.jenis_kelamin : formData.golongan_darah) === item.value;
+                return (
+                  <TouchableOpacity
+                    style={[styles.modalItem, isSelected && styles.modalItemSelected]}
+                    onPress={() => {
+                      if (activePicker === 'jk') {
+                        setFormData({ ...formData, jenis_kelamin: item.value });
+                      } else {
+                        setFormData({ ...formData, golongan_darah: item.value });
+                      }
+                      setActivePicker(null);
+                    }}
+                  >
+                    <Text style={[styles.modalItemText, isSelected && styles.modalItemTextSelected]}>{item.label}</Text>
+                    {isSelected && (
+                      <Ionicons name="checkmark-circle" size={20} color="#00AA5B" />
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
             />
           </View>
         </TouchableOpacity>
@@ -322,49 +355,171 @@ export default function EditProfile() {
   );
 }
 
-const InputGroup = ({ label, value, onChange, keyboardType = 'default', multiline = false, editable = true }: InputGroupProps) => (
+const InputGroup = ({ label, value, onChange, keyboardType = 'default', multiline = false, editable = true, icon }: InputGroupProps) => (
   <View style={styles.inputGroup}>
     <Text style={styles.labelSimple}>{label}</Text>
-    <TextInput 
-      style={[styles.input, multiline && styles.textArea, !editable && styles.disabledInput]} 
-      value={value}
-      onChangeText={onChange}
-      keyboardType={keyboardType}
-      multiline={multiline}
-      editable={editable}
-      placeholderTextColor="#94a3b8"
-    />
+    <View style={[styles.inputRow, !editable && styles.inputRowDisabled]}>
+      {icon && <Ionicons name={icon} size={16} color="#00AA5B" style={styles.inputIcon} />}
+      <TextInput 
+        style={[styles.input, multiline && styles.textArea]} 
+        value={value}
+        onChangeText={onChange}
+        keyboardType={keyboardType}
+        multiline={multiline}
+        editable={editable}
+        placeholderTextColor="#b0bec5"
+      />
+    </View>
   </View>
 );
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { padding: 20, backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', gap: 15, borderBottomWidth: 1, borderColor: '#e2e8f0' },
-  headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#0f172a' },
-  content: { padding: 20 },
-  sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#1e40af', marginBottom: 15, marginTop: 10 },
-  inputGroup: { marginBottom: 15 },
-  labelSimple: { fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 6, marginLeft: 2 },
-  input: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 10, padding: 12, fontSize: 15, color: '#1e293b' },
-  disabledInput: { backgroundColor: '#f1f5f9', color: '#64748b', borderColor: '#e2e8f0' },
+  container: { flex: 1, backgroundColor: '#f5faf7' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5faf7' },
+  loadingCard: { alignItems: 'center', gap: 12 },
+  loadingText: { fontSize: 14, color: '#546e7a', fontWeight: '600' },
+
+  topBar: {
+    backgroundColor: '#00AA5B',
+    paddingTop: Platform.OS === 'ios' ? 0 : 10,
+    paddingBottom: 18,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  topBarCenter: { flex: 1, alignItems: 'center' },
+  topBarTitle: { fontSize: 18, fontWeight: '800', color: '#fff' },
+  topBarSub: { fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+
+  content: { padding: 16, paddingBottom: 48 },
+
+  section: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 14,
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#e8f5e9',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 18,
+    gap: 8,
+  },
+  sectionIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#e8f5e9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sectionTitle: { fontSize: 15, fontWeight: '800', color: '#1a1a2e' },
+
+  inputGroup: { marginBottom: 14 },
+  labelSimple: { fontSize: 11, fontWeight: '700', color: '#546e7a', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.6 },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5faf7',
+    borderWidth: 1.5,
+    borderColor: '#e0f2ec',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+  },
+  inputRowDisabled: {
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
+  },
+  inputIcon: { marginRight: 8 },
+  input: { flex: 1, color: '#1a1a2e', paddingVertical: 12, fontSize: 14 },
   textArea: { height: 80, textAlignVertical: 'top' },
-  row: { flexDirection: 'row', marginBottom: 15 },
-  
-  // Style untuk Custom Selector UI Baru pengganti Picker Native
-  selectorField: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 10, height: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12 },
-  selectorValueText: { fontSize: 15, color: '#1e293b' },
 
-  // Style Modal Bottom Sheet Pop up
+  row: { flexDirection: 'row', marginBottom: 14 },
+  selectorField: {
+    backgroundColor: '#f5faf7',
+    borderWidth: 1.5,
+    borderColor: '#e0f2ec',
+    borderRadius: 12,
+    height: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    gap: 6,
+  },
+  selectorValueText: { flex: 1, fontSize: 14, color: '#1a1a2e', fontWeight: '600' },
+
+  footer: { marginTop: 6, marginBottom: 16 },
+  btnSubmit: {
+    backgroundColor: '#00AA5B',
+    padding: 16,
+    borderRadius: 14,
+    alignItems: 'center',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  btnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  btnText: { color: '#fff', fontWeight: '800', fontSize: 16 },
+
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '50%' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  modalTitle: { fontSize: 16, fontWeight: 'bold', color: '#0f172a' },
-  modalItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 10, borderRadius: 8 },
-  modalItemOptionSelected: { backgroundColor: '#eff6ff' },
-  modalItemText: { fontSize: 15, color: '#334155' },
-
-  footer: { marginTop: 10, marginBottom: 40 },
-  btnSubmit: { backgroundColor: '#1e40af', padding: 16, borderRadius: 12, alignItems: 'center', elevation: 4 },
-  btnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 }
+  modalSheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    maxHeight: '50%',
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#e0f2ec',
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  modalClose: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f5faf7',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalTitle: { fontSize: 16, fontWeight: '800', color: '#1a1a2e' },
+  modalItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    marginBottom: 4,
+  },
+  modalItemSelected: { backgroundColor: '#e8f5e9' },
+  modalItemText: { fontSize: 15, color: '#37474f', fontWeight: '600' },
+  modalItemTextSelected: { color: '#00AA5B', fontWeight: '700' },
 });

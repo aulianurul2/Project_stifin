@@ -144,7 +144,7 @@
                                                 </tr>
                                                 @endforelse
                                             </tbody>
-                                        </table>
+                                        </table>    
                                     </div>
 
                                     @if($klien->hasPages())

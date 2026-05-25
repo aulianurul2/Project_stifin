@@ -7,7 +7,8 @@ import {
   TouchableOpacity, 
   ScrollView, 
   ActivityIndicator, 
-  Alert 
+  Alert,
+  Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -69,7 +70,6 @@ export default function PendaftaranTes() {
       return;
     }
     
-    // Berpindah ke form pendaftaran dengan membawa parameter jadwal
     router.push({
       pathname: '/form-pendaftaran',
       params: { 
@@ -80,119 +80,142 @@ export default function PendaftaranTes() {
     });
   };
 
+  const lokasiOptions = ['Home Visit', 'Kantor Cabang'];
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header Section */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.menuIcon} onPress={() => router.back()}>
-          <Ionicons name="arrow-back-outline" size={28} color="#1e293b" />
+
+      {/* Green Top Bar */}
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Ionicons name="arrow-back-outline" size={22} color="#fff" />
         </TouchableOpacity>
-        <View style={styles.profileSection}>
-          <View style={styles.avatarPlaceholder}>
-             <Ionicons name="person" size={30} color="#94a3b8" />
-          </View>
-          <View>
-            <Text style={styles.welcomeText}>Halo, {userName}!</Text>
-            <Text style={styles.subText}>Silakan pilih lokasi dan waktu tes Anda</Text>
-          </View>
+        <View style={styles.topBarCenter}>
+          <Text style={styles.topBarTitle}>Pilih Jadwal Tes</Text>
+          <Text style={styles.topBarSub}>Halo, {userName}!</Text>
         </View>
+        <View style={{ width: 38 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        
-        {/* Selector Section (Dropdown) */}
-        <View style={styles.selectorSection}>
-          <View style={styles.labelBox}>
-            <Text style={styles.bold}>Tempat Tes :</Text>
-          </View>
-          <View style={styles.dropdownContainer}>
-            <TouchableOpacity 
-              style={styles.dropdownTrigger} 
-              onPress={() => setShowDropdown(!showDropdown)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.dropdownValue}>{tempatTes}</Text>
-              <Ionicons name={showDropdown ? "chevron-up" : "chevron-down"} size={18} color="#0891b2" />
-            </TouchableOpacity>
-            
-            {showDropdown && (
-              <View style={styles.dropdownMenu}>
-                {['Home Visit', 'Kantor Cabang'].map((val) => (
-                  <TouchableOpacity 
-                    key={val} 
-                    onPress={() => {
-                      setTempatTes(val); 
-                      setShowDropdown(false); 
-                      setSelectedJadwal(null);
-                    }} 
-                    style={styles.dropItem}
-                  >
-                    <Text style={val === tempatTes ? styles.activeDropText : {}}>{val}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
+
+        {/* Info Banner */}
+        <View style={styles.infoBanner}>
+          <Ionicons name="information-circle-outline" size={18} color="#0288d1" />
+          <Text style={styles.infoBannerText}>Pilih lokasi dan waktu tes yang sesuai dengan Anda</Text>
+        </View>
+
+        {/* Location Selector */}
+        <View style={styles.locationCard}>
+          <Text style={styles.locationLabel}>
+            <Ionicons name="location-outline" size={13} color="#546e7a" /> Lokasi Tes
+          </Text>
+          <View style={styles.locationOptions}>
+            {lokasiOptions.map((val) => (
+              <TouchableOpacity
+                key={val}
+                style={[styles.locationChip, tempatTes === val && styles.locationChipActive]}
+                onPress={() => {
+                  setTempatTes(val);
+                  setSelectedJadwal(null);
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={val === 'Home Visit' ? 'home-outline' : 'business-outline'}
+                  size={14}
+                  color={tempatTes === val ? '#fff' : '#546e7a'}
+                />
+                <Text style={[styles.locationChipText, tempatTes === val && styles.locationChipTextActive]}>
+                  {val}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 
-        {/* Jadwal Table Section */}
+        {/* Schedule Table */}
         <View style={styles.tableCard}>
-          <View style={styles.tableHeader}>
-            <Text style={styles.tableHeaderText}>Pilihan Jadwal Tersedia</Text>
+          <View style={styles.tableCardHeader}>
+            <View style={styles.tableCardHeaderLeft}>
+              <Ionicons name="calendar-outline" size={18} color="#00AA5B" />
+              <Text style={styles.tableCardTitle}>Jadwal Tersedia</Text>
+            </View>
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>{filteredJadwal.length} Slot</Text>
+            </View>
           </View>
           
+          {/* Table Head */}
           <View style={styles.rowHeader}>
-            <Text style={[styles.col, styles.bold]}>Tanggal</Text>
-            <Text style={[styles.col, styles.bold]}>Waktu</Text>
-            <Text style={[styles.col, styles.bold, { textAlign: 'center' }]}>Status</Text>
+            <Text style={[styles.col, styles.colHeader]}>Tanggal</Text>
+            <Text style={[styles.colMid, styles.colHeader]}>Waktu</Text>
+            <Text style={[styles.colEnd, styles.colHeader]}>Status</Text>
           </View>
 
           {loading ? (
-            <ActivityIndicator size="large" color="#3b82f6" style={{ margin: 30 }} />
+            <View style={styles.loadingBox}>
+              <ActivityIndicator size="large" color="#00AA5B" />
+              <Text style={styles.loadingText}>Memuat jadwal...</Text>
+            </View>
           ) : filteredJadwal.length > 0 ? (
-            filteredJadwal.map((item) => (
-              <TouchableOpacity 
-                key={item.id_jadwal} 
-                onPress={() => setSelectedJadwal(item)} 
-                style={[
-                  styles.rowData, 
-                  selectedJadwal?.id_jadwal === item.id_jadwal && styles.selectedRow
-                ]}
-              >
-                <Text style={styles.col}>{item.tanggal}</Text>
-                <Text style={styles.col}>{item.waktu} WIB</Text>
-                <View style={styles.col}>
-                  <View style={styles.statusBadge}>
-                    <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
+            filteredJadwal.map((item) => {
+              const isSelected = selectedJadwal?.id_jadwal === item.id_jadwal;
+              return (
+                <TouchableOpacity 
+                  key={item.id_jadwal} 
+                  onPress={() => setSelectedJadwal(item)} 
+                  style={[styles.rowData, isSelected && styles.selectedRow]}
+                  activeOpacity={0.7}
+                >
+                  {isSelected && <View style={styles.selectedIndicator} />}
+                  <Text style={[styles.col, isSelected && styles.selectedText]}>{item.tanggal}</Text>
+                  <Text style={[styles.colMid, isSelected && styles.selectedText]}>{item.waktu} WIB</Text>
+                  <View style={styles.colEnd}>
+                    <View style={styles.statusBadge}>
+                      <View style={styles.statusDot} />
+                      <Text style={styles.statusText}>{item.status}</Text>
+                    </View>
                   </View>
-                </View>
-              </TouchableOpacity>
-            ))
+                </TouchableOpacity>
+              );
+            })
           ) : (
             <View style={styles.emptyState}>
-              <Ionicons name="calendar-outline" size={40} color="#cbd5e1" />
-              <Text style={styles.emptyText}>Tidak ada jadwal tersedia untuk lokasi ini.</Text>
+              <View style={styles.emptyIconBg}>
+                <Ionicons name="calendar-outline" size={32} color="#90a4ae" />
+              </View>
+              <Text style={styles.emptyTitle}>Tidak Ada Jadwal</Text>
+              <Text style={styles.emptyText}>Belum ada jadwal tersedia untuk lokasi ini.</Text>
             </View>
           )}
         </View>
 
-        {/* Footer Navigation */}
+        {/* Selected Info */}
+        {selectedJadwal && (
+          <View style={styles.selectedInfo}>
+            <Ionicons name="checkmark-circle" size={18} color="#00AA5B" />
+            <Text style={styles.selectedInfoText}>
+              Dipilih: <Text style={{ fontWeight: '800' }}>{selectedJadwal.tanggal}</Text> pukul {selectedJadwal.waktu} WIB
+            </Text>
+          </View>
+        )}
+
+        {/* Footer Buttons */}
         <View style={styles.footerBtns}>
-          <TouchableOpacity style={styles.btnBack} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.btnBack} onPress={() => router.back()} activeOpacity={0.7}>
+            <Ionicons name="arrow-back" size={16} color="#546e7a" />
             <Text style={styles.btnBackText}>Kembali</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={[
-              styles.btnNext, 
-              { backgroundColor: selectedJadwal ? '#1e40af' : '#cbd5e1' }
-            ]} 
+            style={[styles.btnNext, !selectedJadwal && styles.btnNextDisabled]} 
             onPress={handleNext}
             disabled={!selectedJadwal}
+            activeOpacity={0.85}
           >
-            <Text style={[styles.btnNextText, { color: selectedJadwal ? '#fff' : '#64748b' }]}>
-              Berikutnya
-            </Text>
+            <Text style={[styles.btnNextText, !selectedJadwal && styles.btnNextTextDisabled]}>Berikutnya</Text>
+            <Ionicons name="arrow-forward" size={16} color={selectedJadwal ? '#fff' : '#b0bec5'} />
           </TouchableOpacity>
         </View>
 
@@ -202,111 +225,241 @@ export default function PendaftaranTes() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { 
-    padding: 20, 
-    backgroundColor: '#fff', 
-    borderBottomWidth: 1, 
-    borderColor: '#e2e8f0',
-    paddingTop: 50
+  container: { flex: 1, backgroundColor: '#f5faf7' },
+
+  topBar: {
+    backgroundColor: '#00AA5B',
+    paddingTop: Platform.OS === 'ios' ? 0 : 10,
+    paddingBottom: 18,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  menuIcon: { marginBottom: 15 },
-  profileSection: { flexDirection: 'row', alignItems: 'center' },
-  avatarPlaceholder: { 
-    width: 60, 
-    height: 60, 
-    backgroundColor: '#f1f5f9', 
-    marginRight: 15, 
-    borderRadius: 15,
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e2e8f0'
   },
-  welcomeText: { fontSize: 20, fontWeight: 'bold', color: '#1e293b' },
-  subText: { fontSize: 13, color: '#64748b', marginTop: 2 },
-  content: { padding: 20 },
-  selectorSection: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    marginBottom: 20, 
-    zIndex: 1000 // Sangat penting untuk Android
+  topBarCenter: { flex: 1, alignItems: 'center' },
+  topBarTitle: { fontSize: 18, fontWeight: '800', color: '#fff' },
+  topBarSub: { fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+
+  content: { padding: 16, paddingBottom: 48 },
+
+  infoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e1f5fe',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 16,
+    gap: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#0288d1',
   },
-  labelBox: { 
-    backgroundColor: '#e2e8f0', 
-    paddingVertical: 10, 
-    paddingHorizontal: 12, 
-    borderRadius: 8,
-    marginRight: 10 
-  },
-  dropdownContainer: { flex: 1, position: 'relative' },
-  dropdownTrigger: { 
+  infoBannerText: { fontSize: 12, color: '#01579b', fontWeight: '600', flex: 1 },
+
+  locationCard: {
     backgroundColor: '#fff',
-    borderWidth: 1, 
-    borderColor: '#22d3ee', 
-    borderRadius: 8,
-    padding: 10, 
-    flexDirection: 'row', 
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-  dropdownValue: { fontSize: 14, color: '#1e293b', fontWeight: '600' },
-  dropdownMenu: { 
-    position: 'absolute', 
-    top: 45, 
-    left: 0, 
-    right: 0, 
-    backgroundColor: '#fff', 
-    borderRadius: 8,
-    borderWidth: 1, 
-    borderColor: '#e2e8f0',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    zIndex: 2000 
-  },
-  dropItem: { padding: 12, borderBottomWidth: 1, borderColor: '#f1f5f9' },
-  activeDropText: { color: '#0891b2', fontWeight: 'bold' },
-  tableCard: { 
-    backgroundColor: '#fff', 
-    borderRadius: 12, 
-    overflow: 'hidden', 
-    borderWidth: 1, 
-    borderColor: '#e2e8f0',
-    elevation: 2
-  },
-  tableHeader: { backgroundColor: '#f1f5f9', padding: 15, borderBottomWidth: 1, borderColor: '#e2e8f0' },
-  tableHeaderText: { fontWeight: '800', color: '#475569', fontSize: 14 },
-  rowHeader: { flexDirection: 'row', backgroundColor: '#fff', padding: 12, borderBottomWidth: 2, borderColor: '#f1f5f9' },
-  rowData: { flexDirection: 'row', padding: 15, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#f1f5f9', alignItems: 'center' },
-  selectedRow: { backgroundColor: '#f0f9ff', borderColor: '#3b82f6' },
-  col: { flex: 1, fontSize: 13, color: '#334155' },
-  bold: { fontWeight: '700', color: '#1e293b' },
-  statusBadge: { backgroundColor: '#dcfce7', borderRadius: 20, paddingVertical: 4, paddingHorizontal: 8, alignItems: 'center' },
-  statusText: { fontSize: 10, color: '#16a34a', fontWeight: 'bold' },
-  emptyState: { padding: 40, alignItems: 'center' },
-  emptyText: { marginTop: 10, color: '#94a3b8', textAlign: 'center', fontSize: 14 },
-  footerBtns: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 30, marginBottom: 50 },
-  btnBack: { 
-    backgroundColor: '#fff', 
-    paddingVertical: 12, 
-    paddingHorizontal: 20, 
-    borderRadius: 10, 
-    width: '45%', 
-    alignItems: 'center',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#e2e8f0'
+    borderColor: '#e8f5e9',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  btnBackText: { color: '#475569', fontWeight: 'bold' },
-  btnNext: { 
-    paddingVertical: 12, 
-    paddingHorizontal: 20, 
-    borderRadius: 10, 
-    width: '45%', 
+  locationLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#546e7a',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: 12,
+  },
+  locationOptions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  locationChip: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
-    elevation: 3
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 11,
+    borderRadius: 12,
+    backgroundColor: '#f5faf7',
+    borderWidth: 1.5,
+    borderColor: '#e0f2ec',
   },
-  btnNextText: { fontWeight: 'bold' }
+  locationChipActive: {
+    backgroundColor: '#00AA5B',
+    borderColor: '#00AA5B',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  locationChipText: { fontSize: 13, fontWeight: '700', color: '#546e7a' },
+  locationChipTextActive: { color: '#fff' },
+
+  tableCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#e8f5e9',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+    marginBottom: 14,
+  },
+  tableCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 14,
+    borderBottomWidth: 1,
+    borderColor: '#e8f5e9',
+    backgroundColor: '#f5faf7',
+  },
+  tableCardHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  tableCardTitle: { fontSize: 13, fontWeight: '800', color: '#1a1a2e' },
+  countBadge: {
+    backgroundColor: '#e8f5e9',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  countBadgeText: { fontSize: 11, color: '#00AA5B', fontWeight: '800' },
+  rowHeader: {
+    flexDirection: 'row',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderColor: '#f5faf7',
+    backgroundColor: '#fafffe',
+  },
+  colHeader: { color: '#90a4ae', fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
+  rowData: {
+    flexDirection: 'row',
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderColor: '#f5faf7',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  selectedRow: {
+    backgroundColor: '#e8f5e9',
+    borderColor: '#00AA5B',
+  },
+  selectedIndicator: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 3,
+    backgroundColor: '#00AA5B',
+    borderRadius: 2,
+  },
+  col: { flex: 2, fontSize: 13, color: '#37474f', fontWeight: '600' },
+  colMid: { flex: 2, fontSize: 13, color: '#37474f', fontWeight: '600' },
+  colEnd: { flex: 1.5, alignItems: 'flex-end' },
+  selectedText: { color: '#00AA5B', fontWeight: '700' },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e8f5e9',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    gap: 4,
+  },
+  statusDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: '#00AA5B' },
+  statusText: { fontSize: 10, color: '#00AA5B', fontWeight: '800', textTransform: 'uppercase' },
+  loadingBox: { padding: 40, alignItems: 'center', gap: 10 },
+  loadingText: { fontSize: 12, color: '#90a4ae' },
+  emptyState: { padding: 36, alignItems: 'center' },
+  emptyIconBg: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#f5faf7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  emptyTitle: { fontSize: 15, fontWeight: '700', color: '#546e7a', marginBottom: 4 },
+  emptyText: { fontSize: 12, color: '#90a4ae', textAlign: 'center' },
+
+  selectedInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#e8f5e9',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#a5d6a7',
+  },
+  selectedInfoText: { fontSize: 13, color: '#2e7d32', flex: 1 },
+
+  footerBtns: { flexDirection: 'row', gap: 12, marginTop: 4, marginBottom: 16 },
+  btnBack: {
+    flex: 1,
+    backgroundColor: '#fff',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
+    borderWidth: 1.5,
+    borderColor: '#e0f2ec',
+  },
+  btnBackText: { color: '#546e7a', fontWeight: '700', fontSize: 14 },
+  btnNext: {
+    flex: 1,
+    backgroundColor: '#00AA5B',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  btnNextDisabled: {
+    backgroundColor: '#e0e0e0',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  btnNextText: { color: '#fff', fontWeight: '800', fontSize: 14 },
+  btnNextTextDisabled: { color: '#b0bec5' },
 });

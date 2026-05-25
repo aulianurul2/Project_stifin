@@ -7,7 +7,8 @@ import {
   ScrollView,
   ActivityIndicator,
   TouchableOpacity,
-  ViewStyle
+  ViewStyle,
+  Platform
 } from 'react-native';
 
 import { useFocusEffect } from 'expo-router';
@@ -75,11 +76,9 @@ export default function RiwayatJadwal() {
     const statusUtama = item.status ? item.status.trim() : "";
     const statusHasil = item.status_tes ? item.status_tes.trim() : "";
 
-    // Jika pendaftaran ditolak atau masih menunggu, pakai status dari tabel jadwal
     if (statusUtama === "Ditolak") return "Ditolak";
     if (statusUtama === "Menunggu" || statusUtama === "Konfirmasi") return "Menunggu";
 
-    // Jika sudah diterima admin, tampilkan status progres tesnya
     if (statusHasil) {
       if (statusHasil.toLowerCase() === 'proses') return "Diproses";
       if (statusHasil.toLowerCase() === 'selesai') return "Selesai";
@@ -92,12 +91,32 @@ export default function RiwayatJadwal() {
   // FIX: Sinkronisasi warna hex pembacaan status baru
   const warnaStatus = (status: string) => {
     const s = status.toLowerCase();
-    if (s === "selesai") return "#16a34a"; // Hijau
-    if (s === "menunggu" || s === "konfirmasi") return "#eab308"; // Kuning
-    if (s === "diproses" || s === "proses" || s === "diterima") return "#2563eb"; // Biru
-    if (s === "ditolak") return "#dc2626"; // Merah
-    if (s === "dibatalkan") return "#64748b"; // Abu-abu
-    return "#2563eb";
+    if (s === "selesai") return "#00AA5B";
+    if (s === "menunggu" || s === "konfirmasi") return "#f57c00";
+    if (s === "diproses" || s === "proses" || s === "diterima") return "#0288d1";
+    if (s === "ditolak") return "#e53935";
+    if (s === "dibatalkan") return "#78909c";
+    return "#0288d1";
+  };
+
+  const warnaBgStatus = (status: string) => {
+    const s = status.toLowerCase();
+    if (s === "selesai") return "#e8f5e9";
+    if (s === "menunggu" || s === "konfirmasi") return "#fff3e0";
+    if (s === "diproses" || s === "proses" || s === "diterima") return "#e1f5fe";
+    if (s === "ditolak") return "#ffebee";
+    if (s === "dibatalkan") return "#f5f5f5";
+    return "#e1f5fe";
+  };
+
+  const ikonStatus = (status: string): keyof typeof Ionicons.glyphMap => {
+    const s = status.toLowerCase();
+    if (s === "selesai") return "checkmark-circle";
+    if (s === "menunggu" || s === "konfirmasi") return "time-outline";
+    if (s === "diproses" || s === "proses" || s === "diterima") return "sync-outline";
+    if (s === "ditolak") return "close-circle";
+    if (s === "dibatalkan") return "ban-outline";
+    return "ellipse-outline";
   };
 
   const handleRowPress = (item: RiwayatItem) => {
@@ -119,77 +138,143 @@ export default function RiwayatJadwal() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header Section */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.menuIcon} onPress={() => router.replace('/home')}>
-          <Ionicons name="arrow-back-outline" size={28} color="#1e293b" />
+
+      {/* Green Top Bar */}
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.replace('/home')}>
+          <Ionicons name="arrow-back-outline" size={22} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.title}>Halo, {userName}</Text>
-        <Text style={styles.subTitle}>Riwayat Tes STIFIn Anda</Text>
+        <View style={styles.topBarCenter}>
+          <Text style={styles.topBarTitle}>Riwayat Tes</Text>
+          <Text style={styles.topBarSub}>STIFIn Genetic Test</Text>
+        </View>
+        <View style={{ width: 38 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      {/* User Greeting */}
+      <View style={styles.greetingBar}>
+        <View style={styles.greetingAvatar}>
+          <Text style={styles.greetingAvatarText}>
+            {userName.trim().charAt(0).toUpperCase()}
+          </Text>
+        </View>
+        <View>
+          <Text style={styles.greetingName}>Halo, {userName}!</Text>
+          <Text style={styles.greetingSubtitle}>Berikut riwayat pendaftaran tes Anda</Text>
+        </View>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         {loading ? (
-          <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 40 }} />
+          <View style={styles.loadingBox}>
+            <ActivityIndicator size="large" color="#00AA5B" />
+            <Text style={styles.loadingText}>Memuat riwayat...</Text>
+          </View>
+
         ) : riwayat.length === 0 ? (
-          
+
+          /* Empty State */
           <View style={styles.emptyContainer}>
-            <View style={styles.iconCircleBackground}>
-              <Ionicons name="document-text-outline" size={48} color="#94a3b8" />
+            <View style={styles.emptyIconWrap}>
+              <Ionicons name="document-text-outline" size={48} color="#90a4ae" />
             </View>
             <Text style={styles.emptyTitle}>Belum Ada Riwayat Tes</Text>
             <Text style={styles.emptySubtitle}>
               Anda belum melakukan pendaftaran tes STIFIn atau jadwal yang Anda pilih sebelumnya telah dihapus.
             </Text>
-            
             <TouchableOpacity 
               style={styles.emptyButton} 
               onPress={() => router.push('/pendaftaran')}
-              activeOpacity={0.8}
+              activeOpacity={0.85}
             >
-              <Ionicons name="add-circle-outline" size={20} color="#fff" style={{ marginRight: 6 }} />
+              <Ionicons name="add-circle-outline" size={18} color="#fff" />
               <Text style={styles.emptyButtonText}>Daftar Tes Sekarang</Text>
             </TouchableOpacity>
           </View>
 
         ) : (
-          <View style={styles.tableContainer}>
-            <View style={styles.tableHeaderRow}>
-              <Text style={[styles.th, { flex: 2.5 }]}>Jadwal Tes</Text>
-              <Text style={[styles.th, { flex: 2, textAlign: 'center' }]}>Status</Text>
-              <Text style={[styles.th, { flex: 0.8, textAlign: 'right' }]}></Text>
+
+          /* Riwayat List */
+          <View>
+            {/* Summary Chip */}
+            <View style={styles.summaryChip}>
+              <Ionicons name="list-outline" size={14} color="#00AA5B" />
+              <Text style={styles.summaryText}>
+                {riwayat.length} riwayat pendaftaran ditemukan
+              </Text>
             </View>
 
-            {riwayat.map((item, index) => {
-              const statusAktif = dapatkanStatusValid(item);
-              const jamAktif = dapatkanJamValid(item);
+            <View style={styles.listContainer}>
+              {riwayat.map((item, index) => {
+                const statusAktif = dapatkanStatusValid(item);
+                const jamAktif = dapatkanJamValid(item);
+                const warna = warnaStatus(statusAktif);
+                const warnaBg = warnaBgStatus(statusAktif);
+                const ikon = ikonStatus(statusAktif);
+                const adaBerkas = item.file_hasil || item.file_detail;
 
-              return (
-                <TouchableOpacity
-                  key={item.id_jadwal || index}
-                  style={styles.tableRow}
-                  onPress={() => handleRowPress(item)}
-                  activeOpacity={0.7}
-                >
-                  <View style={{ flex: 2.5 }}>
-                    <Text style={styles.tdTanggal}>{item.tanggal || '—'}</Text>
-                    <Text style={styles.tdWaktu}>
-                      {jamAktif ? `${jamAktif} WIB` : '—'}
-                    </Text>
-                  </View>
+                return (
+                  <TouchableOpacity
+                    key={item.id_jadwal || index}
+                    style={styles.card}
+                    onPress={() => handleRowPress(item)}
+                    activeOpacity={0.7}
+                  >
+                    {/* Left accent bar */}
+                    <View style={[styles.cardAccent, { backgroundColor: warna }]} />
 
-                  <View style={{ flex: 2, alignItems: 'center', justifyContent: 'center' }}>
-                    <View style={[styles.badge, { backgroundColor: warnaStatus(statusAktif) }]}>
-                      <Text style={styles.badgeText}>{statusAktif}</Text>
+                    <View style={styles.cardBody}>
+                      {/* Top row: tanggal + status badge */}
+                      <View style={styles.cardTopRow}>
+                        <View style={styles.cardDateWrap}>
+                          <View style={styles.cardDateIcon}>
+                            <Ionicons name="calendar-outline" size={13} color="#00AA5B" />
+                          </View>
+                          <Text style={styles.cardTanggal}>{item.tanggal || '—'}</Text>
+                        </View>
+
+                        <View style={[styles.statusBadge, { backgroundColor: warnaBg }]}>
+                          <Ionicons name={ikon} size={12} color={warna} />
+                          <Text style={[styles.statusBadgeText, { color: warna }]}>
+                            {statusAktif}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Middle row: jam */}
+                      <View style={styles.cardMidRow}>
+                        <Ionicons name="time-outline" size={13} color="#90a4ae" />
+                        <Text style={styles.cardJam}>
+                          {jamAktif ? `${jamAktif} WIB` : 'Waktu belum ditentukan'}
+                        </Text>
+                      </View>
+
+                      {/* Bottom row: berkas indicator + chevron */}
+                      <View style={styles.cardBottomRow}>
+                        {adaBerkas ? (
+                          <View style={styles.berkasBadge}>
+                            <Ionicons name="document-attach-outline" size={12} color="#00AA5B" />
+                            <Text style={styles.berkasBadgeText}>Berkas Tersedia</Text>
+                          </View>
+                        ) : (
+                          <View style={styles.noberkasBadge}>
+                            <Ionicons name="document-outline" size={12} color="#90a4ae" />
+                            <Text style={styles.noberkasBadgeText}>Belum Ada Berkas</Text>
+                          </View>
+                        )}
+
+                        <View style={styles.chevronWrap}>
+                          <Ionicons name="chevron-forward" size={16} color="#00AA5B" />
+                        </View>
+                      </View>
                     </View>
-                  </View>
-
-                  <View style={{ flex: 0.8, alignItems: 'flex-end', justifyContent: 'center' }}>
-                    <Ionicons name="chevron-forward" size={18} color="#64748b" />
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
         )}
       </ScrollView>
@@ -198,24 +283,283 @@ export default function RiwayatJadwal() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { padding: 20, paddingBottom: 10, paddingTop: 40 },
-  menuIcon: { marginBottom: 15 },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#0f172a' },
-  subTitle: { fontSize: 14, color: '#64748b', marginTop: 4 },
-  content: { padding: 20, flexGrow: 1 },
-  emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, marginTop: 60 },
-  iconCircleBackground: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#1e293b', marginBottom: 8 },
-  emptySubtitle: { fontSize: 13, color: '#94a3b8', textAlign: 'center', lineHeight: 20, marginBottom: 25 },
-  emptyButton: { flexDirection: 'row', backgroundColor: '#2563eb', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12, alignItems: 'center', elevation: 2, shadowColor: '#2563eb', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4 },
-  emptyButtonText: { color: '#ffffff', fontWeight: '700', fontSize: 14 },
-  tableContainer: { backgroundColor: '#ffffff', borderRadius: 16, overflow: 'hidden', elevation: 2, shadowColor: '#0f172a', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8 },
-  tableHeaderRow: { flexDirection: 'row', backgroundColor: '#f1f5f9', paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderColor: '#e2e8f0' } as ViewStyle,
-  th: { fontSize: 13, fontWeight: '700', color: '#475569' },
-  tableRow: { flexDirection: 'row', paddingVertical: 16, paddingHorizontal: 16, borderBottomWidth: 1, borderColor: '#f1f5f9', alignItems: 'center' } as ViewStyle,
-  tdTanggal: { fontSize: 14, fontWeight: '600', color: '#1e293b' },
-  tdWaktu: { fontSize: 12, color: '#64748b', marginTop: 2 },
-  badge: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 12 },
-  badgeText: { color: '#fff', fontWeight: '700', fontSize: 11 },
+  container: {
+    flex: 1,
+    backgroundColor: '#f5faf7',
+  },
+
+  topBar: {
+    backgroundColor: '#00AA5B',
+    paddingTop: Platform.OS === 'ios' ? 0 : 10,
+    paddingBottom: 18,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  topBarCenter: { flex: 1, alignItems: 'center' },
+  topBarTitle: { fontSize: 18, fontWeight: '800', color: '#fff' },
+  topBarSub: { fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+
+  greetingBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e8f5e9',
+  },
+  greetingAvatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: '#00AA5B',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  greetingAvatarText: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#fff',
+  },
+  greetingName: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1a1a2e',
+  },
+  greetingSubtitle: {
+    fontSize: 11,
+    color: '#90a4ae',
+    marginTop: 2,
+  },
+
+  content: {
+    padding: 16,
+    paddingBottom: 40,
+    flexGrow: 1,
+  },
+
+  loadingBox: {
+    marginTop: 60,
+    alignItems: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 13,
+    color: '#90a4ae',
+    fontWeight: '600',
+  },
+
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    marginTop: 60,
+  },
+  emptyIconWrap: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#e0f2ec',
+    borderStyle: 'dashed',
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#1a1a2e',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 13,
+    color: '#90a4ae',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 28,
+  },
+  emptyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#00AA5B',
+    paddingVertical: 13,
+    paddingHorizontal: 24,
+    borderRadius: 14,
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  emptyButtonText: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: 14,
+  },
+
+  summaryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#e8f5e9',
+    alignSelf: 'flex-start',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginBottom: 14,
+  },
+  summaryText: {
+    fontSize: 12,
+    color: '#2e7d32',
+    fontWeight: '700',
+  },
+
+  listContainer: {
+    gap: 10,
+  },
+
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    flexDirection: 'row',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#e8f5e9',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+
+  cardAccent: {
+    width: 4,
+    borderRadius: 2,
+  },
+
+  cardBody: {
+    flex: 1,
+    padding: 14,
+    gap: 8,
+  },
+
+  cardTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  cardDateWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  cardDateIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    backgroundColor: '#e8f5e9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardTanggal: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#1a1a2e',
+  },
+
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  statusBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+
+  cardMidRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  cardJam: {
+    fontSize: 12,
+    color: '#78909c',
+    fontWeight: '600',
+  },
+
+  cardBottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+
+  berkasBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#e8f5e9',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  berkasBadgeText: {
+    fontSize: 10,
+    color: '#2e7d32',
+    fontWeight: '700',
+  },
+
+  noberkasBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#f5f5f5',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  noberkasBadgeText: {
+    fontSize: 10,
+    color: '#90a4ae',
+    fontWeight: '600',
+  },
+
+  chevronWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#e8f5e9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });

@@ -24,8 +24,6 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-// Di dalam login.tsx, ubah fungsi handleLogin menjadi seperti ini:
-
 const handleLogin = async () => {
   if (!username || !password) {
     Alert.alert("Perhatian", "Silakan masukkan username dan password Anda.");
@@ -42,10 +40,9 @@ const handleLogin = async () => {
     if (response.data.success) {
       const userNama = response.data.user.nama;
       const userHp = response.data.user.no_hp;
-      const token = response.data.token; // 1. Ambil token dari response
+      const token = response.data.token;
 
-      // SIMPAN DATA KE MEMORI HP (AsyncStorage)
-      await AsyncStorage.setItem('user_token', token); // 2. SIMPAN TOKEN INI (PENTING!)
+      await AsyncStorage.setItem('user_token', token);
       await AsyncStorage.setItem('user_name', userNama);
       await AsyncStorage.setItem('user_phone', userHp || "");
 
@@ -68,82 +65,98 @@ const handleLogin = async () => {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scrollContainer} bounces={false}>
-          <View style={styles.loginCard}>
-            
-            {/* Header Section */}
-            <View style={styles.headerSection}>
-              <View style={styles.logoCircle}>
-                <Text style={styles.logoIcon}>⚡</Text>
+
+          {/* Top Green Hero Section */}
+          <View style={styles.heroSection}>
+            <View style={styles.logoWrap}>
+              <View style={styles.logoCircleOuter}>
+                <View style={styles.logoCircleInner}>
+                  <Text style={styles.logoEmoji}>⚡</Text>
+                </View>
               </View>
-              <Text style={styles.title}>Sign In STIFIn</Text>
-              <Text style={styles.subtitle}>Selamat datang kembali!</Text>
+            </View>
+            <Text style={styles.heroTitle}>STIFIn</Text>
+            <Text style={styles.heroSubtitle}>Information System</Text>
+          </View>
+
+          {/* White Card Form */}
+          <View style={styles.formCard}>
+            <Text style={styles.cardTitle}>Masuk ke Akun</Text>
+            <Text style={styles.cardSubtitle}>Selamat datang kembali!</Text>
+
+            {/* Username Field */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Username</Text>
+              <View style={styles.inputRow}>
+                <View style={styles.iconBox}>
+                  <Ionicons name="person-outline" size={18} color="#00AA5B" />
+                </View>
+                <TextInput
+                  style={styles.textInput}
+                  value={username}
+                  onChangeText={setUsername}
+                  placeholder="Masukkan username"
+                  placeholderTextColor="#b0bec5"
+                  autoCapitalize="none"
+                />
+              </View>
             </View>
 
-            {/* Form Section */}
-            <View style={styles.formSection}>
-              
-              {/* Input Username */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Username</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="person-outline" size={18} color="#64748b" style={styles.fieldIcon} />
-                  <TextInput
-                    style={styles.textInput}
-                    value={username}
-                    onChangeText={setUsername}
-                    placeholder="Masukkan username"
-                    placeholderTextColor="#475569"
-                    autoCapitalize="none"
-                  />
+            {/* Password Field */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Password</Text>
+              <View style={styles.inputRow}>
+                <View style={styles.iconBox}>
+                  <Ionicons name="lock-closed-outline" size={18} color="#00AA5B" />
                 </View>
-              </View>
-
-              {/* Input Password */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Password</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons name="lock-closed-outline" size={18} color="#64748b" style={styles.fieldIcon} />
-                  <TextInput
-                    style={styles.textInput}
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!showPassword}
-                    placeholder="Masukkan password"
-                    placeholderTextColor="#475569"
+                <TextInput
+                  style={styles.textInput}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  placeholder="Masukkan password"
+                  placeholderTextColor="#b0bec5"
+                />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+                  <Ionicons 
+                    name={showPassword ? "eye-off-outline" : "eye-outline"} 
+                    size={20} 
+                    color="#00AA5B" 
                   />
-                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
-                    <Ionicons 
-                      name={showPassword ? "eye-off-outline" : "eye-outline"} 
-                      size={20} 
-                      color="#3b82f6" 
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* Tombol Login */}
-              <TouchableOpacity 
-                style={styles.primaryBtn} 
-                onPress={handleLogin} 
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#ffffff" />
-                ) : (
-                  <Text style={styles.btnText}>Masuk Sekarang</Text>
-                )}
-              </TouchableOpacity>
-
-              {/* Footer Section (NAVIGASI REGISTER) */}
-              <View style={styles.footerSection}>
-                <Text style={styles.footerText}>Belum punya akun? </Text>
-                <TouchableOpacity onPress={() => router.push('/register')}>
-                  <Text style={styles.linkText}>Daftar di sini</Text>
                 </TouchableOpacity>
               </View>
+            </View>
 
+            {/* Login Button */}
+            <TouchableOpacity 
+              style={styles.primaryBtn} 
+              onPress={handleLogin} 
+              disabled={loading}
+              activeOpacity={0.85}
+            >
+              {loading ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <Text style={styles.btnText}>Masuk Sekarang</Text>
+              )}
+            </TouchableOpacity>
+
+            {/* Divider */}
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>atau</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Register Link */}
+            <View style={styles.footerSection}>
+              <Text style={styles.footerText}>Belum punya akun? </Text>
+              <TouchableOpacity onPress={() => router.push('/register')}>
+                <Text style={styles.linkText}>Daftar di sini</Text>
+              </TouchableOpacity>
             </View>
           </View>
+
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -153,106 +166,153 @@ const handleLogin = async () => {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '#0f172a' 
+    backgroundColor: '#00AA5B',
   },
   scrollContainer: { 
-    flexGrow: 1, 
-    justifyContent: 'center', 
-    padding: 24 
+    flexGrow: 1,
   },
-  loginCard: { 
-    backgroundColor: '#1e293b', 
-    borderRadius: 28, 
-    padding: 32, 
-    borderWidth: 1, 
-    borderColor: 'rgba(255, 255, 255, 0.05)', 
-    elevation: 8 
+  heroSection: {
+    alignItems: 'center',
+    paddingTop: 60,
+    paddingBottom: 40,
+    backgroundColor: '#00AA5B',
   },
-  headerSection: { 
-    alignItems: 'center', 
-    marginBottom: 32 
+  logoWrap: {
+    marginBottom: 16,
   },
-  logoCircle: { 
-    width: 70, 
-    height: 70, 
-    borderRadius: 35, 
-    backgroundColor: 'rgba(59, 130, 246, 0.1)', 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    marginBottom: 16 
+  logoCircleOuter: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  logoIcon: { 
-    fontSize: 36 
+  logoCircleInner: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  title: { 
-    fontSize: 26, 
-    fontWeight: '800', 
-    color: '#ffffff' 
+  logoEmoji: {
+    fontSize: 34,
   },
-  subtitle: { 
-    color: '#94a3b8', 
-    fontSize: 15, 
-    marginTop: 6 
+  heroTitle: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: '#fff',
+    letterSpacing: 2,
   },
-  formSection: { 
-    width: '100%' 
+  heroSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 4,
+    letterSpacing: 1,
   },
-  inputGroup: { 
-    marginBottom: 20 
+  formCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    padding: 32,
+    paddingBottom: 48,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 10,
   },
-  inputLabel: { 
-    color: '#94a3b8', 
-    fontSize: 12, 
-    fontWeight: '600', 
-    marginBottom: 8, 
-    textTransform: 'uppercase', 
-    letterSpacing: 1 
+  cardTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#1a1a2e',
+    marginBottom: 4,
   },
-  inputWrapper: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    backgroundColor: 'rgba(15, 23, 42, 0.5)', 
-    borderRadius: 14, 
-    borderWidth: 1, 
-    borderColor: 'rgba(255, 255, 255, 0.1)', 
-    paddingHorizontal: 16 
+  cardSubtitle: {
+    fontSize: 14,
+    color: '#90a4ae',
+    marginBottom: 28,
   },
-  fieldIcon: { 
-    marginRight: 12 
+  fieldGroup: {
+    marginBottom: 18,
   },
-  textInput: { 
-    flex: 1, 
-    color: '#ffffff', 
-    paddingVertical: 14, 
-    fontSize: 15 
+  fieldLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#37474f',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
-  eyeBtn: { 
-    padding: 8 
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f9f7',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#e0f2ec',
   },
-  primaryBtn: { 
-    backgroundColor: '#3b82f6', 
-    paddingVertical: 16, 
-    borderRadius: 14, 
-    alignItems: 'center', 
-    marginTop: 10 
+  iconBox: {
+    width: 44,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  btnText: { 
-    color: '#ffffff', 
-    fontWeight: '700', 
-    fontSize: 16 
+  textInput: {
+    flex: 1,
+    color: '#1a1a2e',
+    paddingVertical: 14,
+    fontSize: 15,
   },
-  footerSection: { 
-    flexDirection: 'row', 
-    justifyContent: 'center', 
-    marginTop: 24 
+  eyeBtn: {
+    padding: 12,
   },
-  footerText: { 
-    color: '#94a3b8', 
-    fontSize: 14 
+  primaryBtn: {
+    backgroundColor: '#00AA5B',
+    paddingVertical: 16,
+    borderRadius: 14,
+    alignItems: 'center',
+    marginTop: 8,
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
   },
-  linkText: { 
-    color: '#3b82f6', 
-    fontWeight: '700', 
-    fontSize: 14 
+  btnText: {
+    color: '#ffffff',
+    fontWeight: '800',
+    fontSize: 16,
+    letterSpacing: 0.5,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e8f5e9',
+  },
+  dividerText: {
+    color: '#b0bec5',
+    fontSize: 13,
+    marginHorizontal: 12,
+  },
+  footerSection: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  footerText: {
+    color: '#90a4ae',
+    fontSize: 14,
+  },
+  linkText: {
+    color: '#00AA5B',
+    fontWeight: '800',
+    fontSize: 14,
   },
 });

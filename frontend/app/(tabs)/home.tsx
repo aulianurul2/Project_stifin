@@ -37,7 +37,6 @@ export default function DashboardIndex() {
   const [userName, setUserName] = useState("User");
   const [navLoading, setNavLoading] = useState(false);
 
-  // Format tanggal Indonesia
   const getFormattedDate = () => {
     const options: Intl.DateTimeFormatOptions = {
       weekday: 'long',
@@ -45,11 +44,9 @@ export default function DashboardIndex() {
       month: 'long',
       day: 'numeric'
     };
-
     return new Date().toLocaleDateString('id-ID', options);
   };
 
-  // Ambil huruf pertama nama user
   const getInitialName = (name: string) => {
     if (!name) return "U";
     return name.trim().charAt(0).toUpperCase();
@@ -59,17 +56,14 @@ export default function DashboardIndex() {
     useCallback(() => {
       const getSavedName = async () => {
         const savedName = await AsyncStorage.getItem('user_name');
-
         if (savedName) {
           setUserName(savedName);
         }
       };
-
       getSavedName();
     }, [])
   );
 
-  // Ambil jam yang valid dari berbagai kemungkinan field
   const dapatkanJamValid = (item: RiwayatItem): string => {
     const nilaiJam =
       item.jam ||
@@ -79,20 +73,17 @@ export default function DashboardIndex() {
 
     if (!nilaiJam) return "";
 
-    // Hilangkan detik dari format HH:mm:ss
     if (
       nilaiJam.includes(':') &&
       nilaiJam.split(':').length === 3
     ) {
       const splitJam = nilaiJam.split(':');
-
       return `${splitJam[0]}:${splitJam[1]}`;
     }
 
     return nilaiJam;
   };
 
-  // Ambil status yang paling valid
   const dapatkanStatusValid = (item: RiwayatItem): string => {
     const statusUtama = item.status
       ? item.status.trim()
@@ -133,13 +124,10 @@ export default function DashboardIndex() {
       setNavLoading(true);
 
       const response = await axiosInstance.get('/riwayat-pendaftaran');
-
       const riwayat: RiwayatItem[] = response.data;
 
       if (riwayat && riwayat.length > 0) {
-        // Ambil data terbaru
         const latestItem = riwayat[0];
-
         const jamValid = dapatkanJamValid(latestItem);
         const statusValid = dapatkanStatusValid(latestItem);
 
@@ -149,21 +137,15 @@ export default function DashboardIndex() {
             id_jadwal: latestItem.id_jadwal
               ? latestItem.id_jadwal.toString()
               : 'undefined',
-
             tanggal: latestItem.tanggal || '',
-
             jam: jamValid,
-
             file_hasil: latestItem.file_hasil
               ? latestItem.file_hasil
               : 'null',
-
             file_detail: latestItem.file_detail
               ? latestItem.file_detail
               : 'null',
-
             status: statusValid,
-
             komentar: latestItem.komentar
               ? latestItem.komentar
               : 'null'
@@ -171,40 +153,39 @@ export default function DashboardIndex() {
         });
 
       } else {
-        // Jika belum ada riwayat
         router.push('/hasil-tes');
       }
 
     } catch (error) {
       console.log("Gagal memproses navigasi hasil tes:", error);
-
       Alert.alert(
         "Error",
         "Gagal mengambil data pendaftaran terakhir Anda."
       );
-
     } finally {
       setNavLoading(false);
     }
   };
 
+  const menuItems = [
+    { title: "Daftar Tes", icon: "create-outline", color: "#00AA5B", bgColor: "#e8f5e9", onPress: () => router.push('/pendaftaran') },
+    { title: "Riwayat Tes", icon: "calendar-outline", color: "#0288d1", bgColor: "#e1f5fe", onPress: () => router.push('/riwayat') },
+    { title: "Hasil Tes", icon: "stats-chart-outline", color: "#f57c00", bgColor: "#fff3e0", isCustom: true },
+    { title: "Panduan", icon: "book-outline", color: "#7b1fa2", bgColor: "#f3e5f5", onPress: undefined },
+  ];
+
   return (
     <SafeAreaView style={styles.container}>
+
+      {/* Header */}
       <View style={styles.header}>
         <View>
           <Text style={styles.brandText}>STIFIn Mobile</Text>
-          <Text style={styles.dateText}>
-            {getFormattedDate()}
-          </Text>
+          <Text style={styles.dateText}>{getFormattedDate()}</Text>
         </View>
 
         <TouchableOpacity style={styles.notifBtn}>
-          <Ionicons
-            name="notifications-outline"
-            size={24}
-            color="#1e293b"
-          />
-
+          <Ionicons name="notifications-outline" size={22} color="#00AA5B" />
           <View style={styles.notifBadge} />
         </TouchableOpacity>
       </View>
@@ -213,269 +194,403 @@ export default function DashboardIndex() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+
+        {/* Welcome Card - Green gradient style */}
         <View style={styles.welcomeCard}>
+          <View style={styles.welcomeCardBg1} />
+          <View style={styles.welcomeCardBg2} />
           <View style={styles.welcomeInfo}>
-            <Text style={styles.welcomeLabel}>
-              Selamat Datang,
-            </Text>
-
-            <Text style={styles.userName}>
-              {userName}
-            </Text>
-
+            <Text style={styles.welcomeLabel}>Selamat Datang 👋</Text>
+            <Text style={styles.userName}>{userName}</Text>
             <View style={styles.roleBadge}>
-              <Text style={styles.roleText}>
-                Klien Aktif
-              </Text>
+              <View style={styles.roleDot} />
+              <Text style={styles.roleText}>Klien Aktif</Text>
             </View>
           </View>
 
-          {/* Inisial Nama */}
           <View style={styles.avatarIconContainer}>
-            <Text style={styles.avatarInitialText}>
-              {getInitialName(userName)}
-            </Text>
+            <Text style={styles.avatarInitialText}>{getInitialName(userName)}</Text>
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>
-          Layanan Utama
-        </Text>
-
-        <View style={styles.grid}>
-          <MenuBox
-            title="Daftar Tes"
-            icon="create-outline"
-            color="#3b82f6"
-            onPress={() => router.push('/pendaftaran')}
-          />
-
-          <MenuBox
-            title="Riwayat Tes"
-            icon="calendar-outline"
-            color="#10b981"
-            onPress={() => router.push('/riwayat')}
-          />
-
-          <TouchableOpacity
-            style={styles.menuBox}
-            onPress={handleHasilTesNavigation}
-            disabled={navLoading}
-            activeOpacity={0.7}
-          >
-            {navLoading ? (
-              <ActivityIndicator
-                size="small"
-                color="#f59e0b"
-                style={styles.loaderSpacing}
-              />
-            ) : (
-              <View
-                style={[
-                  styles.iconCircle,
-                  { backgroundColor: '#f59e0b15' }
-                ]}
-              >
-                <Ionicons
-                  name="stats-chart-outline"
-                  size={28}
-                  color="#f59e0b"
-                />
-              </View>
-            )}
-
-            <Text style={styles.menuTitle}>
-              Hasil Tes
-            </Text>
-          </TouchableOpacity>
-
-          <MenuBox
-            title="Panduan"
-            icon="book-outline"
-            color="#8b5cf6"
-          />
+        {/* Quick Stats Row */}
+        <View style={styles.statsRow}>
+          <View style={styles.statBox}>
+            <Ionicons name="checkmark-circle" size={20} color="#00AA5B" />
+            <Text style={styles.statValue}>Aktif</Text>
+            <Text style={styles.statLabel}>Status</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statBox}>
+            <Ionicons name="shield-checkmark" size={20} color="#0288d1" />
+            <Text style={styles.statValue}>Aman</Text>
+            <Text style={styles.statLabel}>Data</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statBox}>
+            <Ionicons name="flash" size={20} color="#f57c00" />
+            <Text style={styles.statValue}>STIFIn</Text>
+            <Text style={styles.statLabel}>Sistem</Text>
+          </View>
         </View>
+
+        {/* Section Title */}
+        <Text style={styles.sectionTitle}>Layanan Utama</Text>
+
+        {/* Menu Grid */}
+        <View style={styles.grid}>
+          {menuItems.map((item, index) => {
+            if (item.isCustom) {
+              return (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.menuBox}
+                  onPress={handleHasilTesNavigation}
+                  disabled={navLoading}
+                  activeOpacity={0.7}
+                >
+                  {navLoading ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={item.color}
+                      style={{ padding: 18, marginBottom: 8 }}
+                    />
+                  ) : (
+                    <View style={[styles.iconCircle, { backgroundColor: item.bgColor }]}>
+                      <Ionicons name={item.icon as any} size={26} color={item.color} />
+                    </View>
+                  )}
+                  <Text style={styles.menuTitle}>{item.title}</Text>
+                </TouchableOpacity>
+              );
+            }
+            return (
+              <MenuBox
+                key={index}
+                title={item.title}
+                icon={item.icon}
+                color={item.color}
+                bgColor={item.bgColor}
+                onPress={item.onPress}
+              />
+            );
+          })}
+        </View>
+
+        {/* Promo Banner */}
+        <TouchableOpacity style={styles.promoBanner} onPress={() => router.push('/pendaftaran')} activeOpacity={0.9}>
+          <View style={styles.promoLeft}>
+            <Text style={styles.promoTag}>✨ Spesial</Text>
+            <Text style={styles.promoTitle}>Daftar Tes STIFIn Sekarang</Text>
+            <Text style={styles.promoSub}>Temukan mesin kecerdasan genetik Anda</Text>
+          </View>
+          <View style={styles.promoArrow}>
+            <Ionicons name="arrow-forward" size={18} color="#fff" />
+          </View>
+        </TouchableOpacity>
+
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const MenuBox = ({
-  title,
-  icon,
-  color,
-  onPress
-}: any) => (
+const MenuBox = ({ title, icon, color, bgColor, onPress }: any) => (
   <TouchableOpacity
     style={styles.menuBox}
     onPress={onPress}
     activeOpacity={0.7}
   >
-    <View
-      style={[
-        styles.iconCircle,
-        { backgroundColor: color + '15' }
-      ]}
-    >
-      <Ionicons
-        name={icon}
-        size={28}
-        color={color}
-      />
+    <View style={[styles.iconCircle, { backgroundColor: bgColor }]}>
+      <Ionicons name={icon} size={26} color={color} />
     </View>
-
-    <Text style={styles.menuTitle}>
-      {title}
-    </Text>
+    <Text style={styles.menuTitle}>{title}</Text>
   </TouchableOpacity>
 );
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc'
+    backgroundColor: '#f5faf7',
   },
 
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
     backgroundColor: '#fff',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9'
+    borderBottomColor: '#e8f5e9',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 3,
   },
 
   brandText: {
     fontSize: 20,
-    fontWeight: '800',
-    color: '#1e293b'
+    fontWeight: '900',
+    color: '#1a1a2e',
+    letterSpacing: 0.5,
   },
 
   dateText: {
-    fontSize: 12,
-    color: '#94a3b8',
+    fontSize: 11,
+    color: '#90a4ae',
     marginTop: 2,
-    textTransform: 'capitalize'
+    textTransform: 'capitalize',
   },
 
   notifBtn: {
-    padding: 8,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 12
+    width: 40,
+    height: 40,
+    backgroundColor: '#e8f5e9',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   notifBadge: {
     position: 'absolute',
-    top: 10,
-    right: 10,
+    top: 8,
+    right: 8,
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: '#ef4444',
     borderWidth: 2,
-    borderColor: '#fff'
+    borderColor: '#fff',
   },
 
   scrollContent: {
-    padding: 20
+    padding: 16,
+    paddingBottom: 32,
   },
 
   welcomeCard: {
-    backgroundColor: '#1e293b',
-    padding: 25,
-    borderRadius: 24,
+    backgroundColor: '#00AA5B',
+    padding: 22,
+    borderRadius: 22,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20
+    marginBottom: 14,
+    overflow: 'hidden',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
 
-  welcomeInfo: {
-    flex: 1
+  welcomeCardBg1: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    top: -30,
+    right: 60,
   },
+
+  welcomeCardBg2: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    bottom: -20,
+    left: 20,
+  },
+
+  welcomeInfo: { flex: 1 },
 
   welcomeLabel: {
-    color: '#94a3b8',
-    fontSize: 14
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 13,
+    marginBottom: 4,
   },
 
   userName: {
     color: '#fff',
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginVertical: 4
+    fontSize: 22,
+    fontWeight: '900',
+    marginBottom: 8,
+    letterSpacing: 0.3,
   },
 
   roleBadge: {
-    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 8,
-    alignSelf: 'flex-start'
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+    gap: 5,
+  },
+
+  roleDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#fff',
   },
 
   roleText: {
-    color: '#3b82f6',
+    color: '#fff',
     fontSize: 11,
-    fontWeight: '700'
+    fontWeight: '700',
   },
 
   avatarIconContainer: {
-    width: 55,
-    height: 55,
-    backgroundColor: '#ffffff',
+    width: 54,
+    height: 54,
+    backgroundColor: '#fff',
     borderRadius: 18,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
 
   avatarInitialText: {
     fontSize: 22,
-    fontWeight: 'bold',
-    color: '#3b82f6'
+    fontWeight: '900',
+    color: '#00AA5B',
+  },
+
+  statsRow: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#e8f5e9',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+
+  statBox: {
+    alignItems: 'center',
+    gap: 4,
+  },
+
+  statValue: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#1a1a2e',
+  },
+
+  statLabel: {
+    fontSize: 10,
+    color: '#90a4ae',
+    fontWeight: '600',
+  },
+
+  statDivider: {
+    width: 1,
+    height: 36,
+    backgroundColor: '#e8f5e9',
   },
 
   sectionTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1e293b',
-    marginBottom: 15,
-    marginLeft: 4
+    fontWeight: '800',
+    color: '#1a1a2e',
+    marginBottom: 14,
+    marginLeft: 2,
   },
 
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    marginBottom: 16,
   },
 
   menuBox: {
     width: '47%',
     backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 24,
+    padding: 18,
+    borderRadius: 20,
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
-    justifyContent: 'center'
+    borderColor: '#e8f5e9',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+    justifyContent: 'center',
   },
 
   iconCircle: {
-    padding: 16,
-    borderRadius: 18,
-    marginBottom: 12
+    padding: 14,
+    borderRadius: 16,
+    marginBottom: 10,
   },
 
   menuTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#334155'
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#1a1a2e',
+    textAlign: 'center',
   },
 
-  loaderSpacing: {
-    padding: 20,
-    marginBottom: 12
-  }
+  promoBanner: {
+    backgroundColor: '#00AA5B',
+    borderRadius: 18,
+    padding: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.28,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+
+  promoLeft: { flex: 1 },
+
+  promoTag: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.8)',
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+
+  promoTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#fff',
+    marginBottom: 3,
+  },
+
+  promoSub: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.75)',
+  },
+
+  promoArrow: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
