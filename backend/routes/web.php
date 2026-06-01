@@ -28,6 +28,9 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 
 // Route POST untuk proses kirim data login (URL: /login)
 Route::post('/login', [AuthController::class, 'login']);
+// Route untuk forgot password (tampilan form dan proses update password)
+Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request');
+Route::post('/forgot-password', [AuthController::class, 'updatePassword'])->name('password.update');
 
 // Register tetap sama
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');

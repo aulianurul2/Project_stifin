@@ -8,6 +8,7 @@ use App\Models\Klien;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -56,6 +57,46 @@ class AuthController extends Controller
             'login' => 'Username atau Password salah!',
         ])->withInput($request->only('username'));
     }
+
+    // Menampilkan halaman lupa password
+public function showForgotPasswordForm()
+{
+    return view('auth.forgot-password');
+}
+
+// Memproses perubahan password berdasarkan username
+public function updatePassword(Request $request)
+{
+    // Validasi input
+    $request->validate([
+        'username' => 'required',
+        'password' => 'required|min:6|confirmed', // 'confirmed' mewajibkan field password_confirmation
+    ], [
+        'username.required' => 'Username wajib diisi.',
+        'password.required' => 'Password baru wajib diisi.',
+        'password.min' => 'Password minimal harus 6 karakter.',
+        'password.confirmed' => 'Konfirmasi password tidak cocok.',
+    ]);
+
+    // Cari user berdasarkan username di tabel 'user' (atau sesuaikan dengan nama tabel Anda)
+    $user = DB::table('user')->where('username', $request->username)->first();
+
+    if (!$user) {
+        return redirect()->back()
+            ->withInput($request->only('username'))
+            ->withErrors(['username' => 'Username tidak terdaftar dalam sistem.']);
+    }
+
+    // Update password menggunakan Hash bawaan Laravel demi keamanan
+    DB::table('user')
+        ->where('username', $request->username)
+        ->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+    // Redirect kembali ke halaman login dengan pesan sukses
+    return redirect()->route('login')->with('success_reset', 'Password Anda berhasil diperbarui. Silakan masuk!');
+}
 
     /**
      * Menampilkan halaman pendaftaran akun
