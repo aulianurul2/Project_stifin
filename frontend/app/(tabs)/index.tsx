@@ -74,12 +74,17 @@ export default function HomeSTIFIn() {
         {/* Hero Banner */}
         <View style={styles.heroBanner}>
           <View style={styles.heroBannerContent}>
-            <Text style={styles.heroBannerTag}>🧬 Genetik Tes</Text>
+            <View style={styles.heroTagContainer}>
+              {/* Ikon Profesional Pengganti Emoji */}
+              <Ionicons name="fitness-outline" size={14} color="rgba(255,255,255,0.9)" />
+              <Text style={styles.heroBannerTag}>Genetik Tes</Text>
+            </View>
             <Text style={styles.heroBannerTitle}>Kenali Potensi{'\n'}Genetik Anda</Text>
-            <Text style={styles.heroBannerSub}>Temukan kekuatan tersembunyi lewat metode STIFIn</Text>
+            <Text style={styles.heroBannerSub}>Temukan Jati Diri Anda Lewat Metode STIFIn</Text>
           </View>
+          {/* Dekorasi Belakang Berbasis Vektor Ikon */}
           <View style={styles.heroBannerDeco}>
-            <Text style={{ fontSize: 64 }}>🧬</Text>
+            <Ionicons name="analytics" size={80} color="rgba(255,255,255,0.15)" />
           </View>
         </View>
 
@@ -186,15 +191,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  logoMini: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: '#00AA5B',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoMiniText: { fontSize: 18 },
   brandText: { 
     fontSize: 16, 
     fontWeight: '900', 
@@ -214,7 +210,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e8f5e9',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#00AA5B',
   },
   content: { paddingVertical: 20 },
@@ -226,6 +222,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 22,
     flexDirection: 'row',
+    position: 'relative', // Memastikan kontainer menampung posisi absolut dekorasi
     overflow: 'hidden',
     shadowColor: '#00AA5B',
     shadowOffset: { width: 0, height: 6 },
@@ -233,12 +230,22 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
-  heroBannerContent: { flex: 1 },
+  heroBannerContent: { 
+    flex: 1,
+    zIndex: 2, // Menaikkan teks ke atas agar tidak tertutup ikon dekorasi belakang
+  },
+  heroTagContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 8,
+  },
   heroBannerTag: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
-    fontWeight: '600',
-    marginBottom: 8,
+    color: 'rgba(255,255,255,0.9)',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5
   },
   heroBannerTitle: {
     fontSize: 22,
@@ -249,13 +256,14 @@ const styles = StyleSheet.create({
   },
   heroBannerSub: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.75)',
+    color: 'rgba(255,255,255,0.8)',
     lineHeight: 17,
   },
   heroBannerDeco: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    opacity: 0.4,
+    position: 'absolute',
+    right: -10,
+    bottom: -15,
+    zIndex: 1,
   },
 
   sliderSection: { marginBottom: 20 },
@@ -385,7 +393,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#00AA5B',
     fontWeight: '700',
-    textTransform: 'uppercase',
+    textTransform: 'capitalize',
     letterSpacing: 0.8,
     marginBottom: 4,
   },
@@ -406,10 +414,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
-  },
-  btnText: { 
-    color: '#fff', 
-    fontWeight: '800', 
-    fontSize: 15,
   },
 });

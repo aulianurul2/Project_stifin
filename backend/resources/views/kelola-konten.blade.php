@@ -102,8 +102,7 @@
                                                 data-title="{{ $item->title }}"
                                                 data-description="{{ $item->description }}"
                                                 data-icon="{{ $item->icon }}"
-                                                data-color="{{ $item->color }}"
-                                                data-text_color="{{ $item->text_color }}">
+                                
                                                 <i class="fa fa-edit me-1"></i> Edit
                                             </button>
 
@@ -171,16 +170,6 @@
                             <input type="file" name="image" accept="image/*" class="form-control">
                             <small class="text-muted d-block mt-1" style="font-size: 10px;">* Format berkas: JPG, PNG, WEBP. Maksimal ukuran 2MB.</small>
                         </div>
-                        <div class="row g-3 mb-2">
-                            <div class="col-6">
-                                <label class="fw-semibold small mb-1 text-secondary">Warna Background</label>
-                                <input type="color" name="color" value="#eff6ff" required class="form-control form-control-color w-100" style="height: 40px;">
-                            </div>
-                            <div class="col-6">
-                                <label class="fw-semibold small mb-1 text-secondary">Warna Teks & Icon</label>
-                                <input type="color" name="text_color" value="#1e40af" required class="form-control form-control-color w-100" style="height: 40px;">
-                            </div>
-                        </div>
                     </div>
                     <div class="modal-footer border-top-0 pt-0">
                         <button type="button" class="btn btn-light btn-sm fw-bold px-3 btn-round" data-bs-dismiss="modal">Batal</button>
@@ -223,16 +212,6 @@
                             <label class="fw-semibold small mb-1 text-secondary">Ganti Gambar (Biarkan kosong jika tidak diubah)</label>
                             <input type="file" name="image" accept="image/*" class="form-control">
                         </div>
-                        <div class="row g-3 mb-2">
-                            <div class="col-6">
-                                <label class="fw-semibold small mb-1 text-secondary">Warna Background</label>
-                                <input type="color" name="color" id="edit_color" required class="form-control form-control-color w-100" style="height: 40px;">
-                            </div>
-                            <div class="col-6">
-                                <label class="fw-semibold small mb-1 text-secondary">Warna Teks</label>
-                                <input type="color" name="text_color" id="edit_text_color" required class="form-control form-control-color w-100" style="height: 40px;">
-                            </div>
-                        </div>
                     </div>
                     <div class="modal-footer border-top-0 pt-0">
                         <button type="button" class="btn btn-light btn-sm fw-bold px-3 btn-round" data-bs-dismiss="modal">Batal</button>
@@ -256,9 +235,7 @@
                 const title = $(this).data('title');
                 const description = $(this).data('description');
                 const icon = $(this).data('icon');
-                const color = $(this).data('color');
-                const textColor = $(this).data('text_color');
-
+    
                 // Inject action route dinamis Laravel
                 $('#formEditKonten').attr('action', "{{ route('kelola-konten.index') }}/" + id);
 
@@ -266,8 +243,7 @@
                 $('#edit_title').val(title);
                 $('#edit_description').val(description);
                 $('#edit_icon').val(icon);
-                $('#edit_color').val(color);
-                $('#edit_text_color').val(textColor);
+               
 
                 // Tampilkan Modal Edit Bootstrap 5
                 $('#modalEditKonten').modal('show');

@@ -10,6 +10,7 @@ use App\Http\Controllers\KontenInformasiController;
 // Rute Publik (Tanpa Login)
 Route::post('/addnew', [AuthController::class, 'registerAPI']);
 Route::post('/login', [AuthController::class, 'loginAPI']);
+Route::post('/forgot-password', [AuthController::class, 'updatePassword']);
 Route::get('/jadwal-tersedia', [JadwalController::class, 'getJadwalApi']);
 Route::get('/informasi-tes', [KontenInformasiController::class, 'getApiInformasi']);
 

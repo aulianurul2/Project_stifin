@@ -1,12 +1,13 @@
 import React, { useState, type ComponentProps } from 'react';
 import { 
   View, Text, TextInput, TouchableOpacity, StyleSheet, 
-  ScrollView, SafeAreaView, Alert, ActivityIndicator, 
+  ScrollView, SafeAreaView, ActivityIndicator, 
   KeyboardAvoidingView, Platform 
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import axiosInstance from '@/src/api/axiosConfig';
+import Toast from 'react-native-toast-message'; // Import Toast
 
 interface InputBoxProps {
   label: string;
@@ -46,48 +47,81 @@ export default function RegisterScreen() {
   };
 
   const handleRegister = async () => {
+    // Validasi Kelengkapan Data Wajib Dasar
+    if (!form.nama || !form.username || !form.password || !form.tanggal_lahir || !form.jenis_kelamin) {
+      Toast.show({
+        type: 'error',
+        text1: 'Perhatian',
+        text2: 'Silakan lengkapi data Akun & Identitas Anda.',
+        position: 'top'
+      });
+      return;
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!form.email || !emailRegex.test(form.email.trim())) {
-        Alert.alert("Perhatian", "Format email tidak valid. Pastikan tidak ada spasi.");
-        return;
+      Toast.show({
+        type: 'error',
+        text1: 'Format Salah',
+        text2: 'Format email tidak valid atau mengandung spasi.',
+        position: 'top'
+      });
+      return;
     }
 
     setLoading(true);
     try {
-        const parts = form.tanggal_lahir.split('/');
-        const formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+      const parts = form.tanggal_lahir.split('/');
+      if (parts.length !== 3) {
+        throw new Error("Format tanggal lahir harus DD/MM/YYYY");
+      }
+      const formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
 
-        const payload = {
-            ...form,
-            nama: form.nama.trim(),
-            username: form.username.trim().toLowerCase(),
-            email: form.email.trim().toLowerCase(), 
-            tanggal_lahir: formattedDate,
-            no_hp: form.no_hp.trim()
-        };
+      const payload = {
+        ...form,
+        nama: form.nama.trim(),
+        username: form.username.trim().toLowerCase(),
+        email: form.email.trim().toLowerCase(), 
+        tanggal_lahir: formattedDate,
+        no_hp: form.no_hp.trim()
+      };
 
-        console.log("Kirim Data ke Server:", payload);
+      console.log("Kirim Data ke Server:", payload);
 
-        const response = await axiosInstance.post('/addnew', payload);
+      const response = await axiosInstance.post('/addnew', payload);
 
-        Alert.alert("Sukses", "Pendaftaran berhasil! Silakan login.");
+      Toast.show({
+        type: 'success',
+        text1: 'Registrasi Berhasil',
+        text2: 'Akun Anda telah terdaftar. Silakan login.',
+        position: 'top',
+        visibilityTime: 2500
+      });
+
+      setTimeout(() => {
         router.push('/login');
-    } catch (error: any) {
-        console.log("XHR Error Detail:", error.response?.data);
-        
-        const serverErrors = error.response?.data?.errors;
-        let errorMessage = "Gagal mendaftar";
-        
-        if (serverErrors) {
-            const details = Object.values(serverErrors).flat().join('\n');
-            errorMessage = details;
-        } else {
-            errorMessage = error.response?.data?.message || errorMessage;
-        }
+      }, 1500);
 
-        Alert.alert("Registrasi Gagal", errorMessage);
+    } catch (error: any) {
+      console.log("XHR Error Detail:", error.response?.data);
+      
+      const serverErrors = error.response?.data?.errors;
+      let errorMessage = "Gagal mendaftar, silakan coba lagi.";
+      
+      if (serverErrors) {
+        errorMessage = Object.values(serverErrors).flat().join('\n');
+      } else {
+        errorMessage = error.response?.data?.message || error.message || errorMessage;
+      }
+
+      Toast.show({
+        type: 'error',
+        text1: 'Registrasi Gagal',
+        text2: errorMessage,
+        position: 'top'
+      });
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -224,7 +258,6 @@ const InputBox = ({ label, icon, ...props }: InputBoxProps) => (
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5faf7' },
-
   topBar: {
     backgroundColor: '#00AA5B',
     paddingTop: Platform.OS === 'ios' ? 0 : 10,
@@ -255,9 +288,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.8)',
     marginTop: 2,
   },
-
   scrollContent: { padding: 16, paddingBottom: 48 },
-
   progressHint: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -273,7 +304,6 @@ const styles = StyleSheet.create({
     color: '#2e7d32',
     fontWeight: '600',
   },
-
   section: {
     backgroundColor: '#fff',
     borderRadius: 18,
@@ -309,13 +339,11 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#1a1a2e',
   },
-
   inputGroupOuter: { marginBottom: 14 },
   inputLabel: { color: '#546e7a', fontSize: 11, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.6 },
   inputWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f5faf7', borderRadius: 12, paddingHorizontal: 12, borderWidth: 1.5, borderColor: '#e0f2ec' },
   fieldIcon: { marginRight: 10 },
   textInput: { flex: 1, color: '#1a1a2e', paddingVertical: 12, fontSize: 14 },
-  
   row: { flexDirection: 'row', justifyContent: 'space-between' },
   genderContainer: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   genderBox: { flex: 1, backgroundColor: '#f5faf7', borderRadius: 10, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#e0f2ec', paddingVertical: 10 },
@@ -324,7 +352,6 @@ const styles = StyleSheet.create({
   boxActive: { backgroundColor: '#00AA5B', borderColor: '#00AA5B' },
   boxText: { color: '#78909c', fontWeight: '700', fontSize: 11 },
   textActive: { color: '#fff' },
-
   primaryBtn: {
     backgroundColor: '#00AA5B',
     paddingVertical: 16,
@@ -340,7 +367,6 @@ const styles = StyleSheet.create({
   },
   btnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   btnText: { color: '#fff', fontWeight: '800', fontSize: 16 },
-
   loginLink: { flexDirection: 'row', justifyContent: 'center', marginTop: 16 },
   loginLinkText: { color: '#90a4ae', fontSize: 14 },
   loginLinkBold: { color: '#00AA5B', fontWeight: '800', fontSize: 14 },

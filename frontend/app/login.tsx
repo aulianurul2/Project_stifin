@@ -6,7 +6,6 @@ import {
   TouchableOpacity, 
   StyleSheet, 
   SafeAreaView, 
-  Alert, 
   ActivityIndicator, 
   KeyboardAvoidingView, 
   Platform, 
@@ -16,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axiosInstance from '@/src/api/axiosConfig';
+import Toast from 'react-native-toast-message'; // Import Toast
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -25,38 +25,77 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
 
 const handleLogin = async () => {
-  if (!username || !password) {
-    Alert.alert("Perhatian", "Silakan masukkan username dan password Anda.");
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const response = await axiosInstance.post('/login', {
-      username,
-      password,
-    });
-
-    if (response.data.success) {
-      const userNama = response.data.user.nama;
-      const userHp = response.data.user.no_hp;
-      const token = response.data.token;
-
-      await AsyncStorage.setItem('user_token', token);
-      await AsyncStorage.setItem('user_name', userNama);
-      await AsyncStorage.setItem('user_phone', userHp || "");
-
-      router.replace('/(tabs)');
-    } else {
-      Alert.alert("Gagal", response.data.message || "Username atau password salah.");
+    if (!username || !password) {
+      Toast.show({
+        type: 'error',
+        text1: 'Perhatian',
+        text2: 'Silakan masukkan username dan password Anda.',
+        position: 'top'
+      });
+      return;
     }
-  } catch (error: any) {
-    console.error(error);
-    Alert.alert("Login Gagal", "Terjadi kesalahan koneksi ke server.");
-  } finally {
-    setLoading(false);
-  }
-};
+
+    setLoading(true);
+    try {
+      const response = await axiosInstance.post('/login', {
+        username,
+        password,
+      });
+
+      if (response.data.success) {
+        const userNama = response.data.user.nama;
+        const userHp = response.data.user.no_hp;
+        const token = response.data.token;
+
+        await AsyncStorage.setItem('user_token', token);
+        await AsyncStorage.setItem('user_name', userNama);
+        await AsyncStorage.setItem('user_phone', userHp || "");
+
+        Toast.show({
+          type: 'success',
+          text1: 'Berhasil Masuk',
+          text2: `Selamat datang kembali, ${userNama}! `,
+          position: 'top',
+          visibilityTime: 2000
+        });
+
+        setTimeout(() => {
+          setLoading(false); // Matikan loading sebelum pindah halaman
+          router.replace('/(tabs)');
+        }, 1000);
+        
+      } else {
+        // 1. Matikan loading indikator agar tombol tidak terus berputar
+        setLoading(false);
+
+        // 2. Reset / Kosongkan form input langsung
+        setUsername('');
+        setPassword('');
+
+        // 3. Tampilkan pesan kesalahan
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal Masuk',
+          text2: response.data.message || 'Username atau password salah. ',
+          position: 'top'
+        });
+      }
+    } catch (error: any) {
+      console.error(error);
+      
+      // Matikan loading dan reset form jika terjadi error koneksi server
+      setLoading(false);
+      setUsername('');
+      setPassword('');
+
+      Toast.show({
+        type: 'error',
+        text1: 'Login Gagal',
+        text2: 'Username atau password salah',
+        position: 'top'
+      });
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -125,6 +164,13 @@ const handleLogin = async () => {
                   />
                 </TouchableOpacity>
               </View>
+            </View>
+
+            {/* Forgot Password Link */}
+            <View style={styles.forgotPasswordContainer}>
+              <TouchableOpacity onPress={() => router.push('/forgot-password')}>
+                <Text style={styles.forgotPasswordText}>Lupa password?</Text>
+              </TouchableOpacity>
             </View>
 
             {/* Login Button */}
@@ -268,6 +314,16 @@ const styles = StyleSheet.create({
   },
   eyeBtn: {
     padding: 12,
+  },
+  forgotPasswordContainer: {
+    alignItems: 'flex-end',
+    marginBottom: 24,
+    marginTop: -4,
+  },
+  forgotPasswordText: {
+    color: '#00AA5B',
+    fontWeight: '700',
+    fontSize: 14,
   },
   primaryBtn: {
     backgroundColor: '#00AA5B',

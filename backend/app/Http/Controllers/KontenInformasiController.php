@@ -22,8 +22,6 @@ class KontenInformasiController extends Controller
             'title' => 'required|string|max:150',
             'description' => 'required|string',
             'icon' => 'required|string|max:50',
-            'color' => 'required|string|max:10',
-            'text_color' => 'required|string|max:10',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', // Validasi file gambar
         ]);
 
@@ -37,8 +35,6 @@ class KontenInformasiController extends Controller
             'title' => $request->title,
             'description' => $request->description,
             'icon' => $request->icon,
-            'color' => $request->color,
-            'text_color' => $request->text_color,
             'image' => $imagePath, // <-- SIMPAN PATH GAMBAR
             'created_at' => now(),
             'updated_at' => now(),
@@ -54,8 +50,6 @@ class KontenInformasiController extends Controller
             'title' => 'required|string|max:150',
             'description' => 'required|string',
             'icon' => 'required|string|max:50',
-            'color' => 'required|string|max:10',
-            'text_color' => 'required|string|max:10',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
@@ -75,8 +69,6 @@ class KontenInformasiController extends Controller
             'title' => $request->title,
             'description' => $request->description,
             'icon' => $request->icon,
-            'color' => $request->color,
-            'text_color' => $request->text_color,
             'image' => $imagePath, // <-- UPDATE PATH GAMBAR
             'updated_at' => now(),
         ]);
@@ -104,7 +96,7 @@ class KontenInformasiController extends Controller
     public function getApiInformasi()
     {
         $data = DB::table('konten_informasi')
-            ->select('id', 'title', 'description', 'icon', 'color', 'text_color as textColor', 'image') // <-- KETAMBAHAN FIELD IMAGE
+            ->select('id', 'title', 'description', 'icon', 'image') // <-- KETAMBAHAN FIELD IMAGE
             ->get();
 
         return response()->json($data, 200);

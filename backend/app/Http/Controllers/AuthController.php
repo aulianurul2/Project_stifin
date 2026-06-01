@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -67,35 +68,88 @@ public function showForgotPasswordForm()
 // Memproses perubahan password berdasarkan username
 public function updatePassword(Request $request)
 {
-    // Validasi input
-    $request->validate([
-        'username' => 'required',
-        'password' => 'required|min:6|confirmed', // 'confirmed' mewajibkan field password_confirmation
-    ], [
-        'username.required' => 'Username wajib diisi.',
-        'password.required' => 'Password baru wajib diisi.',
-        'password.min' => 'Password minimal harus 6 karakter.',
-        'password.confirmed' => 'Konfirmasi password tidak cocok.',
-    ]);
-
-    // Cari user berdasarkan username di tabel 'user' (atau sesuaikan dengan nama tabel Anda)
-    $user = DB::table('user')->where('username', $request->username)->first();
-
-    if (!$user) {
-        return redirect()->back()
-            ->withInput($request->only('username'))
-            ->withErrors(['username' => 'Username tidak terdaftar dalam sistem.']);
-    }
-
-    // Update password menggunakan Hash bawaan Laravel demi keamanan
-    DB::table('user')
-        ->where('username', $request->username)
-        ->update([
-            'password' => Hash::make($request->password),
+    // 1. Alur untuk Aplikasi Mobile Frontend (Menggunakan EMAIL)
+    if ($request->has('email') || $request->expectsJson()) {
+        
+        // Validasi input JSON dari Axios mobile
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required|min:6|confirmed',
+        ], [
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'password.required' => 'Password baru wajib diisi.',
+            'password.min' => 'Password minimal harus 6 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
         ]);
 
-    // Redirect kembali ke halaman login dengan pesan sukses
-    return redirect()->route('login')->with('success_reset', 'Password Anda berhasil diperbarui. Silakan masuk!');
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first()
+            ], 422);
+        }
+
+        // Jalankan JOIN ke tabel klien untuk mencari id_user berdasarkan email
+        $user = DB::table('user')
+            ->join('klien', 'user.id_user', '=', 'klien.id_user')
+            ->where('klien.email', $request->email)
+            ->select('user.id_user')
+            ->first();
+
+        // Jika email di tabel klien tidak ditemukan
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email tidak terdaftar dalam sistem.'
+            ], 404);
+        }
+
+        // Update password baru di tabel user menggunakan id_user yang sah
+        DB::table('user')
+            ->where('id_user', $user->id_user)
+            ->update([
+                'password' => Hash::make($request->password),
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password Anda berhasil diperbarui.'
+        ], 200);
+
+    } 
+    
+    // 2. Alur untuk Web Admin (Menggunakan USERNAME)
+    else {
+        
+        $request->validate([
+            'username' => 'required',
+            'password' => 'required|min:6|confirmed',
+        ], [
+            'username.required' => 'Username wajib diisi.',
+            'password.required' => 'Password baru wajib diisi.',
+            'password.min' => 'Password minimal harus 6 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
+        ]);
+
+        // Cari langsung ke tabel user berdasarkan username
+        $user = DB::table('user')->where('username', $request->username)->first();
+
+        if (!$user) {
+            return redirect()->back()
+                ->withInput($request->only('username'))
+                ->withErrors(['username' => 'Username tidak terdaftar dalam sistem.']);
+        }
+
+        // Update password langsung berdasarkan username
+        DB::table('user')
+            ->where('username', $request->username)
+            ->update([
+                'password' => Hash::make($request->password),
+            ]);
+
+        return redirect()->route('login')->with('success_reset', 'Password Anda berhasil diperbarui. Silakan masuk!');
+    }
 }
 
     /**
