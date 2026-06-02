@@ -9,7 +9,8 @@ import {
   ActivityIndicator,
   Modal,
   Dimensions,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
+  Image
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -304,7 +305,12 @@ export default function DashboardIndex() {
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statBox}>
-            <Ionicons name="flash" size={20} color="#f57c00" />
+            {/* Perbaikan path file gambar lokal logostif.jpg */}
+            <Image 
+              source={require('../../assets/images/logostif.png')} 
+              style={styles.statIconImg}
+              resizeMode="contain"
+            />
             <Text style={styles.statValue}>STIFIn</Text>
             <Text style={styles.statLabel}>Sistem</Text>
           </View>
@@ -503,6 +509,7 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 13, fontWeight: '800', color: '#1a1a2e' },
   statLabel: { fontSize: 10, color: '#90a4ae', fontWeight: '600' },
   statDivider: { width: 1, height: 36, backgroundColor: '#e8f5e9' },
+  statIconImg: { width: 22, height: 22 }, // Menjaga gambar tetap proporsional sejajar Ionicons
   sectionTitle: { fontSize: 16, fontWeight: '800', color: '#1a1a2e', marginBottom: 14, marginLeft: 2 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 16 },
   menuBox: { width: '47%', backgroundColor: '#fff', padding: 18, borderRadius: 20, alignItems: 'center', marginBottom: 14, borderWidth: 1, borderColor: '#e8f5e9', justifyContent: 'center' },

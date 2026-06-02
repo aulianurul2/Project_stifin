@@ -59,7 +59,7 @@
                 </div>
 
                 <div class="form-options" style="justify-content: flex-end;">
-                    <a href="{{ route('login') }}" class="forgot-password">Kembali ke Sign In</a>
+                    <a href="{{ route('login') }}" class="forgot-password">Kembali ke Login</a>
                 </div>
 
                 <button type="submit" class="login-btn btn">

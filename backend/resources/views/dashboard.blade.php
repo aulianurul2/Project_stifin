@@ -404,155 +404,65 @@
     <script src="assets/js/kaiadmin.min.js"></script>
 
 
-
 <script>
-
-    // Inisialisasi Canvas
-
     var ctx = document.getElementById('stifinChart').getContext('2d');
 
-
-
-    // Membuat efek gradien pada area chart
-
-    var gradient = ctx.createLinearGradient(0, 0, 0, 400);
-
-    gradient.addColorStop(0, 'rgba(37, 99, 235, 0.25)');
-
-    gradient.addColorStop(1, 'rgba(37, 99, 235, 0)');
-
-
+    // Gradien modern yang memberikan kesan kedalaman
+    var gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(16, 185, 129, 0.4)'); // Warna Emerald (hijau kesuksesan)
+    gradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
 
     var stifinChart = new Chart(ctx, {
-
         type: 'line',
-
         data: {
-
             labels: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"],
-
             datasets: [{
-
                 label: "Jumlah Tes",
-
-                borderColor: '#2563eb',
-
+                data: @json($dataBulanan),
+                borderColor: '#10b981', // Warna hijau konsisten
                 backgroundColor: gradient,
-
                 fill: true,
-
-                borderWidth: 3,
-
-                tension: 0.45,
-
-                pointRadius: 0,
-
-                pointHoverRadius: 6,
-
-                pointHitRadius: 30,
-
-                pointBackgroundColor: '#2563eb',
-
-                pointBorderColor: '#fff',
-
-                pointBorderWidth: 2,
-
-                data: @json($dataBulanan)
-
+                borderWidth: 4,
+                tension: 0.3, // Kurva yang pas, tidak terlalu meliuk
+                pointRadius: 5,
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: '#10b981',
+                pointBorderWidth: 3,
+                pointHoverRadius: 8,
+                pointHoverBackgroundColor: '#10b981',
+                pointHoverBorderColor: '#ffffff',
             }]
-
         },
-
         options: {
-
             responsive: true,
-
             maintainAspectRatio: false,
-
-            interaction: {
-
-                intersect: false,
-
-                mode: 'index'
-
-            },
-
             plugins: {
-
                 legend: { display: false },
-
                 tooltip: {
-
-                    backgroundColor: '#1e293b',
-
-                    padding: 12,
-
-                    displayColors: false,
-
-                    callbacks: {
-
-                        label: function(context) {
-
-                            return ` Total: ${context.raw} Tes`;
-
-                        }
-
-                    }
-
-                }
-
-            },
-
-            scales: {
-
-            yAxes: [{
-
-                ticks: {
-
-                    fontStyle: "500",
-
-                    beginAtZero: false,
-
-                    maxTicksLimit: 5,
-
-                    padding: 10
-
-                },
-
-                gridLines: {
-
-                    drawTicks: false,
-
-                    display: false
-
-                }
-
-            }],
-
-            xAxes: [{
-
-                gridLines: {
-
-                    zeroLineColor: "transparent"
-
-                },
-
-                ticks: {
-
+                    backgroundColor: '#000000',
                     padding: 10,
-
-                    fontStyle: "500"
-
+                    titleFont: { size: 14 },
+                    bodyFont: { size: 13 },
+                    displayColors: false,
+                    callbacks: {
+                        title: (items) => `Bulan ${items[0].label}`,
+                        label: (item) => `${item.raw} Tes Selesai`
+                    }
                 }
-
-            }]
-
-        },
-
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { borderDash: [5, 5], color: '#e5e7eb' }, // Garis putus-putus agar tidak mengganggu
+                    ticks: { color: '#6b7280' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#6b7280' }
+                }
+            }
         }
-
     });
-
 </script>
 
 </body>

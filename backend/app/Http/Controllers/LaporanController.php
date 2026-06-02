@@ -49,21 +49,36 @@ class LaporanController extends Controller
         ));
     }
 
-    public function exportPdf()
-    {
-        $data = DB::table('hasiltes')
-            ->join('klien', 'hasiltes.id_klien', '=', 'klien.id_klien')
-            ->select('klien.nama', 'hasiltes.status_tes as hasil', 'hasiltes.tanggal', 'hasiltes.biaya_tes')
-            ->where('hasiltes.status_tes', 'Selesai')
-            ->get();
+   public function exportPdf()
+{
+    // 1. Ambil data untuk tabel
+    $riwayatLaporan = DB::table('hasiltes')
+        ->join('klien', 'hasiltes.id_klien', '=', 'klien.id_klien')
+        ->select('klien.nama', 'hasiltes.status_tes as hasil', 'hasiltes.tanggal')
+        ->where('hasiltes.status_tes', 'Selesai')
+        ->get();
 
-        $pdf = Pdf::loadView('pdf_laporan', compact('data'));
-    
-         return $pdf->download('laporan-stifin.pdf');
-    }
+    // 2. Ambil data ringkasan untuk header
+    $totalKlien = DB::table('klien')->count();
+    $totalPendapatan = DB::table('hasiltes')->where('status_tes', 'Selesai')->sum('biaya_tes');
 
-    public function exportExcel()
-    {
-        return Excel::download(new LaporanExport, 'laporan-stifin.xlsx');
-    }
+    // 3. Masukkan ke dalam array data
+    $data = [
+        'riwayatLaporan' => $riwayatLaporan,
+        'totalKlien'     => $totalKlien,
+        'totalPendapatan'=> $totalPendapatan
+    ];
+
+    // 4. Panggil file template yang kita buat tadi (layout.pdf_template)
+    $pdf = Pdf::loadView('layout.pdf_template', $data);
+
+    // 5. Download file
+    return $pdf->download('Laporan_STIFIn_' . date('d-m-Y') . '.pdf');
+}
+
+   public function exportExcel()
+{
+    // Menggunakan library Excel untuk memicu unduhan
+    return Excel::download(new LaporanExport, 'Laporan_STIFIn_' . date('d-m-Y') . '.xlsx');
+}
 }

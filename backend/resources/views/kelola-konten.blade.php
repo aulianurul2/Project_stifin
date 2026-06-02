@@ -73,15 +73,10 @@
                     <div class="row">
                         @forelse($konten as $item)
                             <div class="col-md-6 col-lg-4 mb-4">
-                                <div class="card card-round shadow-sm h-100" style="background-color: {{ $item->color }}; min-height: 220px;">
+                                <div class="card card-round shadow-sm h-100" style="background-color: {{ $item->color ?? '#ffffff' }}; min-height: 220px; border: 1px solid #ebedf2;">
                                     <div class="card-body d-flex flex-column justify-content-between p-4">
                                         <div>
-                                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                                <span class="badge bg-white bg-opacity-75 px-2 py-1 border border-light text-truncate" style="color: {{ $item->text_color }}; font-weight: 700;">
-                                                    <i class="fas fa-cube me-1"></i> {{ $item->icon }}
-                                                </span>
-                                                <span class="badge bg-white bg-opacity-70 text-uppercase fw-bold" style="color: {{ $item->text_color }}; font-size: 10px;">Penting</span>
-                                            </div>
+                                            
 
                                             @if($item->image)
                                                 <div class="mb-3 w-100 rounded overflow-hidden bg-white bg-opacity-50 border" style="height: 120px;">
@@ -89,7 +84,7 @@
                                                 </div>
                                             @endif
 
-                                            <h5 class="fw-bold mb-2" style="color: {{ $item->text_color }}">{{ $item->title }}</h5>
+                                            <h5 class="fw-bold mb-2" style="color: {{ $item->text_color ?? '#2a2b2d' }}">{{ $item->title }}</h5>
                                             <p class="small mb-0 text-dark opacity-75" style="display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5;">
                                                 {{ $item->description }}
                                             </p>
@@ -100,9 +95,7 @@
                                                 class="btn btn-white btn-sm shadow-sm border text-secondary btn-edit-konten"
                                                 data-id="{{ $item->id }}"
                                                 data-title="{{ $item->title }}"
-                                                data-description="{{ $item->description }}"
-                                                data-icon="{{ $item->icon }}"
-                                
+                                                data-description="{{ $item->description }}">
                                                 <i class="fa fa-edit me-1"></i> Edit
                                             </button>
 
@@ -157,15 +150,6 @@
                             <textarea name="description" rows="4" required class="form-control" style="resize: none;" placeholder="Tulis rincian prosedur..."></textarea>
                         </div>
                         <div class="form-group p-0 mb-3">
-                            <label class="fw-semibold small mb-1 text-secondary">Pilih Ikon Informasi</label>
-                            <select name="icon" class="form-select">
-                                <option value="information-circle-outline">💡 Informasi Umum / Prosedur</option>
-                                <option value="calendar-outline">📅 Jadwal & Agenda</option>
-                                <option value="star-outline">⭐ Promo / Pengumuman Penting</option>
-                                <option value="help-circle-outline">❓ Bantuan / Panduan</option>
-                            </select>
-                        </div>
-                        <div class="form-group p-0 mb-3">
                             <label class="fw-semibold small mb-1 text-secondary">Unggah Gambar Sampul (Opsional)</label>
                             <input type="file" name="image" accept="image/*" class="form-control">
                             <small class="text-muted d-block mt-1" style="font-size: 10px;">* Format berkas: JPG, PNG, WEBP. Maksimal ukuran 2MB.</small>
@@ -200,15 +184,6 @@
                             <textarea name="description" id="edit_description" rows="4" required class="form-control" style="resize: none;"></textarea>
                         </div>
                         <div class="form-group p-0 mb-3">
-                            <label class="fw-semibold small mb-1 text-secondary">Pilih Ikon Informasi</label>
-                            <select name="icon" id="edit_icon" class="form-select">
-                                <option value="information-circle-outline">💡 Informasi Umum</option>
-                                <option value="calendar-outline">📅 Jadwal & Agenda</option>
-                                <option value="star-outline">⭐ Promo / Pengumuman Penting</option>
-                                <option value="help-circle-outline">❓ Bantuan / Panduan</option>
-                            </select>
-                        </div>
-                        <div class="form-group p-0 mb-3">
                             <label class="fw-semibold small mb-1 text-secondary">Ganti Gambar (Biarkan kosong jika tidak diubah)</label>
                             <input type="file" name="image" accept="image/*" class="form-control">
                         </div>
@@ -234,7 +209,6 @@
                 const id = $(this).data('id');
                 const title = $(this).data('title');
                 const description = $(this).data('description');
-                const icon = $(this).data('icon');
     
                 // Inject action route dinamis Laravel
                 $('#formEditKonten').attr('action', "{{ route('kelola-konten.index') }}/" + id);
@@ -242,8 +216,6 @@
                 // Inject data ke form modal
                 $('#edit_title').val(title);
                 $('#edit_description').val(description);
-                $('#edit_icon').val(icon);
-               
 
                 // Tampilkan Modal Edit Bootstrap 5
                 $('#modalEditKonten').modal('show');

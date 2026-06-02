@@ -2,28 +2,23 @@
 
 namespace App\Exports;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\FromView;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize; // Tambahkan baris ini
+use Illuminate\Support\Facades\DB;
 
-class LaporanExport implements FromView, ShouldAutoSize
+class LaporanExport implements FromView, ShouldAutoSize // Tambahkan interface ini
 {
     public function view(): View
     {
-        // PERBAIKAN: Hapus 'hasiltes.hasil' karena kolomnya sudah tidak ada
         $riwayatLaporan = DB::table('hasiltes')
             ->join('klien', 'hasiltes.id_klien', '=', 'klien.id_klien')
-            ->select(
-                'klien.nama', 
-                'hasiltes.status_tes as hasil', // Gunakan status_tes sebagai pengganti
-                'hasiltes.biaya_tes', 
-                'hasiltes.tanggal'
-            )
-            ->orderBy('hasiltes.tanggal', 'desc')
+            ->select('klien.nama', 'hasiltes.status_tes as hasil', 'hasiltes.biaya_tes', 'hasiltes.tanggal')
+            ->where('hasiltes.status_tes', 'Selesai')
             ->get();
 
-        // Pastikan file view ini ada: resources/views/layout/excel_template.blade.php
-        return view('layout.excel_template', compact('riwayatLaporan'));
+        return view('layout.excel_template', [
+            'riwayatLaporan' => $riwayatLaporan
+        ]);
     }
 }

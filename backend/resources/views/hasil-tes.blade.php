@@ -2,9 +2,9 @@
 <html lang="id">
 <head>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>Hasil Tes - STIFIn</title>
+    <title>Hasil Tes - STIFIn Admin</title>
     <meta content="width=device-width, initial-scale=1.0, shrink-to-fit=no" name="viewport" />
-    <link rel="icon" href="{{ asset('assets/img/kaiadmin/favicon.ico') }}" type="image/x-icon" />
+    <link class="icon" href="{{ asset('assets/img/kaiadmin/favicon.ico') }}" type="image/x-icon" />
 
     <script src="{{ asset('assets/js/plugin/webfont/webfont.min.js') }}"></script>
     <script>
@@ -42,10 +42,10 @@
             <div class="container">
                 <div class="page-inner">
 
-                    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
                         <div>
-                            <h3 class="fw-bold mb-1">Manajemen Hasil Tes</h3>
-                            <ul class="breadcrumbs mb-0 p-0" style="background: transparent;">
+                            <h3 class="fw-bold mb-3">Manajemen Hasil Tes</h3>
+                            <ul class="breadcrumbs mb-3">
                                 <li class="nav-home"><a href="{{ route('dashboard') }}"><i class="icon-home"></i></a></li>
                                 <li class="separator"><i class="icon-arrow-right"></i></li>
                                 <li class="nav-item"><a href="#" class="text-muted">Hasil Tes</a></li>
@@ -71,32 +71,34 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-12">
+                        <div class="col-md-12">
                             <div class="card card-round shadow-sm">
-                                <div class="card-body p-0">
+                                <div class="card-body p-4"> 
                                     <div class="table-responsive">
-                                        <table class="table table-hover align-middle mb-0 text-nowrap">
-                                            <thead class="bg-light text-secondary">
+                                        <table id="basic-datatables" class="table table-striped table-hover mb-0 align-middle">
+                                            <thead class="bg-light">
                                                 <tr>
-                                                    <th class="px-4 py-3 fw-bold text-uppercase small" style="width: 40%">Nama Klien</th>
-                                                    <th class="px-4 py-3 fw-bold text-uppercase small" style="width: 30%">Hasil</th>
-                                                    <th class="px-4 py-3 fw-bold text-uppercase small text-center" style="width: 30%">Aksi</th>
+                                                    <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8" style="width: 40%">Nama Klien</th>
+                                                    <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8" style="width: 30%">Hasil</th>
+                                                    <th class="px-4 py-3 text-center text-uppercase font-weight-bold text-muted fs-8" style="width: 30%">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @forelse($data as $item)
+                                                @foreach($data as $item)
                                                     <tr>
                                                         <td class="px-4 py-3">
-                                                            <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ $item->nama }}</div>
-                                                            <div class="text-muted small"><i class="fab fa-whatsapp me-1"></i> {{ $item->no_hp }}</div>
+                                                            <div class="fw-bold text-dark fs-6">{{ $item->nama }}</div>
+                                                            <small class="text-muted"><i class="fab fa-whatsapp me-1"></i> {{ $item->no_hp }}</small>
                                                         </td>
                                                         <td class="px-4 py-3">
                                                             @if($item->status_tes == 'Selesai')
-                                                                <span class="badge bg-success bg-opacity-10  fw-bold px-3 py-2 card-round">
+                                                                <span class="badge badge-success px-3 py-1 btn-round text-capitalize fs-8 fw-normal">
                                                                     <i class="fas fa-check-circle me-1"></i> Tersertifikasi
                                                                 </span>
                                                             @else
-                                                                <span class="text-muted fst-italic small">Belum diinput</span>
+                                                                <span class="badge badge-primary px-3 py-1 btn-round text-capitalize fs-8 fw-normal">
+                                                                    Belum diinput
+                                                                </span>
                                                             @endif
                                                         </td>
                                                         <td class="px-4 py-3 text-center">
@@ -108,23 +110,23 @@
                                                                 <div class="d-flex justify-content-center align-items-center gap-2">
                                                                     <a href="{{ asset('uploads/hasil/' . $item->file_hasil) }}"
                                                                        download="{{ 'Sertifikat_' . $item->nama }}"
-                                                                       span class="btn btn-warning btn-sm p-2 text-dark card-round shadow-sm"
+                                                                       class="btn btn-sm p-2 text-dark card-round shadow-sm"
                                                                        style="background-color: #fff3cd; border-color: #ffeeba;"
                                                                        title="Download Sertifikat">
-                                                                        <i class="fas fa-file-download text-warning-700"></i>
+                                                                        <i class="fas fa-file-download text-warning"></i>
                                                                     </a>
 
                                                                     <a href="{{ asset('uploads/hasil/' . $item->file_detail) }}"
                                                                        download="{{ 'Detail_Hasil_' . $item->nama }}"
-                                                                       class="btn btn-success btn-sm p-2  card-round shadow-sm"
-                                                                       style="background-color: #d1e7dd; border-color: #badbcc;"
+                                                                       class="btn btn-sm p-2 card-round shadow-sm"
+                                                                       style="background-color: #d1e7dd; border-color: #badbcc; color: #0f5132;"
                                                                        title="Download Hasil Lengkap">
                                                                         <i class="fas fa-file-alt"></i>
                                                                     </a>
 
                                                                     <button type="button" onclick="previewFile('{{ asset('uploads/hasil/' . $item->file_hasil) }}')"
-                                                                            class="btn btn-primary btn-sm p-2  card-round shadow-sm"
-                                                                            style="background-color: #586983; border-color: #636d7c;"
+                                                                            class="btn btn-sm p-2 card-round shadow-sm"
+                                                                            style="background-color: #586983; border-color: #636d7c; color: #ffffff;"
                                                                             title="Preview Sertifikat">
                                                                         <i class="fas fa-eye"></i>
                                                                     </button>
@@ -132,23 +134,11 @@
                                                             @endif
                                                         </td>
                                                     </tr>
-                                                @empty
-                                                    <tr>
-                                                        <td colspan="3" class="text-center py-5 text-muted fst-italic">
-                                                            <i class="fas fa-exclamation-circle d-block mb-2 style="font-size: 2rem;"></i>
-                                                            Data tidak ditemukan
-                                                        </td>
-                                                    </tr>
-                                                @endforelse
+                                                @endforeach
                                             </tbody>
                                         </table>
-                                                                        @if($tab == 'riwayat')
-    <div class="card-footer d-flex justify-content-center border-0 pt-3">
-        {{ $data->links('pagination::bootstrap-5') }}
-    </div>
-@endif
                                     </div>
-    
+                                    
                                 </div>
                             </div>
                         </div>
@@ -225,35 +215,46 @@
     <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
     <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
     <script src="{{ asset('assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js') }}"></script>
+    <script src="{{ asset('assets/js/plugin/datatables/datatables.min.js') }}"></script>
     <script src="{{ asset('assets/js/kaiadmin.min.js') }}"></script>
 
     <script>
-        // Logic Modal Input Berkas
+        $(document).ready(function () {
+            // Mengikuti konfigurasi bahasa dan setelan auto-sort dari halaman Manajemen Jadwal Anda
+            $('#basic-datatables').DataTable({
+                "pageLength": 10,
+                "order": [], 
+                "language": {
+                    "search": "Cari Data:",
+                    "lengthMenu": "Tampilkan _MENU_ data",
+                    "zeroRecords": "Tidak ada data yang cocok",
+                    "info": "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    "infoEmpty": "Data tidak tersedia",
+                    "infoFiltered": "(difilter dari _MAX_ total data)"
+                }
+            });
+        });
+
         function openModal(id, nama) {
             document.getElementById('modalNama').innerText = nama;
 
-            // Set Action URL dinamis Laravel dengan penggantian placeholder ID
             let url = "{{ route('hasil.update', ':id') }}";
             url = url.replace(':id', id);
             document.getElementById('formHasil').action = url;
 
-            // Trigger Modal Tampil ala Bootstrap 5
             var modalInput = new bootstrap.Modal(document.getElementById('modalHasil'));
             modalInput.show();
         }
 
-        // Logic Modal Preview File Iframe
         function previewFile(url) {
             const frame = document.getElementById('previewFrame');
             frame.src = url;
 
-            // Trigger Modal Preview Tampil ala Bootstrap 5
             var modalPreview = new bootstrap.Modal(document.getElementById('modalPreview'));
             modalPreview.show();
         }
 
         function closePreview() {
-            // Sembunyikan modal secara paksa dan bersihkan src iframe agar load ulang aman
             var modalEl = document.getElementById('modalPreview');
             var modalInstance = bootstrap.Modal.getInstance(modalEl);
             if (modalInstance) {

@@ -22,18 +22,31 @@
     <link rel="stylesheet" href="{{ asset('assets/css/plugins.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/css/kaiadmin.min.css') }}" />
 
+    <!-- Third Party Plugins (Alpine.js & SweetAlert2) -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         [x-cloak] { display: none !important; }
         .modal-backdrop-custom {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.4);
             z-index: 1050;
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+        /* Hanya override form khusus di dalam modal agar tidak merusak elemen pencarian tabel luar */
+        .modal-backdrop-custom .form-control, 
+        .modal-backdrop-custom .form-select {
+            border: 1px solid #ced4da !important;
+            color: #495057 !important;
+        }
+        .modal-backdrop-custom .form-control:focus, 
+        .modal-backdrop-custom .form-select:focus {
+            border-color: #6c757d !important;
+            box-shadow: none !important;
         }
     </style>
 </head>
@@ -101,13 +114,15 @@
                                                     </td>
                                                     <td>
                                                         <div class="form-button-action">
+                                                            {{-- Tombol Lihat Detail Profil --}}
                                                             <button type="button" class="btn btn-link btn-primary btn-lg"
                                                                 @click="selectedView = {
                                                                     nama: '{{ $k->nama }}',
-                                                                    no_hp: '{{ $k->no_hp }}',
-                                                                    tanggal_lahir: '{{ $k->tanggal_lahir }}',
-                                                                    jenis_kelamin: '{{ $k->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan' }}',
-                                                                    golongan_darah: '{{ $k->golongan_darah }}',
+                                                                    no_hp: '{{ $k->no_hp ?? '-' }}',
+                                                                    tanggal_lahir: '{{ $k->tanggal_lahir ?? '-' }}',
+                                                                    jenis_kelamin: '{{ $k->jenis_kelamin }}',
+                                                                    jenis_kelamin_text: '{{ $k->jenis_kelamin == 'L' ? 'Laki-laki' : ($k->jenis_kelamin == 'P' ? 'Perempuan' : '-') }}',
+                                                                    golongan_darah: '{{ $k->golongan_darah ?? '-' }}',
                                                                     email: '{{ $k->email ?? '-' }}',
                                                                     alamat: '{{ $k->alamat ?? '-' }}',
                                                                     institusi: '{{ $k->institusi ?? '-' }}',
@@ -118,20 +133,28 @@
                                                                 <i class="fa fa-eye"></i>
                                                             </button>
 
+                                                            {{-- Tombol Edit Profil --}}
                                                             <button type="button" class="btn btn-link btn-primary btn-lg"
                                                                 @click="selected = {
                                                                     id: '{{ $k->id_klien }}',
                                                                     nama: '{{ $k->nama }}',
                                                                     no_hp: '{{ $k->no_hp }}',
                                                                     email: '{{ $k->email }}',
+                                                                    tanggal_lahir: '{{ $k->tanggal_lahir }}',
+                                                                    jenis_kelamin: '{{ $k->jenis_kelamin }}',
+                                                                    golongan_darah: '{{ $k->golongan_darah }}',
+                                                                    institusi: '{{ $k->institusi }}',
+                                                                    sosmed: '{{ $k->sosmed }}',
+                                                                    domisili: '{{ $k->domisili }}',
                                                                     alamat: '{{ $k->alamat }}'
                                                                 }; openModal = true">
                                                                 <i class="fa fa-edit"></i>
                                                             </button>
 
-                                                            <form action="{{ route('klien.destroy', $k->id_klien) }}" method="POST" onsubmit="return confirm('Hapus klien ini?')">
+                                                            {{-- Form & Tombol Hapus Klien Berbasis SweetAlert2 --}}
+                                                            <form id="delete-form-{{ $k->id_klien }}" action="{{ route('klien.destroy', $k->id_klien) }}" method="POST" style="display:inline;">
                                                                 @csrf @method('DELETE')
-                                                                <button type="submit" class="btn btn-link btn-danger">
+                                                                <button type="button" class="btn btn-link btn-danger" onclick="konfirmasiHapus('{{ $k->id_klien }}', '{{ $k->nama }}')">
                                                                     <i class="fa fa-times"></i>
                                                                 </button>
                                                             </form>
@@ -147,16 +170,7 @@
                                         </table>    
                                     </div>
 
-                                    @if($klien->hasPages())
-                                        <div class="card-footer d-flex justify-content-between align-items-center bg-white border-top py-3 px-0">
-                                            <div class="text-muted small">
-                                                Menampilkan {{ $klien->firstItem() }} sampai {{ $klien->lastItem() }} dari {{ $klien->total() }} klien
-                                            </div>
-                                            <div>
-                                                {{ $klien->links('pagination::bootstrap-5') }}
-                                            </div>
-                                        </div>
-                                    @endif
+                    
 
                                 </div>
                             </div>
@@ -174,78 +188,211 @@
             </footer>
         </div>
 
+        {{-- MODAL DETAIL PROFIL KLIEN (VIEW MODE - CLEAN & FORMAL) --}}
         <div x-show="openView" x-cloak class="modal-backdrop-custom">
-            <div class="card w-75 shadow-lg" style="max-width: 700px;" @click.away="openView = false">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="card-title"><i class="fas fa-id-card text-primary me-2"></i> Detail Profil Klien</h4>
-                    <button type="button" class="close" @click="openView = false"><span>&times;</span></button>
+            <div class="card w-75 shadow-lg" style="max-width: 750px; border-radius: 4px; border: 1px solid #dcdcdc;" @click.away="openView = false">
+                
+                <div class="card-header d-flex justify-content-between align-items-center py-3 border-bottom bg-white">
+                    <h5 class="card-title mb-0 fw-bold text-dark" style="font-size: 1.1rem; letter-spacing: 0.5px;">
+                        DETAIL PROFIL KLIEN
+                    </h5>
+                    <button type="button" class="close text-muted" @click="openView = false" style="background: none; border: none; font-size: 1.5rem; line-height: 1;">
+                        <span>&times;</span>
+                    </button>
                 </div>
-                <div class="card-body">
+                
+                <div class="card-body p-4 bg-white" style="max-height: 70vh; overflow-y: auto;">
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="text-muted small fw-bold text-uppercase">Nama Lengkap</label>
-                            <p class="fw-bold mb-0" x-text="selectedView.nama"></p>
+                        
+                        <div class="col-12 mb-3">
+                            <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">I. IDENTITAS UTAMA</span>
+                            <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
                         </div>
+
                         <div class="col-md-6 mb-3">
-                            <label class="text-muted small fw-bold text-uppercase">No. HP / WA</label>
-                            <p class="mb-0" x-text="selectedView.no_hp"></p>
+                            <label class="text-muted small d-block mb-1">Nama Lengkap</label>
+                            <span class="text-dark fw-bold" x-text="selectedView.nama"></span>
                         </div>
+
                         <div class="col-md-6 mb-3">
-                            <label class="text-muted small fw-bold text-uppercase">Email</label>
-                            <p class="mb-0" x-text="selectedView.email"></p>
+                            <label class="text-muted small d-block mb-1">Status Akun</label>
+                            <span class="text-dark fw-bold" x-text="selectedView.status"></span>
                         </div>
+
                         <div class="col-md-6 mb-3">
-                            <label class="text-muted small fw-bold text-uppercase">Tanggal Lahir</label>
-                            <p class="mb-0" x-text="selectedView.tanggal_lahir"></p>
+                            <label class="text-muted small d-block mb-1">No. HP / WhatsApp</label>
+                            <span class="text-dark" x-text="selectedView.no_hp"></span>
                         </div>
+
                         <div class="col-md-6 mb-3">
-                            <label class="text-muted small fw-bold text-uppercase">Gender / Gol. Darah</label>
-                            <p class="mb-0"><span x-text="selectedView.jenis_kelamin"></span> / <span x-text="selectedView.golongan_darah"></span></p>
+                            <label class="text-muted small d-block mb-1">Alamat Email</label>
+                            <span class="text-dark" x-text="selectedView.email"></span>
                         </div>
+
+                        <div class="col-12 mt-2 mb-3">
+                            <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">II. INFORMASI PERSONAL</span>
+                            <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="text-muted small d-block mb-1">Tanggal Lahir</label>
+                            <span class="text-dark" x-text="selectedView.tanggal_lahir"></span>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="text-muted small d-block mb-1">Jenis Kelamin</label>
+                            <span class="text-dark" x-text="selectedView.jenis_kelamin_text"></span>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="text-muted small d-block mb-1">Golongan Darah</label>
+                            <span class="text-dark text-uppercase" x-text="selectedView.golongan_darah || '-'"></span>
+                        </div>
+
+                        <div class="col-12 mt-2 mb-3">
+                            <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">III. AFILIASI & MEDIA SOSIAL</span>
+                            <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
+                        </div>
+
                         <div class="col-md-6 mb-3">
-                            <label class="text-muted small fw-bold text-uppercase">Status Sistem</label>
-                            <div><span class="badge badge-primary" x-text="selectedView.status"></span></div>
+                            <label class="text-muted small d-block mb-1">Institusi / Perusahaan</label>
+                            <span class="text-dark" x-text="selectedView.institusi"></span>
                         </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small d-block mb-1">Media Sosial</label>
+                            <span class="text-dark" x-text="selectedView.sosmed"></span>
+                        </div>
+
+                        <div class="col-12 mt-2 mb-3">
+                            <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">IV. LOKASI TEMPAT TINGGAL</span>
+                            <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
+                        </div>
+
                         <div class="col-md-12 mb-3">
-                            <label class="text-muted small fw-bold text-uppercase">Alamat</label>
-                            <p class="mb-0 p-2 bg-light rounded shadow-sm italic" x-text="selectedView.alamat"></p>
+                            <label class="text-muted small d-block mb-1">Domisili (Kota / Kabupaten)</label>
+                            <span class="text-dark" x-text="selectedView.domisili"></span>
                         </div>
+
+                        <div class="col-md-12 mb-2">
+                            <label class="text-muted small d-block mb-1">Alamat Lengkap</label>
+                            <div class="text-dark" style="line-height: 1.6; white-space: pre-line; font-size: 0.9rem;" x-text="selectedView.alamat"></div>
+                        </div>
+
                     </div>
                 </div>
-                <div class="card-footer d-flex justify-content-end">
-                    <button type="button" class="btn btn-black btn-round" @click="openView = false">Tutup</button>
+                
+                <div class="card-footer bg-white d-flex justify-content-end py-3 border-top">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" @click="openView = false" style="border-radius: 3px; font-weight: 600;">
+                        TUTUP
+                    </button>
                 </div>
             </div>
         </div>
 
+        {{-- MODAL EDIT KLIEN (EDIT MODE - CLEAN & PROFESSIONAL) --}}
         <div x-show="openModal" x-cloak class="modal-backdrop-custom">
-            <div class="card w-50 shadow-lg" style="max-width: 500px;" @click.away="openModal = false">
-                <div class="card-header">
-                    <h4 class="card-title">Edit Klien: <span class="text-primary" x-text="selected.nama"></span></h4>
+            <div class="card w-75 shadow-lg" style="max-width: 700px; border-radius: 4px; border: 1px solid #dcdcdc;" @click.away="openModal = false">
+                
+                <div class="card-header d-flex justify-content-between align-items-center py-3 border-bottom bg-white">
+                    <h5 class="card-title mb-0 fw-bold text-dark" style="font-size: 1.1rem; letter-spacing: 0.5px;">
+                        PERBARUI DATA KLIEN
+                    </h5>
+                    <button type="button" class="close text-muted" @click="openModal = false" style="background: none; border: none; font-size: 1.5rem; line-height: 1;">
+                        <span>&times;</span>
+                    </button>
                 </div>
+
                 <form :action="'{{ url('kelola-klien') }}/' + selected.id" method="POST">
                     @csrf @method('PUT')
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label>Nama Lengkap</label>
-                            <input type="text" name="nama" x-model="selected.nama" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label>No. HP / WhatsApp</label>
-                            <input type="text" name="no_hp" x-model="selected.no_hp" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" name="email" x-model="selected.email" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label>Alamat</label>
-                            <textarea name="alamat" x-model="selected.alamat" class="form-control" rows="3"></textarea>
+                    
+                    <div class="card-body p-4 bg-white" style="max-height: 65vh; overflow-y: auto;">
+                        <div class="row">
+                            
+                            <div class="col-12 mb-3">
+                                <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">I. DATA IDENTITAS UTAMA</span>
+                                <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
+                            </div>
+
+                            <div class="form-group col-md-12 mb-3">
+                                <label class="text-muted small mb-1 fw-semibold">Nama Lengkap</label>
+                                <input type="text" name="nama" x-model="selected.nama" class="form-control" style="border-radius: 3px;" required>
+                            </div>
+                            
+                            <div class="form-group col-md-6 mb-3">
+                                <label class="text-muted small mb-1 fw-semibold">No. HP / WhatsApp</label>
+                                <input type="text" name="no_hp" x-model="selected.no_hp" class="form-control" style="border-radius: 3px;" required>
+                            </div>
+                            
+                            <div class="form-group col-md-6 mb-3">
+                                <label class="text-muted small mb-1 fw-semibold">Alamat Email</label>
+                                <input type="email" name="email" x-model="selected.email" class="form-control" style="border-radius: 3px;">
+                            </div>
+
+                            <div class="col-12 mt-2 mb-3">
+                                <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">II. INFORMASI PERSONAL</span>
+                                <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
+                            </div>
+
+                            <div class="form-group col-md-6 mb-3">
+                                <label class="text-muted small mb-1 fw-semibold">Tanggal Lahir</label>
+                                <input type="date" name="tanggal_lahir" x-model="selected.tanggal_lahir" class="form-control" style="border-radius: 3px;">
+                            </div>
+                            
+                            <div class="form-group col-md-3 mb-3">
+                                <label class="text-muted small mb-1 fw-semibold">Jenis Kelamin</label>
+                                <select name="jenis_kelamin" x-model="selected.jenis_kelamin" class="form-control form-select" style="border-radius: 3px;">
+                                    <option value="">- Pilih -</option>
+                                    <option value="L">Laki-laki</option>
+                                    <option value="P">Perempuan</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group col-md-3 mb-3">
+                                <label class="text-muted small mb-1 fw-semibold">Gol. Darah</label>
+                                <select name="golongan_darah" x-model="selected.golongan_darah" class="form-control form-select" style="border-radius: 3px;">
+                                    <option value="">-</option>
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="AB">AB</option>
+                                    <option value="O">O</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12 mt-2 mb-3">
+                                <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">III. AFILIASI & LOKASI TEMPAT TINGGAL</span>
+                                <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
+                            </div>
+
+                            <div class="form-group col-md-6 mb-3">
+                                <label class="text-muted small mb-1 fw-semibold">Institusi / Perusahaan</label>
+                                <input type="text" name="institusi" x-model="selected.institusi" class="form-control" style="border-radius: 3px;">
+                            </div>
+                            
+                            <div class="form-group col-md-6 mb-3">
+                                <label class="text-muted small mb-1 fw-semibold">Media Sosial (IG/FB)</label>
+                                <input type="text" name="sosmed" x-model="selected.sosmed" class="form-control" style="border-radius: 3px;">
+                            </div>
+                            
+                            <div class="form-group col-md-12 mb-3">
+                                <label class="text-muted small mb-1 fw-semibold">Domisili (Kota / Kabupaten)</label>
+                                <input type="text" name="domisili" x-model="selected.domisili" class="form-control" style="border-radius: 3px;">
+                            </div>
+                            
+                            <div class="form-group col-md-12 mb-2">
+                                <label class="text-muted small mb-1 fw-semibold">Alamat Lengkap</label>
+                                <textarea name="alamat" x-model="selected.alamat" class="form-control" rows="3" style="border-radius: 3px; resize: none; line-height: 1.5;"></textarea>
+                            </div>
                         </div>
                     </div>
-                    <div class="card-action d-flex justify-content-end">
-                        <button type="button" class="btn btn-border btn-round me-2" @click="openModal = false">Batal</button>
-                        <button type="submit" class="btn btn-primary btn-round">Simpan Perubahan</button>
+
+                    <div class="card-action d-flex justify-content-end py-3 bg-white border-top" style="padding-right: 1.5rem;">
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" @click="openModal = false" style="border-radius: 3px; font-weight: 600;">
+                            BATAL
+                        </button>
+                        <button type="submit" class="btn btn-dark btn-sm" style="border-radius: 3px; font-weight: 600; letter-spacing: 0.3px;">
+                            SIMPAN PERUBAHAN
+                        </button>
                     </div>
                 </form>
             </div>
@@ -253,10 +400,52 @@
 
     </div>
 
+    <!-- Core JS Files -->
     <script src="{{ asset('assets/js/core/jquery-3.7.1.min.js') }}"></script>
     <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
     <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
     <script src="{{ asset('assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js') }}"></script>
+    
+    <!-- Datatables Plugin & Inisialisasi bawaan KaiAdmin -->
+    <script src="{{ asset('assets/js/plugin/datatables/datatables.min.js') }}"></script>
     <script src="{{ asset('assets/js/kaiadmin.min.js') }}"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Re-inisialisasi agar fungsi pencarian dan filter bawaan tabel aktif kembali
+            $('#add-row').DataTable({
+                "pageLength": 10,
+                "language": {
+                    "search": "Cari:",
+                    "lengthMenu": "Tampilkan _MENU_ data per halaman",
+                    "zeroRecords": "Tidak ada data yang cocok ditemukan",
+                    "info":  "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    "infoEmpty": "Data tidak tersedia",
+                    "infoFiltered": "(difilter dari _MAX_ total data)"
+                    
+                }
+            });
+        });
+
+        function konfirmasiHapus(id, nama) {
+            Swal.fire({
+                title: 'KONFIRMASI PENGHAPUSAN',
+                text: `Apakah Anda yakin ingin menghapus data klien "${nama}" secara permanen? Tindakan ini juga akan menghapus data akun terkait.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#1a202c', 
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'YA, HAPUS',
+                cancelButtonText: 'BATAL',
+                customClass: {
+                    popup: 'border-radius-0' 
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('delete-form-' + id).submit();
+                }
+            });
+        }
+    </script>
 </body>
 </html>

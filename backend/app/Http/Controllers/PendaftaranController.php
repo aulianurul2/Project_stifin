@@ -13,7 +13,7 @@ class PendaftaranController extends Controller
         $pendaftaran = DB::table('jadwal')
             ->whereNotNull('nama_klien')
             ->orderBy('id_jadwal', 'desc')
-            ->paginate(10);
+            ->get();
         return view('pendaftaran-tes', compact('pendaftaran'));
     }
 

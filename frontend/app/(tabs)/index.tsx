@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
   Text, 
@@ -9,14 +9,17 @@ import {
   Dimensions,
   ViewStyle,
   ActivityIndicator,
-  Image
+  Image,
+  Animated,
+  Modal
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import axiosInstance from '@/src/api/axiosConfig';
 
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.75; 
+const { width, height } = Dimensions.get('window');
+const CARD_WIDTH = width * 0.82; 
+const CARD_GAP = 14; 
 
 const AXIOS_BASE_URL = axiosInstance.defaults.baseURL;
 const BACKEND_ROOT = AXIOS_BASE_URL ? AXIOS_BASE_URL.replace('/api', '') : '';
@@ -25,7 +28,6 @@ interface InfoCard {
   id: string;
   title: string;
   description: string;
-  icon: string;
   color: string;
   textColor: string;
   image: string | null;
@@ -36,11 +38,35 @@ export default function HomeSTIFIn() {
   const [infoCards, setInfoCards] = useState<InfoCard[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // State untuk mengontrol Modal Detail Card
+  const [selectedCard, setSelectedCard] = useState<InfoCard | null>(null);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+
+  const scrollViewRef = useRef<ScrollView>(null);
+  const currentIndexRef = useRef<number>(0);
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+
   useEffect(() => {
     const fetchInformasi = async () => {
       try {
         const response = await axiosInstance.get('/informasi-tes');
         setInfoCards(response.data);
+        
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(slideAnim, {
+            toValue: 0,
+            duration: 600,
+            useNativeDriver: true,
+          })
+        ]).start();
+
       } catch (error) {
         console.log("Gagal memuat info dari backend:", error);
       } finally {
@@ -51,12 +77,48 @@ export default function HomeSTIFIn() {
     fetchInformasi();
   }, []);
 
+  // Effect untuk Auto Scroll / Animasi bergeser sendiri
+  useEffect(() => {
+    if (infoCards.length <= 1 || modalVisible) return; // Pause auto-scroll jika modal sedang terbuka
+
+    const autoPlayInterval = setInterval(() => {
+      let nextIndex = currentIndexRef.current + 1;
+      
+      if (nextIndex >= infoCards.length) {
+        nextIndex = 0;
+      }
+
+      currentIndexRef.current = nextIndex;
+      const scrollPosition = nextIndex * (CARD_WIDTH + CARD_GAP);
+
+      scrollViewRef.current?.scrollTo({
+        x: scrollPosition,
+        animated: true,
+      });
+
+    }, 3000);
+
+    return () => clearInterval(autoPlayInterval);
+  }, [infoCards, modalVisible]);
+
+  // Fungsi saat kartu ditekan
+  const handleCardPress = (card: InfoCard) => {
+    setSelectedCard(card);
+    setModalVisible(true);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
 
       {/* Compact Green Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
+          {/* Penambahan Logo STIFIn di samping kiri tulisan */}
+          <Image 
+            source={require('../../assets/images/logostif.png')} 
+            style={styles.headerLogo}
+            resizeMode="contain"
+          />
           <View>
             <Text style={styles.brandText}>STIFIn</Text>
             <Text style={styles.brandSub}>Information System</Text>
@@ -75,14 +137,12 @@ export default function HomeSTIFIn() {
         <View style={styles.heroBanner}>
           <View style={styles.heroBannerContent}>
             <View style={styles.heroTagContainer}>
-              {/* Ikon Profesional Pengganti Emoji */}
               <Ionicons name="fitness-outline" size={14} color="rgba(255,255,255,0.9)" />
               <Text style={styles.heroBannerTag}>Genetik Tes</Text>
             </View>
             <Text style={styles.heroBannerTitle}>Kenali Potensi{'\n'}Genetik Anda</Text>
             <Text style={styles.heroBannerSub}>Temukan Jati Diri Anda Lewat Metode STIFIn</Text>
           </View>
-          {/* Dekorasi Belakang Berbasis Vektor Ikon */}
           <View style={styles.heroBannerDeco}>
             <Ionicons name="analytics" size={80} color="rgba(255,255,255,0.15)" />
           </View>
@@ -104,42 +164,54 @@ export default function HomeSTIFIn() {
               <Text style={styles.loadingText}>Memuat informasi...</Text>
             </View>
           ) : (
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false} 
-              snapToInterval={CARD_WIDTH + 16}
-              decelerationRate="fast"
-              contentContainerStyle={styles.sliderContainer}
-            >
-              {infoCards.map((card) => (
-                <View key={card.id} style={styles.card}>
-                  <View style={styles.cardIconRow}>
-                    <View style={styles.cardIconBg}>
-                      <Ionicons name={(card.icon || 'information-circle-outline') as any} size={22} color="#00AA5B" />
-                    </View>
-                  </View>
+            <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+              <ScrollView 
+                ref={scrollViewRef}
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                snapToInterval={CARD_WIDTH + CARD_GAP}
+                decelerationRate="fast"
+                contentContainerStyle={styles.sliderContainer}
+                onMomentumScrollEnd={(e) => {
+                  const offsetX = e.nativeEvent.contentOffset.x;
+                  currentIndexRef.current = Math.round(offsetX / (CARD_WIDTH + CARD_GAP));
+                }}
+              >
+                {infoCards.map((card) => (
+                  <TouchableOpacity 
+                    key={card.id} 
+                    style={styles.card}
+                    activeOpacity={0.9}
+                    onPress={() => handleCardPress(card)}
+                  >
+                    {card.image && (
+                      <View style={styles.imageContainer}>
+                        <Image 
+                          source={{ uri: `${BACKEND_ROOT}/storage/${card.image}` }} 
+                          style={styles.cardImageBlur} 
+                          blurRadius={15}
+                          resizeMode="cover"
+                        />
+                        <Image 
+                          source={{ uri: `${BACKEND_ROOT}/storage/${card.image}` }} 
+                          style={styles.cardImageMain} 
+                          resizeMode="contain"
+                        />
+                      </View>
+                    )}
 
-                  {card.image && (
-                    <View style={styles.imageContainer}>
-                      <Image 
-                        source={{ uri: `${BACKEND_ROOT}/storage/${card.image}` }} 
-                        style={styles.cardImageBlur} 
-                        blurRadius={15}
-                        resizeMode="cover"
-                      />
-                      <Image 
-                        source={{ uri: `${BACKEND_ROOT}/storage/${card.image}` }} 
-                        style={styles.cardImageMain} 
-                        resizeMode="contain"
-                      />
+                    <View style={styles.cardTextContent}>
+                      <Text style={styles.cardTitle} numberOfLines={2}>
+                        {card.title}
+                      </Text>
+                      <Text style={styles.cardDescription} numberOfLines={4}>
+                        {card.description}
+                      </Text>
                     </View>
-                  )}
-
-                  <Text style={styles.cardTitle}>{card.title}</Text>
-                  <Text style={styles.cardDescription}>{card.description}</Text>
-                </View>
-              ))}
-            </ScrollView>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </Animated.View>
           )}
         </View>
 
@@ -161,6 +233,62 @@ export default function HomeSTIFIn() {
         </View>
 
       </ScrollView>
+
+      {/* MODAL VIEW DETAIL JIKA CARD DIKLIK */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            
+            {/* Tombol Tutup / Close */}
+            <TouchableOpacity 
+              style={styles.modalCloseButton} 
+              onPress={() => setModalVisible(false)}
+            >
+              <Ionicons name="close" size={24} color="#334155" />
+            </TouchableOpacity>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Gambar Full Size di Modal */}
+              {selectedCard?.image && (
+                <View style={styles.modalImageContainer}>
+                  <Image 
+                    source={{ uri: `${BACKEND_ROOT}/storage/${selectedCard.image}` }} 
+                    style={styles.modalImageBlur} 
+                    blurRadius={15}
+                    resizeMode="cover"
+                  />
+                  <Image 
+                    source={{ uri: `${BACKEND_ROOT}/storage/${selectedCard.image}` }} 
+                    style={styles.modalImageMain} 
+                    resizeMode="contain"
+                  />
+                </View>
+              )}
+
+              {/* Konten Teks Utuh */}
+              <View style={styles.modalTextContainer}>
+                <Text style={styles.modalTitle}>{selectedCard?.title}</Text>
+                <Text style={styles.modalDescription}>{selectedCard?.description}</Text>
+              </View>
+            </ScrollView>
+
+            {/* Tombol Oke/Mengerti di bawah */}
+            <TouchableOpacity 
+              style={styles.modalActionButon}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.modalActionButtonText}>Tutup</Text>
+            </TouchableOpacity>
+
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -189,7 +317,12 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12, // Ditingkatkan sedikit agar ada jarak proporsional antara logo dan teks
+  },
+  headerLogo: {
+    width: 32,
+    height: 32,
+    borderRadius: 6, // Sedikit melengkung di sudutnya agar terlihat rapi
   },
   brandText: { 
     fontSize: 16, 
@@ -222,7 +355,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 22,
     flexDirection: 'row',
-    position: 'relative', // Memastikan kontainer menampung posisi absolut dekorasi
+    position: 'relative',
     overflow: 'hidden',
     shadowColor: '#00AA5B',
     shadowOffset: { width: 0, height: 6 },
@@ -232,7 +365,7 @@ const styles = StyleSheet.create({
   },
   heroBannerContent: { 
     flex: 1,
-    zIndex: 2, // Menaikkan teks ke atas agar tidak tertutup ikon dekorasi belakang
+    zIndex: 2,
   },
   heroTagContainer: {
     flexDirection: 'row',
@@ -308,38 +441,29 @@ const styles = StyleSheet.create({
   sliderContainer: { 
     paddingLeft: 16, 
     paddingRight: 4,
-    paddingBottom: 8,
+    paddingBottom: 12,
   },
+
+  /* DESAIN CARD UTAMA */
   card: { 
     width: CARD_WIDTH, 
-    borderRadius: 18, 
-    padding: 18, 
-    marginRight: 14, 
-    backgroundColor: '#fff',
-    shadowColor: '#00AA5B',
+    borderRadius: 16, 
+    padding: 16, 
+    marginRight: CARD_GAP, 
+    backgroundColor: '#ffffff',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 4,
     borderWidth: 1,
-    borderColor: '#e8f5e9',
+    borderColor: '#e2e8f0',
   } as ViewStyle,
-  cardIconRow: {
-    marginBottom: 12,
-  },
-  cardIconBg: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: '#e8f5e9',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   imageContainer: {
     width: '100%',
     aspectRatio: 16 / 9,
-    borderRadius: 12,
-    marginBottom: 12,
+    borderRadius: 10,
+    marginBottom: 14,
     overflow: 'hidden',
     position: 'relative',
     justifyContent: 'center',
@@ -356,17 +480,105 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  cardTextContent: {
+    paddingHorizontal: 2,
+  },
   cardTitle: { 
-    fontSize: 15, 
+    fontSize: 16, 
     fontWeight: '800', 
-    color: '#1a1a2e',
-    lineHeight: 21,
-    marginBottom: 6,
+    color: '#0f172a', 
+    lineHeight: 22,
+    marginBottom: 8,
   },
   cardDescription: { 
-    fontSize: 12, 
-    color: '#78909c', 
-    lineHeight: 17,
+    fontSize: 13, 
+    color: '#475569', 
+    lineHeight: 19,
+    textAlign: 'justify',
+  },
+
+  /* STYLE UNTUK MODAL DETAIL */
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)', 
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    maxHeight: height * 0.8, 
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 20,
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  modalCloseButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    zIndex: 10,
+    backgroundColor: '#f1f5f9',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalImageContainer: {
+    width: '100%',
+    aspectRatio: 16 / 9,
+    borderRadius: 14,
+    marginTop: 24,
+    marginBottom: 16,
+    overflow: 'hidden',
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+  },
+  modalImageBlur: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    opacity: 0.35,
+  },
+  modalImageMain: {
+    width: '100%',
+    height: '100%',
+  },
+  modalTextContainer: {
+    paddingVertical: 4,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0f172a',
+    lineHeight: 24,
+    marginBottom: 12,
+  },
+  modalDescription: {
+    fontSize: 14,
+    color: '#334155',
+    lineHeight: 22,
+    textAlign: 'justify',
+  },
+  modalActionButon: {
+    backgroundColor: '#00AA5B',
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  modalActionButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '700',
   },
 
   ctaSection: {

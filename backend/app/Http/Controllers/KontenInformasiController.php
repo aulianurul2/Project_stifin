@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage; // <-- WAJIB IMPORT INI
+use Illuminate\Support\Facades\Storage;
 
 class KontenInformasiController extends Controller
 {
@@ -21,7 +21,6 @@ class KontenInformasiController extends Controller
         $request->validate([
             'title' => 'required|string|max:150',
             'description' => 'required|string',
-            'icon' => 'required|string|max:50',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', // Validasi file gambar
         ]);
 
@@ -34,8 +33,7 @@ class KontenInformasiController extends Controller
         DB::table('konten_informasi')->insert([
             'title' => $request->title,
             'description' => $request->description,
-            'icon' => $request->icon,
-            'image' => $imagePath, // <-- SIMPAN PATH GAMBAR
+            'image' => $imagePath, // SIMPAN PATH GAMBAR
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -49,7 +47,6 @@ class KontenInformasiController extends Controller
         $request->validate([
             'title' => 'required|string|max:150',
             'description' => 'required|string',
-            'icon' => 'required|string|max:50',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
@@ -68,8 +65,7 @@ class KontenInformasiController extends Controller
         DB::table('konten_informasi')->where('id', $id)->update([
             'title' => $request->title,
             'description' => $request->description,
-            'icon' => $request->icon,
-            'image' => $imagePath, // <-- UPDATE PATH GAMBAR
+            'image' => $imagePath, // UPDATE PATH GAMBAR
             'updated_at' => now(),
         ]);
 
@@ -96,7 +92,7 @@ class KontenInformasiController extends Controller
     public function getApiInformasi()
     {
         $data = DB::table('konten_informasi')
-            ->select('id', 'title', 'description', 'icon', 'image') // <-- KETAMBAHAN FIELD IMAGE
+            ->select('id', 'title', 'description', 'image') // Menghapus select field icon
             ->get();
 
         return response()->json($data, 200);

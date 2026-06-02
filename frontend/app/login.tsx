@@ -9,13 +9,15 @@ import {
   ActivityIndicator, 
   KeyboardAvoidingView, 
   Platform, 
-  ScrollView 
+  ScrollView,
+  StatusBar,
+  Image 
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axiosInstance from '@/src/api/axiosConfig';
-import Toast from 'react-native-toast-message'; // Import Toast
+import Toast from 'react-native-toast-message';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -24,7 +26,7 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-const handleLogin = async () => {
+  const handleLogin = async () => {
     if (!username || !password) {
       Toast.show({
         type: 'error',
@@ -54,25 +56,21 @@ const handleLogin = async () => {
         Toast.show({
           type: 'success',
           text1: 'Berhasil Masuk',
-          text2: `Selamat datang kembali, ${userNama}! `,
+          text2: `Selamat datang kembali, ${username}! `,
           position: 'top',
           visibilityTime: 2000
         });
 
         setTimeout(() => {
-          setLoading(false); // Matikan loading sebelum pindah halaman
+          setLoading(false);
           router.replace('/(tabs)');
         }, 1000);
         
       } else {
-        // 1. Matikan loading indikator agar tombol tidak terus berputar
         setLoading(false);
-
-        // 2. Reset / Kosongkan form input langsung
         setUsername('');
         setPassword('');
 
-        // 3. Tampilkan pesan kesalahan
         Toast.show({
           type: 'error',
           text1: 'Gagal Masuk',
@@ -82,8 +80,6 @@ const handleLogin = async () => {
       }
     } catch (error: any) {
       console.error(error);
-      
-      // Matikan loading dan reset form jika terjadi error koneksi server
       setLoading(false);
       setUsername('');
       setPassword('');
@@ -98,27 +94,33 @@ const handleLogin = async () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#00AA5B" />
+      
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={styles.scrollContainer} bounces={false}>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContainer} 
+          bounces={false}
+          style={{ backgroundColor: '#00AA5B' }}
+        >
 
-          {/* Top Green Hero Section */}
-          <View style={styles.heroSection}>
-            <View style={styles.logoWrap}>
-              <View style={styles.logoCircleOuter}>
-                <View style={styles.logoCircleInner}>
-                  <Text style={styles.logoEmoji}>⚡</Text>
-                </View>
+          {/* Bagian Atas Hijau */}
+          <SafeAreaView style={styles.heroSafeArea}>
+            <View style={styles.heroSection}>
+              <View style={styles.logoWrap}>
+                <Image 
+                  source={require('../assets/images/logo_light.png')} 
+                  style={styles.logoImg}
+                  resizeMode="contain"
+                />
               </View>
             </View>
-            <Text style={styles.heroTitle}>STIFIn</Text>
-            <Text style={styles.heroSubtitle}>Information System</Text>
-          </View>
+          </SafeAreaView>
 
-          {/* White Card Form */}
+          {/* Card Form Putih */}
           <View style={styles.formCard}>
             <Text style={styles.cardTitle}>Masuk ke Akun</Text>
             <Text style={styles.cardSubtitle}>Selamat datang kembali!</Text>
@@ -205,57 +207,36 @@ const handleLogin = async () => {
 
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '#00AA5B',
+    backgroundColor: '#fff',
   },
   scrollContainer: { 
     flexGrow: 1,
   },
+  heroSafeArea: {
+    backgroundColor: '#00AA5B',
+  },
   heroSection: {
     alignItems: 'center',
-    paddingTop: 60,
-    paddingBottom: 40,
+    paddingTop: Platform.OS === 'android' ? 35 : 20,
+    paddingBottom: 20,
     backgroundColor: '#00AA5B',
   },
   logoWrap: {
-    marginBottom: 16,
-  },
-  logoCircleOuter: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
     alignItems: 'center',
-  },
-  logoCircleInner: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: '#fff',
     justifyContent: 'center',
-    alignItems: 'center',
+    width: '100%',
   },
-  logoEmoji: {
-    fontSize: 34,
-  },
-  heroTitle: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: '#fff',
-    letterSpacing: 2,
-  },
-  heroSubtitle: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 4,
-    letterSpacing: 1,
+  logoImg: {
+    width: 340,      // Diperbesar sedikit lagi dari sebelumnya (300)
+    height: 110,     // Tinggi disesuaikan proporsional (100 -> 110)
+    maxWidth: '95%', // Proteksi aman jika dibuka di layar HP yang sangat ramping
   },
   formCard: {
     flex: 1,
@@ -263,7 +244,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     padding: 32,
-    paddingBottom: 48,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 32,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.08,

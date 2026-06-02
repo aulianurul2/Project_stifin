@@ -13,7 +13,7 @@ class JadwalController extends Controller
         $jadwal = DB::table('jadwal')
             ->orderBy('tanggal', 'asc')
             ->orderBy('waktu', 'asc')
-            ->paginate(10);
+            ->get();
 
         return view('jadwal-tes', compact('jadwal'));
     }

@@ -28,6 +28,34 @@
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/css/plugins.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/css/kaiadmin.min.css') }}" />
+    <style>
+        /* Custom Utility Classes untuk Tampilan Modal yang Lebih Elegan */
+        .bg-info-light {
+            background-color: rgba(72, 171, 247, 0.1) !important;
+        }
+        .bg-primary-light {
+            background-color: rgba(29, 124, 244, 0.1) !important;
+        }
+        @media (min-width: 768px) {
+            .border-end-md {
+                border-right: 1px solid #ebedf2 !important;
+            }
+            .border-start-md {
+                border-left: 1px solid #ebedf2 !important;
+            }
+        }
+        .avatar-lg {
+            width: 48px !important;
+            height: 48px !important;
+        }
+        .avatar-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
 </head>
 <body>
     <div class="wrapper">
@@ -53,7 +81,7 @@
                         </div>
                         <div class="mb-3">
                             <span class="badge badge-primary px-3 py-2 fs-7 btn-round fw-normal">
-                                <i class="fas fa-calendar-check me-1"></i> {{ $jadwal->total() }} Slot Diterbitkan
+                                <i class="fas fa-calendar-check me-1"></i> {{ count($jadwal) }} Slot Diterbitkan
                             </span>
                         </div>
                     </div>
@@ -115,9 +143,9 @@
                     <div class="row mt-2">
                         <div class="col-md-12">
                             <div class="card card-round shadow-sm">
-                                <div class="card-body p-0">
+                                <div class="card-body p-4"> 
                                     <div class="table-responsive">
-                                        <table class="table table-striped table-hover mb-0 align-middle">
+                                        <table id="tabel-jadwal" class="table table-striped table-hover mb-0 align-middle">
                                             <thead class="bg-light">
                                                 <tr>
                                                     <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8">Waktu</th>
@@ -184,35 +212,21 @@
                                                         @endif
                                                     </td>
                                                     <td class="px-4 py-3 text-center">
-                                                        <form action="{{ route('jadwal.destroy', $item->id_jadwal) }}" method="POST" onsubmit="return confirm('Hapus slot ini?')">
+                                                        <form action="{{ route('jadwal.destroy', $item->id_jadwal) }}" method="POST" id="form-hapus-{{ $item->id_jadwal }}">
                                                             @csrf
                                                             @method('DELETE')
-                                                            <button type="submit" class="btn btn-icon btn-link btn-danger btn-sm" data-bs-toggle="tooltip" title="Hapus Slot">
+                                                            <button type="button" class="btn btn-icon btn-link btn-danger btn-sm btn-hapus-jadwal" data-id="{{ $item->id_jadwal }}" data-bs-toggle="tooltip" title="Hapus Slot">
                                                                 <i class="fas fa-trash-alt fs-6"></i>
                                                             </button>
                                                         </form>
                                                     </td>
                                                 </tr>
                                                 @empty
-                                                <tr>
-                                                    <td colspan="5" class="px-4 py-5 text-center text-muted italic">Belum ada slot jadwal yang diterbitkan.</td>
-                                                </tr>
                                                 @endforelse
                                             </tbody>
                                         </table>
                                     </div>
-
-                                    @if($jadwal->hasPages())
-                                        <div class="card-footer d-flex justify-content-between align-items-center bg-white border-top py-3 px-4">
-                                            <div class="text-muted fs-8">
-                                                Menampilkan {{ $jadwal->firstItem() }} sampai {{ $jadwal->lastItem() }} dari {{ $jadwal->total() }} data
-                                            </div>
-                                            <div>
-                                                {{ $jadwal->links('pagination::bootstrap-5') }}
-                                            </div>
-                                        </div>
-                                    @endif
-
+                                    
                                 </div>
                             </div>
                         </div>
@@ -240,44 +254,46 @@
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div>
-                            <small class="text-muted text-uppercase d-block fw-bold fs-8">Waktu Pelaksanaan</small>
-                            <span class="fw-bold text-dark fs-6" id="modal-waktu-jadwal">-</span>
+                <div class="modal-body p-4 bg-light-50">
+                    
+                    <div class="row g-3 mb-4 p-3 bg-white rounded card-round shadow-sm border mx-0">
+                        <div class="col-sm-6 border-end-md">
+                            <div class="d-flex align-items-center">
+                                <div class="p-2 bg-info-light text-info rounded-circle me-3 text-center" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-calendar-alt fs-5 mt-1"></i>
+                                </div>
+                                <div>
+                                    <small class="text-uppercase fw-bold text-muted fs-8 d-block">Waktu Pelaksanaan</small>
+                                    <span class="fw-bold text-dark fs-6" id="modal-waktu-jadwal">-</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="text-end">
-                            <small class="text-muted text-uppercase d-block fw-bold fs-8">Lokasi</small>
-                            <span class="badge badge-info px-3 py-1 btn-round text-capitalize fs-8 fw-normal" id="modal-lokasi-jadwal">-</span>
+                        <div class="col-sm-6">
+                            <div class="d-flex align-items-center ps-0 ps-md-3">
+                                <div class="p-2 bg-primary-light text-primary rounded-circle me-3 text-center" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-map-marker-alt fs-5 mt-1"></i>
+                                </div>
+                                <div>
+                                    <small class="text-uppercase fw-bold text-muted fs-8 d-block">Lokasi Tes</small>
+                                    <span class="badge badge-info px-3 py-1 btn-round text-capitalize fs-8 fw-semibold" id="modal-lokasi-jadwal">-</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="table-responsive border rounded card-round">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="px-3 py-2 text-muted fs-8 text-uppercase" style="width: 5%">No</th>
-                                    <th class="px-3 py-2 text-muted fs-8 text-uppercase">Nama Klien</th>
-                                    <th class="px-3 py-2 text-muted fs-8 text-uppercase">No. HP / WhatsApp</th>
-                                    <th class="px-3 py-2 text-muted fs-8 text-uppercase">Status</th>
-                                    <th class="px-3 py-2 text-muted fs-8 text-uppercase">Catatan</th>
-                                    <th class="px-3 py-2 text-muted fs-8 text-uppercase">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="container-list-klien">
-                            </tbody>
-                        </table>
+                    <div id="container-list-klien">
                     </div>
+
                 </div>
                 <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
-                    <button type="button" class="btn btn-secondary btn-round w-100 fw-bold" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-outline-secondary btn-round w-100 fw-bold text-dark" data-bs-dismiss="modal">Tutup</button>
 
                     <form id="formUpdateStatus" method="POST" style="display:none;">
-        @csrf
-        @method('PUT')
-        <input type="hidden" name="status" id="inputStatus">
-        <button type="submit" id="btnSubmitStatus" class="btn btn-round fw-bold"></button>
-    </form>
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" name="status" id="inputStatus">
+                        <button type="submit" id="btnSubmitStatus" class="btn btn-round fw-bold"></button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -287,12 +303,101 @@
     <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
     <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
     <script src="{{ asset('assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js') }}"></script>
+    <script src="{{ asset('assets/js/plugin/datatables/datatables.min.js') }}"></script>
+    <script src="{{ asset('assets/js/plugin/sweetalert/sweetalert.min.js') }}"></script>
     <script src="{{ asset('assets/js/kaiadmin.min.js') }}"></script>
 
     <script>
         $(document).ready(function(){
             $('[data-bs-toggle="tooltip"]').tooltip();
 
+            // INISIALISASI DATATABLES PADA TABEL JADWAL
+            $('#tabel-jadwal').DataTable({
+                "pageLength": 10, 
+                "order": [], 
+                "language": {
+                    "search": "Cari Slot:",
+                    "lengthMenu": "Tampilkan _MENU_ data",
+                    "zeroRecords": "Tidak ada data slot jadwal yang cocok",
+                    "info": "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    "infoEmpty": "Data tidak tersedia",
+                    "infoFiltered": "(difilter dari _MAX_ total data)",
+                }
+            });
+
+            // Logika Konfirmasi Hapus Slot Jadwal Menggunakan SweetAlert
+            $('#tabel-jadwal').on('click', '.btn-hapus-jadwal', function(e) {
+                e.preventDefault();
+                var idJadwal = $(this).data('id');
+                
+                swal({
+                    title: 'Apakah Anda yakin?',
+                    text: "Slot jadwal ini akan dihapus secara permanen!",
+                    type: 'warning',
+                    buttons: {
+                        cancel: {
+                            visible: true,
+                            text: 'Batal',
+                            className: 'btn btn-secondary btn-round fw-bold'
+                        },
+                        confirm: {
+                            text: 'Ya, Hapus!',
+                            className: 'btn btn-danger btn-round fw-bold'
+                        }
+                    }
+                }).then((willDelete) => {
+                    if (willDelete) {
+                        $('#form-hapus-' + idJadwal).submit();
+                    }
+                });
+            });
+
+            // Logika Konfirmasi Klik Aksi di Dalam Modal AJAX (Tolak / Buka Kembali Slot)
+            $('#container-list-klien').on('click', '.btn-aksi-status', function(e) {
+                e.preventDefault();
+                var idJadwal = $(this).data('id');
+                var statusTarget = $(this).data('status');
+                
+                var swalTitle = 'Konfirmasi Tindakan';
+                var swalText = 'Apakah Anda yakin ingin memproses data ini?';
+                var swalConfirmClass = 'btn btn-primary btn-round fw-bold';
+                var swalConfirmText = 'Ya, Proses!';
+
+                if (statusTarget === 'Ditolak') {
+                    swalTitle = 'Tolak Permohonan?';
+                    swalText = 'Permohonan booking slot dari klien ini akan ditolak.';
+                    swalConfirmClass = 'btn btn-danger btn-round fw-bold';
+                    swalConfirmText = 'Ya, Tolak!';
+                } else if (statusTarget === 'Tersedia') {
+                    swalTitle = 'Buka Kembali Slot?';
+                    swalText = 'Slot ini akan dikosongkan dan dapat dipesan kembali oleh klien lain.';
+                    swalConfirmClass = 'btn btn-success btn-round fw-bold';
+                    swalConfirmText = 'Ya, Buka!';
+                }
+
+                swal({
+                    title: swalTitle,
+                    text: swalText,
+                    type: 'warning',
+                    buttons: {
+                        cancel: {
+                            visible: true,
+                            text: 'Batal',
+                            className: 'btn btn-secondary btn-round fw-bold'
+                        },
+                        confirm: {
+                            text: swalConfirmText,
+                            className: swalConfirmClass
+                        }
+                    }
+                }).then((willConfirm) => {
+                    if (willConfirm) {
+                        executeUpdateStatus(idJadwal, statusTarget);
+                    }
+                });
+            });
+
+            // Logika Modal Detail Klien Ajax dengan Layout Baru yang Profesional
             $('.btn-lihat-klien').on('click', function() {
                 var idJadwal = $(this).data('id');
                 var infoWaktu = $(this).data('waktu');
@@ -301,7 +406,11 @@
                 $('#modal-waktu-jadwal').text(infoWaktu);
                 $('#modal-lokasi-jadwal').html('<i class="fas fa-map-marker-alt me-1"></i> ' + infoLokasi);
                 
-                $('#container-list-klien').html('<tr><td colspan="5" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Memuat data pendaftar...</td></tr>');
+                $('#container-list-klien').html(`
+                    <div class="text-center py-4 text-muted bg-white border card-round shadow-sm">
+                        <i class="fas fa-spinner fa-spin me-2 fs-5"></i>Memuat data pendaftar...
+                    </div>
+                `);
                 $('#modalKlien').modal('show');
 
                 $.ajax({
@@ -312,7 +421,11 @@
                         $('#container-list-klien').empty();
                         
                         if(data.length === 0) {
-                            $('#container-list-klien').html('<tr><td colspan="5" class="text-center py-4 text-muted italic">Belum ada klien yang memesan slot ini.</td></tr>');
+                            $('#container-list-klien').html(`
+                                <div class="text-center py-5 bg-white rounded card-round border shadow-sm">
+                                    <p class="text-muted mb-0 fw-medium italic">Belum ada klien yang memesan slot ini.</p>
+                                </div>
+                            `);
                             return;
                         }
 
@@ -328,63 +441,130 @@
                             }
 
                             if (statusLower === 'menunggu' || statusLower === 'konfirmasi') {
-                                displayStatus = 'Menunggu';
+                                displayStatus = 'Menunggu Konfirmasi';
                             } else {
                                 displayStatus = displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1).toLowerCase();
                             }
 
                             var cleanPhone = item.no_hp ? item.no_hp.replace(/[^0-9]/g, '') : '';
-                            var waLink = item.no_hp ? `<a href="https://wa.me/${cleanPhone}" target="_blank" class="text-success fw-semibold"><i class="fab fa-whatsapp me-1"></i> ${item.no_hp}</a>` : '-';
+                            var waButton = item.no_hp ? `
+                                <a href="https://wa.me/${cleanPhone}" target="_blank" class="btn btn-sm btn-success btn-round px-3">
+                                    <i class="fab fa-whatsapp me-2"></i>Hubungi Klien
+                                </a>
+                            ` : '<span class="text-muted fs-8">-</span>';
+
                             var aksiHtml = '';
-if (statusLower === 'menunggu') {
-    // Menggunakan item.id_jadwal yang sekarang sudah dikirim oleh Controller
-    aksiHtml = `<button onclick="updateStatus(${item.id_jadwal}, 'Ditolak')" class="btn btn-danger btn-sm btn-round">Tolak</button>`;
-} else if (statusLower === 'ditolak') {
-    // Menggunakan item.id_jadwal yang sekarang sudah dikirim oleh Controller
-    aksiHtml = `<button onclick="updateStatus(${item.id_jadwal}, 'Tersedia')" class="btn btn-success btn-sm btn-round"><i class="fas fa-sync-alt me-1"></i> Buka Kembali</button>`;
-} else {
-    aksiHtml = `<span class="text-muted fs-8">Tidak ada aksi</span>`;
-}
-                            var row = `
-                                <tr>
-                                    <td class="px-3 py-2 fw-bold text-muted">${index + 1}</td>
-                                    <td class="px-3 py-2 fw-bold text-dark">${item.nama_klien}</td>
-                                    <td class="px-3 py-2">${waLink}</td>
-                                    <td class="px-3 py-2"><span class="badge ${badgeClass} fw-normal text-capitalize">${displayStatus}</span></td>
-                                    <td class="px-3 py-2 text-muted fs-8 italic">${item.komentar ? item.komentar : '-'}</td>
-                                    <td class="px-3 py-2">${aksiHtml}</td>
-                                </tr>
+                            if (statusLower === 'menunggu') {
+                                aksiHtml = `
+                                    <button data-id="${item.id_jadwal}" data-status="Ditolak" class="btn btn-sm btn-outline-danger btn-round px-3 btn-aksi-status">
+                                        <i class="fas fa-times-circle me-1"></i> Tolak Permohonan
+                                    </button>
+                                `;
+                            } else if (statusLower === 'ditolak') {
+                                aksiHtml = `
+                                    <button data-id="${item.id_jadwal}" data-status="Tersedia" class="btn btn-sm btn-outline-success btn-round px-3 btn-aksi-status">
+                                        <i class="fas fa-sync-alt me-1"></i> Buka Kembali Slot
+                                    </button>
+                                `;
+                            } else {
+                                aksiHtml = `<span class="badge bg-light text-muted border px-3 py-1 btn-round fs-8 fw-normal"><i class="fas fa-lock me-1"></i> Terkunci</span>`;
+                            }
+
+                            // Render Card Grid Profile Klien
+                            var clientCard = `
+                                <div class="card card-round border shadow-sm mb-0">
+                                    <div class="card-body p-4">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-5 mb-3 mb-md-0">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar avatar-lg me-3">
+                                                        <span class="avatar-title rounded-circle bg-info-light text-info fw-bold fs-5">
+                                                            ${item.nama_klien.charAt(0).toUpperCase()}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <h5 class="fw-bold text-dark mb-1 fs-6">${item.nama_klien}</h5>
+                                                        <span class="badge ${badgeClass} px-2.5 py-1 btn-round fs-8 fw-semibold">${displayStatus}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-4 mb-3 mb-md-0 border-start-md px-md-4">
+                                                <div class="mb-2">
+                                                    <small class="text-muted d-block fs-8 fw-bold text-uppercase">Nomor Handphone</small>
+                                                    <span class="text-dark fw-medium fs-7">${item.no_hp ? item.no_hp : '-'}</span>
+                                                </div>
+                                                <div>
+                                                    <small class="text-muted d-block fs-8 fw-bold text-uppercase">Catatan Tambahan</small>
+                                                    <p class="text-muted mb-0 fs-7 italic" style="line-height: 1.4;">
+                                                        "${item.komentar ? item.komentar : 'Tidak ada catatan khusus.'}"
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-3 text-md-end border-start-md">
+                                                <div class="d-grid gap-2 d-md-block text-nowrap">
+                                                    <div class="mb-2">${waButton}</div>
+                                                    <div>${aksiHtml}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             `;
-                            $('#container-list-klien').append(row);
+                            $('#container-list-klien').append(clientCard);
                         });
                     },
                     error: function() {
-                        $('#container-list-klien').html('<tr><td colspan="5" class="text-center py-4 text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Gagal mengambil data klien.</td></tr>');
+                        $('#container-list-klien').html(`
+                            <div class="text-center py-4 text-danger bg-white border card-round shadow-sm">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Gagal mengambil data pendaftar klien.
+                            </div>
+                        `);
                     }
                 });
             });
         });
-        function updateStatus(id, status) {
-    if(confirm('Yakin ingin mengubah status jadwal ini menjadi ' + status + '?')) {
-        $.ajax({
-            url: '/jadwal-tes/' + id + '/update-status',
-            type: 'POST', // Atau PUT
-            data: {
-                _token: '{{ csrf_token() }}',
-                _method: 'PUT',
-                status: status
-            },
-            success: function(response) {
-                alert('Status berhasil diubah!');
-                location.reload(); // Refresh halaman untuk melihat perubahan
-            },
-            error: function(xhr) {
-                alert('Gagal mengubah status.');
-                console.log(xhr.responseText);
-            }
-        });
-    }
-}
+
+        // Pemisahan Fungsi AJAX Update Status Utama
+        function executeUpdateStatus(id, status) {
+            $.ajax({
+                url: '/jadwal-tes/' + id + '/update-status',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    _method: 'PUT',
+                    status: status
+                },
+                success: function(response) {
+                    swal({
+                        title: 'Berhasil!',
+                        text: 'Status jadwal telah diperbarui.',
+                        type: 'success',
+                        buttons: {
+                            confirm: {
+                                className: 'btn btn-success btn-round'
+                            }
+                        }
+                    }).then(() => {
+                        location.reload();
+                    });
+                },
+                error: function(xhr) {
+                    swal({
+                        title: 'Gagal!',
+                        text: 'Terjadi kesalahan saat memperbarui status.',
+                        type: 'error',
+                        buttons: {
+                            confirm: {
+                                className: 'btn btn-danger btn-round'
+                            }
+                        }
+                    });
+                    console.log(xhr.responseText);
+                }
+            });
+        }
     </script>
 </body>
 </html>
