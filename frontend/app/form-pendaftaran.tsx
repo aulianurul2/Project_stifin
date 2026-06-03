@@ -209,7 +209,7 @@ export default function FormPendaftaran() {
           <View style={styles.row}>
             <View style={{ flex: 1, marginRight: 10 }}>
               <CustomInput
-                label="Tgl Lahir (YYYY-MM-DD)"
+                label="Tgl Lahir (Thn-Bln-tgl)"
                 value={formData.tanggal_lahir}
                 icon="calendar-outline"
                 onChange={(val) => setFormData({ ...formData, tanggal_lahir: val })}

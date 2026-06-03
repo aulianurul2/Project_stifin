@@ -111,25 +111,23 @@ export default function HomeSTIFIn() {
     <SafeAreaView style={styles.container}>
 
       {/* Compact Green Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          {/* Penambahan Logo STIFIn di samping kiri tulisan */}
-          <Image 
-            source={require('../../assets/images/logostif.png')} 
-            style={styles.headerLogo}
-            resizeMode="contain"
-          />
-          <View>
-            <Text style={styles.brandText}>STIFIn</Text>
-            <Text style={styles.brandSub}>Information System</Text>
-          </View>
-        </View>
-        <TouchableOpacity style={styles.profileButton} onPress={() => router.push('/edit-profile')}>
-          <View style={styles.profileAvatar}>
-            <Ionicons name="person-outline" size={20} color="#00AA5B" />
-          </View>
-        </TouchableOpacity>
-      </View>
+<View style={styles.header}>
+  {/* Kontainer kiri: Logo dan Teks ditumpuk */}
+  <View style={styles.headerLeft}>
+    <Image 
+      source={require('../../assets/images/logo_light.png')} 
+      style={styles.headerLogo}
+      resizeMode="contain"
+    />
+    <Text style={styles.brandSub}>Information System</Text>
+  </View>
+  
+  <TouchableOpacity style={styles.profileButton} onPress={() => router.push('/edit-profile')}>
+    <View style={styles.profileAvatar}>
+      <Ionicons name="person-outline" size={20} color="#00AA5B" />
+    </View>
+  </TouchableOpacity>
+</View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 
@@ -315,25 +313,31 @@ const styles = StyleSheet.create({
     elevation: 3,
   } as ViewStyle,
   headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12, // Ditingkatkan sedikit agar ada jarak proporsional antara logo dan teks
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    paddingLeft: 20,
   },
+
   headerLogo: {
-    width: 32,
-    height: 32,
-    borderRadius: 6, // Sedikit melengkung di sudutnya agar terlihat rapi
+    width: 130,
+    marginLeft: -60,
+    height: 40,
   },
   brandText: { 
-    fontSize: 16, 
-    fontWeight: '900', 
-    color: '#1a1a2e',
-    letterSpacing: 1,
+    fontSize: 12, 
+    fontWeight: '600', 
+    color: '#00AA5B',
+    marginTop: 2,
   },
   brandSub: {
     fontSize: 10,
-    color: '#90a4ae',
-    marginTop: 1,
+    color: '#1a1a2e',
+    marginTop: 2,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    textAlign: 'left',
+    marginLeft: -20,
   },
   profileButton: { padding: 2 },
   profileAvatar: {
@@ -343,7 +347,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e8f5e9',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: 0.5,
     borderColor: '#00AA5B',
   },
   content: { paddingVertical: 20 },
