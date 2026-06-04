@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  StatusBar,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -296,7 +297,7 @@ const styles = StyleSheet.create({
 
   topBar: {
     backgroundColor: '#00AA5B',
-    paddingTop: Platform.OS === 'ios' ? 0 : 10,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight ? StatusBar.currentHeight + 12 : 30) : 16,
     paddingBottom: 18,
     paddingHorizontal: 16,
     flexDirection: 'row',

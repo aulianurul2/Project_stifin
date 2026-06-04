@@ -281,7 +281,7 @@ export default function DashboardIndex() {
             <Text style={styles.userName}>{userName}</Text>
             <View style={styles.roleBadge}>
               <View style={styles.roleDot} />
-              <Text style={styles.roleText}>Klien Aktif</Text>
+              <Text style={styles.roleText}>Aktif</Text>
             </View>
           </View>
 

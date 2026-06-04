@@ -9,7 +9,8 @@ import {
   ScrollView,
   Modal,
   FlatList,
-  ActivityIndicator
+  ActivityIndicator,
+  StatusBar,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -464,7 +465,7 @@ const styles = StyleSheet.create({
 
   topBar: {
     backgroundColor: '#00AA5B',
-    paddingTop: Platform.OS === 'ios' ? 0 : 10,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight ? StatusBar.currentHeight + 12 : 30) : 16,
     paddingBottom: 18,
     paddingHorizontal: 16,
     flexDirection: 'row',

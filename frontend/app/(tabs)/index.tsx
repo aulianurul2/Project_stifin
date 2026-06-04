@@ -247,7 +247,7 @@ export default function HomeSTIFIn() {
               style={styles.modalCloseButton} 
               onPress={() => setModalVisible(false)}
             >
-              <Ionicons name="close" size={24} color="#334155" />
+              <Ionicons name="close" size={20} color="#334155" />
             </TouchableOpacity>
 
             <ScrollView showsVerticalScrollIndicator={false}>
@@ -528,8 +528,8 @@ const styles = StyleSheet.create({
     right: 16,
     zIndex: 10,
     backgroundColor: '#f1f5f9',
-    width: 36,
-    height: 36,
+    width: 25,
+    height: 25,
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',

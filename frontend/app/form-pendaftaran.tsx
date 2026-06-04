@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   KeyboardTypeOptions,
   Platform,
   Image,
+  StatusBar,
 } from 'react-native';
 
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -44,18 +45,23 @@ interface CustomInputProps {
   icon?: keyof typeof Ionicons.glyphMap;
 }
 
+// Tipe fleksibel: File (web) atau object uri/name/type (mobile)
+type BuktiFile = File | { uri: string; name: string; type: string };
+
 export default function FormPendaftaran() {
   const router = useRouter();
   const params = useLocalSearchParams();
-
-  // Terima semua params dari halaman pendaftaran
   const { id_jadwal, tanggal, waktu, is_luar_subang } = params;
 
   const [loading, setLoading] = useState(false);
   const [fetchingData, setFetchingData] = useState(true);
 
-  // State untuk bukti transfer
-  const [bukti, setBukti] = useState<ImagePicker.ImagePickerAsset | null>(null);
+  // State bukti: simpan file asli + URI preview terpisah
+  const [bukti, setBukti] = useState<BuktiFile | null>(null);
+  const [buktiPreviewUri, setBuktiPreviewUri] = useState<string | null>(null);
+
+  // Ref ke input[type=file] tersembunyi (hanya web)
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [formData, setFormData] = useState<KlienFormData>({
     id_klien: '',
@@ -73,25 +79,46 @@ export default function FormPendaftaran() {
 
   useEffect(() => {
     loadProfileData();
+
+    // Buat input[type=file] tersembunyi khusus web
+    if (Platform.OS === 'web') {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/jpeg,image/png,image/jpg';
+      input.style.display = 'none';
+      input.onchange = (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        const file = target.files?.[0];
+        if (file) {
+          setBukti(file);
+          setBuktiPreviewUri(URL.createObjectURL(file));
+        }
+      };
+      document.body.appendChild(input);
+      fileInputRef.current = input;
+
+      return () => {
+        document.body.removeChild(input);
+      };
+    }
   }, []);
 
   const loadProfileData = async () => {
     try {
       const response = await axiosInstance.get('/profile');
       const u = response.data;
-
       setFormData({
-        id_klien: u.id_user || '',
-        nama: u.nama || '',
-        no_hp: u.no_hp || '',
-        tanggal_lahir: u.tanggal_lahir || '',
-        jenis_kelamin: u.jenis_kelamin || 'L',
+        id_klien:       u.id_user        || '',
+        nama:           u.nama           || '',
+        no_hp:          u.no_hp          || '',
+        tanggal_lahir:  u.tanggal_lahir  || '',
+        jenis_kelamin:  u.jenis_kelamin  || 'L',
         golongan_darah: u.golongan_darah || '-',
-        email: u.email || '',
-        alamat: u.alamat || '',
-        institusi: u.institusi || '',
-        sosmed: u.sosmed || '',
-        domisili: u.domisili || '',
+        email:          u.email          || '',
+        alamat:         u.alamat         || '',
+        institusi:      u.institusi      || '',
+        sosmed:         u.sosmed         || '',
+        domisili:       u.domisili       || '',
       });
     } catch (error) {
       console.log('Gagal memuat profil:', error);
@@ -100,8 +127,13 @@ export default function FormPendaftaran() {
     }
   };
 
-// Fungsi pilih foto dari galeri
   const pilihFoto = async () => {
+    if (Platform.OS === 'web') {
+      fileInputRef.current?.click();
+      return;
+    }
+
+    // Mobile
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       Toast.show({
@@ -120,11 +152,12 @@ export default function FormPendaftaran() {
     });
 
     if (!result.canceled && result.assets.length > 0) {
-      setBukti(result.assets[0]);
+      const asset = result.assets[0];
+      setBukti({ uri: asset.uri, name: asset.fileName || 'bukti_transfer.jpg', type: asset.mimeType || 'image/jpeg' });
+      setBuktiPreviewUri(asset.uri);
     }
   };
 
-  // Fungsi submit pendaftaran
   const handleKirim = async () => {
     if (!formData.nama || !formData.no_hp || !formData.email || !formData.alamat) {
       Toast.show({
@@ -147,28 +180,27 @@ export default function FormPendaftaran() {
     }
 
     setLoading(true);
-
     try {
       const data = new FormData();
 
-      data.append('file_bukti', {
-        uri: bukti.uri,
-        name: bukti.fileName || 'bukti_transfer.jpg',
-        type: bukti.mimeType || 'image/jpeg',
-      } as any);
+      if (Platform.OS === 'web') {
+        data.append('file_bukti', bukti as File);
+      } else {
+        data.append('file_bukti', bukti as any);
+      }
 
-      data.append('id_jadwal', String(id_jadwal));
+      data.append('id_jadwal',      String(id_jadwal));
       data.append('is_luar_subang', is_luar_subang === '1' ? '1' : '0');
-      data.append('nama_klien', formData.nama);
-      data.append('no_hp', formData.no_hp);
-      data.append('email', formData.email);
-      data.append('alamat', formData.alamat);
-      data.append('tanggal_lahir', formData.tanggal_lahir);
-      data.append('jenis_kelamin', formData.jenis_kelamin);
+      data.append('nama_klien',     formData.nama);
+      data.append('no_hp',          formData.no_hp);
+      data.append('email',          formData.email);
+      data.append('alamat',         formData.alamat);
+      data.append('tanggal_lahir',  formData.tanggal_lahir);
+      data.append('jenis_kelamin',  formData.jenis_kelamin);
       data.append('golongan_darah', formData.golongan_darah);
-      data.append('domisili', formData.domisili);
-      data.append('institusi', formData.institusi);
-      data.append('sosmed', formData.sosmed);
+      data.append('domisili',       formData.domisili);
+      data.append('institusi',      formData.institusi);
+      data.append('sosmed',         formData.sosmed);
 
       const response = await axiosInstance.post('/pendaftaran/submit', data, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -182,10 +214,7 @@ export default function FormPendaftaran() {
           position: 'top',
           visibilityTime: 2000,
         });
-
-        setTimeout(() => {
-          router.replace('/riwayat');
-        }, 1000);
+        setTimeout(() => { router.replace('/riwayat'); }, 1000);
       }
     } catch (error: any) {
       console.log('=== ERROR SUBMIT ===');
@@ -261,52 +290,25 @@ export default function FormPendaftaran() {
             <Text style={styles.sectionTitle}>Data Personal</Text>
           </View>
 
-          <CustomInput
-            label="Nama Lengkap"
-            value={formData.nama}
-            icon="person-outline"
-            onChange={(val) => setFormData({ ...formData, nama: val })}
-          />
+          <CustomInput label="Nama Lengkap" value={formData.nama} icon="person-outline"
+            onChange={(val) => setFormData({ ...formData, nama: val })} />
+          <CustomInput label="Nomor WhatsApp" value={formData.no_hp} keyboardType="phone-pad"
+            icon="call-outline" onChange={(val) => setFormData({ ...formData, no_hp: val })} />
 
-          <CustomInput
-            label="Nomor WhatsApp"
-            value={formData.no_hp}
-            keyboardType="phone-pad"
-            icon="call-outline"
-            onChange={(val) => setFormData({ ...formData, no_hp: val })}
-          />
-
-          {/* Tgl Lahir + Goldar */}
           <View style={styles.row}>
             <View style={{ flex: 1, marginRight: 10 }}>
-              <CustomInput
-                label="Tgl Lahir (Thn-Bln-Tgl)"
-                value={formData.tanggal_lahir}
-                icon="calendar-outline"
-                placeholder="2000-01-31"
-                onChange={(val) => setFormData({ ...formData, tanggal_lahir: val })}
-              />
+              <CustomInput label="Tgl Lahir (Thn-Bln-Tgl)" value={formData.tanggal_lahir}
+                icon="calendar-outline" placeholder="2000-01-31"
+                onChange={(val) => setFormData({ ...formData, tanggal_lahir: val })} />
             </View>
-
             <View style={{ width: 145 }}>
               <Text style={styles.fieldLabel}>Gol. Darah</Text>
               <View style={styles.bloodRow}>
                 {['A', 'B', 'AB', 'O'].map((item) => (
-                  <TouchableOpacity
-                    key={item}
-                    style={[
-                      styles.bloodBtn,
-                      formData.golongan_darah === item && styles.bloodBtnActive,
-                    ]}
-                    onPress={() => setFormData({ ...formData, golongan_darah: item })}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[
-                        styles.bloodText,
-                        formData.golongan_darah === item && styles.bloodTextActive,
-                      ]}
-                    >
+                  <TouchableOpacity key={item}
+                    style={[styles.bloodBtn, formData.golongan_darah === item && styles.bloodBtnActive]}
+                    onPress={() => setFormData({ ...formData, golongan_darah: item })} activeOpacity={0.7}>
+                    <Text style={[styles.bloodText, formData.golongan_darah === item && styles.bloodTextActive]}>
                       {item}
                     </Text>
                   </TouchableOpacity>
@@ -315,26 +317,14 @@ export default function FormPendaftaran() {
             </View>
           </View>
 
-          {/* Jenis Kelamin */}
           <View style={styles.inputGroup}>
             <Text style={styles.fieldLabel}>Jenis Kelamin</Text>
             <View style={styles.bloodRow}>
               {[{ label: 'Laki-laki', val: 'L' }, { label: 'Perempuan', val: 'P' }].map((item) => (
-                <TouchableOpacity
-                  key={item.val}
-                  style={[
-                    styles.genderBtn,
-                    formData.jenis_kelamin === item.val && styles.bloodBtnActive,
-                  ]}
-                  onPress={() => setFormData({ ...formData, jenis_kelamin: item.val })}
-                  activeOpacity={0.7}
-                >
-                  <Text
-                    style={[
-                      styles.bloodText,
-                      formData.jenis_kelamin === item.val && styles.bloodTextActive,
-                    ]}
-                  >
+                <TouchableOpacity key={item.val}
+                  style={[styles.genderBtn, formData.jenis_kelamin === item.val && styles.bloodBtnActive]}
+                  onPress={() => setFormData({ ...formData, jenis_kelamin: item.val })} activeOpacity={0.7}>
+                  <Text style={[styles.bloodText, formData.jenis_kelamin === item.val && styles.bloodTextActive]}>
                     {item.label}
                   </Text>
                 </TouchableOpacity>
@@ -342,13 +332,8 @@ export default function FormPendaftaran() {
             </View>
           </View>
 
-          <CustomInput
-            label="Email Aktif"
-            value={formData.email}
-            keyboardType="email-address"
-            icon="mail-outline"
-            onChange={(val) => setFormData({ ...formData, email: val })}
-          />
+          <CustomInput label="Email Aktif" value={formData.email} keyboardType="email-address"
+            icon="mail-outline" onChange={(val) => setFormData({ ...formData, email: val })} />
         </View>
 
         {/* Section 2: Data Tambahan */}
@@ -358,34 +343,14 @@ export default function FormPendaftaran() {
             <Text style={styles.sectionTitle}>Data Tambahan</Text>
           </View>
 
-          <CustomInput
-            label="Institusi / Pekerjaan"
-            value={formData.institusi}
-            icon="business-outline"
-            onChange={(val) => setFormData({ ...formData, institusi: val })}
-          />
-
-          <CustomInput
-            label="Username Sosmed (FB/IG)"
-            value={formData.sosmed}
-            icon="logo-instagram"
-            onChange={(val) => setFormData({ ...formData, sosmed: val })}
-          />
-
-          <CustomInput
-            label="Kota Domisili"
-            value={formData.domisili}
-            icon="map-outline"
-            onChange={(val) => setFormData({ ...formData, domisili: val })}
-          />
-
-          <CustomInput
-            label="Alamat Lengkap"
-            value={formData.alamat}
-            multiline
-            icon="location-outline"
-            onChange={(val) => setFormData({ ...formData, alamat: val })}
-          />
+          <CustomInput label="Institusi / Pekerjaan" value={formData.institusi} icon="business-outline"
+            onChange={(val) => setFormData({ ...formData, institusi: val })} />
+          <CustomInput label="Username Sosmed (FB/IG)" value={formData.sosmed} icon="logo-instagram"
+            onChange={(val) => setFormData({ ...formData, sosmed: val })} />
+          <CustomInput label="Kota Domisili" value={formData.domisili} icon="map-outline"
+            onChange={(val) => setFormData({ ...formData, domisili: val })} />
+          <CustomInput label="Alamat Lengkap" value={formData.alamat} multiline icon="location-outline"
+            onChange={(val) => setFormData({ ...formData, alamat: val })} />
         </View>
 
         {/* Section 3: Info Pembayaran & Upload Bukti */}
@@ -395,7 +360,6 @@ export default function FormPendaftaran() {
             <Text style={styles.sectionTitle}>Info Pembayaran</Text>
           </View>
 
-          {/* Biaya ditentukan dari params is_luar_subang */}
           <View style={styles.biayaBox}>
             <Ionicons name="cash-outline" size={18} color="#00AA5B" />
             <Text style={styles.biayaText}>
@@ -413,11 +377,11 @@ export default function FormPendaftaran() {
             <Text style={styles.rekeningItem}>• Danamon: 1122334455 a.n Calvin</Text>
           </View>
 
-          {/* Preview foto jika sudah dipilih */}
-          {bukti && (
+          {/* Preview gambar setelah dipilih */}
+          {buktiPreviewUri && (
             <View style={styles.previewBox}>
-              <Image source={{ uri: bukti.uri }} style={styles.previewImg} resizeMode="cover" />
-              <Text style={styles.previewLabel}>Bukti terpilih</Text>
+              <Image source={{ uri: buktiPreviewUri }} style={styles.previewImg} resizeMode="cover" />
+              <Text style={styles.previewLabel}>✓ Bukti terpilih</Text>
             </View>
           )}
 
@@ -457,6 +421,7 @@ export default function FormPendaftaran() {
   );
 }
 
+
 const CustomInput = ({
   label,
   value,
@@ -493,7 +458,7 @@ const styles = StyleSheet.create({
 
   topBar: {
     backgroundColor: '#00AA5B',
-    paddingTop: Platform.OS === 'ios' ? 0 : 10,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight ? StatusBar.currentHeight + 12 : 30) : 16,
     paddingBottom: 18,
     paddingHorizontal: 16,
     flexDirection: 'row',
