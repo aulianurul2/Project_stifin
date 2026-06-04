@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('admin', function (Blueprint $table) {
-    $table->integer('id_admin')->autoIncrement();
-    $table->integer('id_user')->nullable();
+    $table->integer('id_admin')->autoIncrement()->unsigned();
+    $table->integer('id_user')->nullable()->unsigned();
     $table->string('nama', 100)->nullable();
     
     $table->foreign('id_user')->references('id_user')->on('user')->onDelete('cascade');

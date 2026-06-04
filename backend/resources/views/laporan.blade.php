@@ -47,6 +47,7 @@
             <div class="container">
                 <div class="page-inner">
 
+                    {{-- Header --}}
                     <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
                         <div>
                             <h3 class="fw-bold mb-1">Laporan Statistik</h3>
@@ -57,15 +58,65 @@
                             </ul>
                         </div>
                         <div class="d-flex gap-2 no-print">
-                            <a href="{{ route('laporan.pdf') }}" class="btn btn-danger btn-round btn-sm px-3 shadow-sm">
+                            <a href="{{ route('laporan.pdf', ['bulan' => $bulan, 'tahun' => $tahun]) }}"
+                               class="btn btn-danger btn-round btn-sm px-3 shadow-sm">
                                 <i class="fas fa-file-pdf me-1"></i> PDF
                             </a>
-                            <a href="{{ route('laporan.excel') }}" class="btn btn-success btn-round btn-sm px-3 shadow-sm">
+                            <a href="{{ route('laporan.excel', ['bulan' => $bulan, 'tahun' => $tahun]) }}"
+                               class="btn btn-success btn-round btn-sm px-3 shadow-sm">
                                 <i class="fas fa-file-excel me-1"></i> Excel
                             </a>
                         </div>
                     </div>
 
+                    {{-- Filter Bulan & Tahun --}}
+                    <div class="card card-round shadow-sm mb-4 no-print">
+                        <div class="card-body py-3 px-4">
+                            <form method="GET" action="{{ route('laporan.index') }}" class="d-flex align-items-center gap-3 flex-wrap">
+                                <span class="fw-bold text-muted small text-uppercase">
+                                    <i class="fas fa-filter me-1"></i> Filter Periode
+                                </span>
+
+                                <select name="bulan" class="form-select form-select-sm w-auto">
+                                    @php
+                                        $namaBulan = [
+                                            1=>'Januari', 2=>'Februari', 3=>'Maret', 4=>'April',
+                                            5=>'Mei', 6=>'Juni', 7=>'Juli', 8=>'Agustus',
+                                            9=>'September', 10=>'Oktober', 11=>'November', 12=>'Desember'
+                                        ];
+                                    @endphp
+                                    @foreach($namaBulan as $num => $label)
+                                        <option value="{{ $num }}" {{ $bulan == $num ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                                <select name="tahun" class="form-select form-select-sm w-auto">
+                                    @foreach($daftarTahun as $y)
+                                        <option value="{{ $y }}" {{ $tahun == $y ? 'selected' : '' }}>
+                                            {{ $y }}
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                                <button type="submit" class="btn btn-primary btn-sm btn-round px-3">
+                                    <i class="fas fa-search me-1"></i> Tampilkan
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    {{-- Label Periode Aktif --}}
+                    @php
+                        $labelBulan = $namaBulan[(int)$bulan] ?? '-';
+                    @endphp
+                    <p class="text-muted small mb-3">
+                        <i class="fas fa-calendar-alt me-1"></i>
+                        Menampilkan data bulan <strong>{{ $labelBulan }} {{ $tahun }}</strong>
+                    </p>
+
+                    {{-- Kartu Ringkasan --}}
                     <div class="row mb-4">
                         <div class="col-sm-6 col-md-4">
                             <div class="card card-stats card-round border border-light shadow-sm">
@@ -80,6 +131,7 @@
                                             <div class="numbers">
                                                 <p class="card-category text-uppercase fw-bold text-muted small mb-1">Total Klien</p>
                                                 <h4 class="card-title fw-bold text-dark mb-0">{{ $totalKlien }}</h4>
+                                                <small class="text-muted" style="font-size:11px;">Keseluruhan terdaftar</small>
                                             </div>
                                         </div>
                                     </div>
@@ -100,6 +152,7 @@
                                             <div class="numbers">
                                                 <p class="card-category text-uppercase fw-bold text-muted small mb-1">Tes Selesai</p>
                                                 <h4 class="card-title fw-bold text-dark mb-0">{{ $totalTesSelesai }}</h4>
+                                                <small class="text-muted" style="font-size:11px;">{{ $labelBulan }} {{ $tahun }}</small>
                                             </div>
                                         </div>
                                     </div>
@@ -119,7 +172,10 @@
                                         <div class="col col-stats ms-3 ms-sm-0">
                                             <div class="numbers">
                                                 <p class="card-category text-uppercase fw-bold text-muted small mb-1">Pendapatan</p>
-                                                <h4 class="card-title fw-bold text-dark mb-0">Rp {{ number_format($totalPendapatan, 0, ',', '.') }}</h4>
+                                                <h4 class="card-title fw-bold text-dark mb-0">
+                                                    Rp {{ number_format($totalPendapatan, 0, ',', '.') }}
+                                                </h4>
+                                                <small class="text-muted" style="font-size:11px;">{{ $labelBulan }} {{ $tahun }}</small>
                                             </div>
                                         </div>
                                     </div>
@@ -128,12 +184,16 @@
                         </div>
                     </div>
 
+                    {{-- Distribusi & Riwayat --}}
                     <div class="row">
                         <div class="col-12 col-lg-6 mb-4">
                             <div class="card card-round shadow-sm h-100">
                                 <div class="card-header border-0 pb-0 bg-transparent">
                                     <div class="card-title fw-bold text-secondary d-flex align-items-center" style="font-size: 1.1rem;">
                                         <i class="fas fa-chart-pie text-primary me-2"></i> Distribusi Hasil STIFIn
+                                        <span class="badge badge-primary ms-2 px-2 py-1 btn-round fw-normal" style="font-size:10px;">
+                                            {{ $labelBulan }} {{ $tahun }}
+                                        </span>
                                     </div>
                                 </div>
                                 <div class="card-body pt-4">
@@ -148,11 +208,17 @@
                                                     <span class="text-muted fw-semibold small">{{ $stat->total }} Orang</span>
                                                 </div>
                                                 <div class="progress card-round" style="height: 10px; background-color: #f1f3f5;">
-                                                    <div class="progress-bar bg-primary card-round" role="progressbar" style="width: {{ $persen }}%"></div>
+                                                    <div class="progress-bar bg-primary card-round" role="progressbar"
+                                                         style="width: {{ $persen }}%"
+                                                         aria-valuenow="{{ $persen }}" aria-valuemin="0" aria-valuemax="100">
+                                                    </div>
                                                 </div>
                                             </div>
                                         @empty
-                                            <div class="text-center py-4 text-muted fst-italic">Belum ada data distribusi.</div>
+                                            <div class="text-center py-4 text-muted fst-italic">
+                                                <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                                                Tidak ada data untuk {{ $labelBulan }} {{ $tahun }}.
+                                            </div>
                                         @endforelse
                                     </div>
                                 </div>
@@ -164,6 +230,9 @@
                                 <div class="card-header border-0 pb-0 bg-transparent">
                                     <div class="card-title fw-bold text-secondary d-flex align-items-center" style="font-size: 1.1rem;">
                                         <i class="fas fa-history text-primary me-2"></i> 10 Tes Terbaru
+                                        <span class="badge badge-primary ms-2 px-2 py-1 btn-round fw-normal" style="font-size:10px;">
+                                            {{ $labelBulan }} {{ $tahun }}
+                                        </span>
                                     </div>
                                 </div>
                                 <div class="card-body p-0 pt-3">
@@ -171,35 +240,34 @@
                                         <table class="table table-hover align-middle mb-0">
                                             <thead class="bg-light text-secondary">
                                                 <tr>
-                                                    <th class="px-4 py-2 fw-bold text-uppercase small" style="font-size: 11px;">Nama Klien</th>
-                                                    <th class="px-4 py-2 fw-bold text-uppercase small" style="font-size: 11px;">Hasil</th>
-                                                    <th class="px-4 py-2 fw-bold text-uppercase small text-end" style="font-size: 11px;">Tanggal</th>
+                                                    <th class="px-4 py-2 fw-bold text-uppercase small" style="font-size:11px;">Nama Klien</th>
+                                                    <th class="px-4 py-2 fw-bold text-uppercase small" style="font-size:11px;">Status</th>
+                                                    <th class="px-4 py-2 fw-bold text-uppercase small text-end" style="font-size:11px;">Biaya</th>
+                                                    <th class="px-4 py-2 fw-bold text-uppercase small text-end" style="font-size:11px;">Tanggal</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 @forelse($riwayatLaporan as $row)
                                                     <tr>
-                                                        <td class="px-4 py-3 fw-bold text-dark" style="font-size: 0.9rem;">{{ $row->nama }}</td>
+                                                        <td class="px-4 py-3 fw-bold text-dark" style="font-size:0.9rem;">{{ $row->nama }}</td>
                                                         <td class="px-4 py-3">
-    @if(isset($row->hasil) && $row->hasil != '')
-        <span class="badge bg-primary text-white fw-bold text-uppercase px-3 py-1.5 rounded shadow-sm" style="font-size: 11px;">
-            {{ $row->hasil }}
-        </span>
-    @elseif(isset($row->status_tes))
-        <span class="badge {{ $row->status_tes == 'Selesai' ? 'bg-success' : 'bg-warning' }} text-white fw-bold text-uppercase px-3 py-1.5 rounded shadow-sm" style="font-size: 11px;">
-            {{ $row->status_tes }}
-        </span>
-    @else
-        <span class="badge bg-secondary text-white fw-bold px-3 py-1.5 rounded" style="font-size: 11px;">
-            N/A
-        </span>
-    @endif
-</td>
-                                                        <td class="px-4 py-3 text-end text-muted small">{{ date('d/m/Y', strtotime($row->tanggal)) }}</td>
+                                                            <span class="badge badge-success px-3 py-1 btn-round fw-normal" style="font-size:11px;">
+                                                                <i class="fas fa-check-circle me-1"></i> Selesai
+                                                            </span>
+                                                        </td>
+                                                        <td class="px-4 py-3 text-end text-dark small fw-bold">
+                                                            Rp {{ number_format($row->biaya_tes, 0, ',', '.') }}
+                                                        </td>
+                                                        <td class="px-4 py-3 text-end text-muted small">
+                                                            {{ $row->tanggal ? date('d/m/Y', strtotime($row->tanggal)) : '-' }}
+                                                        </td>
                                                     </tr>
                                                 @empty
                                                     <tr>
-                                                        <td colspan="3" class="text-center py-5 text-muted fst-italic">Tidak ada data riwayat.</td>
+                                                        <td colspan="4" class="text-center py-5 text-muted fst-italic">
+                                                            <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                                                            Tidak ada riwayat untuk {{ $labelBulan }} {{ $tahun }}.
+                                                        </td>
                                                     </tr>
                                                 @endforelse
                                             </tbody>

@@ -10,75 +10,114 @@ use App\Exports\LaporanExport;
 
 class LaporanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // 1. Total Klien yang terdaftar
+        $bulan = $request->query('bulan', date('m'));
+        $tahun = $request->query('tahun', date('Y'));
+
+        // Daftar tahun dari data hasiltes
+        $daftarTahun = DB::table('hasiltes')
+            ->selectRaw('YEAR(updated_at) as tahun')
+            ->groupBy('tahun')
+            ->orderBy('tahun', 'desc')
+            ->pluck('tahun')
+            ->toArray();
+
+        if (!in_array((int) date('Y'), $daftarTahun)) {
+            array_unshift($daftarTahun, (int) date('Y'));
+        }
+
+        // Base query: tes selesai, filter bulan & tahun
+        $baseQuery = DB::table('hasiltes')
+            ->where('status_tes', 'Selesai')
+            ->whereMonth('updated_at', $bulan)
+            ->whereYear('updated_at', $tahun);
+
+        // Total klien keseluruhan (tidak difilter bulan)
         $totalKlien = DB::table('klien')->count();
 
-        // 2. Total Tes yang sudah berstatus 'Selesai'
-        $totalTesSelesai = DB::table('hasiltes')->where('status_tes', 'Selesai')->count();
+        // Tes selesai bulan ini
+        $totalTesSelesai = (clone $baseQuery)->count();
 
-        // 3. Total Pendapatan
-        $totalPendapatan = DB::table('hasiltes')->where('status_tes', 'Selesai')->sum('biaya_tes');
+        // Pendapatan bulan ini dari biaya_tes
+        $totalPendapatan = (clone $baseQuery)->sum('biaya_tes');
 
-        // 4. Statistik Distribusi (Sekarang diubah menghitung status saja karena tipe_tes dihapus)
-        $statistikHasil = DB::table('hasiltes')
+        // Distribusi bulan ini
+        $statistikHasil = (clone $baseQuery)
             ->select('status_tes as hasil', DB::raw('count(*) as total'))
             ->groupBy('status_tes')
             ->get();
 
-        // 5. Ambil 10 Riwayat Tes Terbaru (JOIN dengan Klien untuk ambil Nama)
+        // 10 riwayat terbaru bulan ini
         $riwayatLaporan = DB::table('hasiltes')
             ->join('klien', 'hasiltes.id_klien', '=', 'klien.id_klien')
-            ->select(
-                'klien.nama', 
-                'hasiltes.status_tes as hasil', // Kita pakai status_tes sebagai pengganti 'hasil' di blade
-                'hasiltes.tanggal'
-            )
+            ->select('klien.nama', 'hasiltes.status_tes as hasil', 'hasiltes.tanggal', 'hasiltes.biaya_tes')
             ->where('hasiltes.status_tes', 'Selesai')
+            ->whereMonth('hasiltes.updated_at', $bulan)
+            ->whereYear('hasiltes.updated_at', $tahun)
             ->orderBy('hasiltes.updated_at', 'desc')
             ->limit(10)
             ->get();
 
         return view('laporan', compact(
-            'totalKlien', 
-            'totalTesSelesai', 
-            'totalPendapatan', 
-            'statistikHasil', 
-            'riwayatLaporan'
+            'totalKlien',
+            'totalTesSelesai',
+            'totalPendapatan',
+            'statistikHasil',
+            'riwayatLaporan',
+            'bulan',
+            'tahun',
+            'daftarTahun'
         ));
     }
 
-   public function exportPdf()
+  public function exportPdf(Request $request)
 {
-    // 1. Ambil data untuk tabel
+    $bulan = $request->query('bulan', date('m'));
+    $tahun = $request->query('tahun', date('Y'));
+
     $riwayatLaporan = DB::table('hasiltes')
         ->join('klien', 'hasiltes.id_klien', '=', 'klien.id_klien')
-        ->select('klien.nama', 'hasiltes.status_tes as hasil', 'hasiltes.tanggal')
+        ->select('klien.nama', 'hasiltes.status_tes as hasil', 'hasiltes.tanggal', 'hasiltes.biaya_tes')
         ->where('hasiltes.status_tes', 'Selesai')
+        ->whereMonth('hasiltes.updated_at', $bulan)
+        ->whereYear('hasiltes.updated_at', $tahun)
+        ->orderBy('hasiltes.updated_at', 'desc')
         ->get();
 
-    // 2. Ambil data ringkasan untuk header
-    $totalKlien = DB::table('klien')->count();
-    $totalPendapatan = DB::table('hasiltes')->where('status_tes', 'Selesai')->sum('biaya_tes');
+    $totalKlien      = DB::table('klien')->count();
+    $totalPendapatan = DB::table('hasiltes')
+        ->where('status_tes', 'Selesai')
+        ->whereMonth('updated_at', $bulan)
+        ->whereYear('updated_at', $tahun)
+        ->sum('biaya_tes');
 
-    // 3. Masukkan ke dalam array data
+    // Fix: cast ke int supaya Carbon tidak error
+    $namaBulan = \Carbon\Carbon::createFromDate((int)$tahun, (int)$bulan, 1)
+        ->locale('id')
+        ->monthName;
+
     $data = [
-        'riwayatLaporan' => $riwayatLaporan,
-        'totalKlien'     => $totalKlien,
-        'totalPendapatan'=> $totalPendapatan
+        'riwayatLaporan'  => $riwayatLaporan,
+        'totalKlien'      => $totalKlien,
+        'totalPendapatan' => $totalPendapatan,
+        'bulan'           => $namaBulan,
+        'tahun'           => $tahun,
     ];
 
-    // 4. Panggil file template yang kita buat tadi (layout.pdf_template)
     $pdf = Pdf::loadView('layout.pdf_template', $data);
 
-    // 5. Download file
-    return $pdf->download('Laporan_STIFIn_' . date('d-m-Y') . '.pdf');
+    return $pdf->download('Laporan_STIFIn_' . $namaBulan . '_' . $tahun . '.pdf');
 }
 
-   public function exportExcel()
-{
-    // Menggunakan library Excel untuk memicu unduhan
-    return Excel::download(new LaporanExport, 'Laporan_STIFIn_' . date('d-m-Y') . '.xlsx');
-}
+    public function exportExcel(Request $request)
+    {
+        $bulan = $request->query('bulan', date('m'));
+        $tahun = $request->query('tahun', date('Y'));
+
+        return Excel::download(
+            new LaporanExport($bulan, $tahun),
+            'Laporan_STIFIn_' . $bulan . '_' . $tahun . '.xlsx'
+        );
+    }
 }

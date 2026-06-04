@@ -30,7 +30,6 @@
     <link rel="stylesheet" href="{{ asset('assets/css/kaiadmin.min.css') }}" />
 
     <style>
-        /* Mengatur form di dalam modal agar seragam, bersih, dan tidak merusak layout luar */
         .modal-content .form-control, 
         .modal-content .form-select {
             border: 1px solid #ced4da !important;
@@ -40,6 +39,31 @@
         .modal-content .form-select:focus {
             border-color: #6c757d !important;
             box-shadow: none !important;
+        }
+        /* Bukti transfer image styling */
+        .bukti-wrapper {
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #f8f9fa;
+        }
+        .bukti-img {
+            width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .bukti-img:hover {
+            opacity: 0.85;
+        }
+        .bukti-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 28px;
+            color: #adb5bd;
         }
     </style>
 </head>
@@ -122,9 +146,23 @@
                                                     </td>
                                                     <td>
                                                         <div class="form-button-action">
+                                                            {{-- Tombol View Detail: tambah parameter bukti_transfer --}}
                                                             <button type="button" 
                                                                     class="btn btn-link btn-primary btn-lg"
-                                                                    onclick="openModalView('{{ $item->nama_klien }}', '{{ $item->no_hp }}', '{{ $item->email }}', '{{ $item->tanggal_lahir }}', '{{ $item->jenis_kelamin }}', '{{ $item->golongan_darah }}', '{{ $item->institusi ?? '-' }}', '{{ $item->sosmed ?? '-' }}', '{{ $item->domisili ?? '-' }}', '{{ $item->alamat }}')">
+                                                                    onclick="openModalView(
+                                                                        '{{ $item->nama_klien }}',
+                                                                        '{{ $item->no_hp }}',
+                                                                        '{{ $item->email }}',
+                                                                        '{{ $item->tanggal_lahir }}',
+                                                                        '{{ $item->jenis_kelamin }}',
+                                                                        '{{ $item->golongan_darah }}',
+                                                                        '{{ $item->institusi ?? '-' }}',
+                                                                        '{{ $item->sosmed ?? '-' }}',
+                                                                        '{{ $item->domisili ?? '-' }}',
+                                                                        '{{ $item->alamat }}',
+                                                                        '{{ $item->bukti_transfer ?? '' }}',
+                                                                        {{ $item->is_luar_subang ? 'true' : 'false' }}
+                                                                    )">
                                                                 <i class="fa fa-eye"></i>
                                                             </button>
 
@@ -144,9 +182,6 @@
                                             </tbody>
                                         </table>    
                                     </div>
-
-                
-
                                 </div>
                             </div>
                         </div>
@@ -165,7 +200,7 @@
         </div>
     </div>
 
-    {{-- MODAL DETAIL PROFIL KLIEN (VIEW MODE - CLEAN & FORMAL) --}}
+    {{-- MODAL DETAIL PROFIL KLIEN --}}
     <div class="modal fade" id="modalView" tabindex="-1" aria-labelledby="modalViewLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content shadow-lg" style="border-radius: 4px; border: 1px solid #dcdcdc;">
@@ -179,72 +214,93 @@
                     </button>
                 </div>
                 
-                <div class="modal-body p-4 bg-white" style="max-height: 70vh; overflow-y: auto;">
+                <div class="modal-body p-4 bg-white" style="max-height: 75vh; overflow-y: auto;">
                     <div class="row">
                         
+                        {{-- I. IDENTITAS UTAMA --}}
                         <div class="col-12 mb-3">
                             <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">I. IDENTITAS UTAMA</span>
                             <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
                         </div>
-
                         <div class="col-md-6 mb-3">
                             <label class="text-muted small d-block mb-1">Nama Lengkap</label>
                             <span id="viewNama" class="text-dark fw-bold"></span>
                         </div>
-
                         <div class="col-md-6 mb-3">
                             <label class="text-muted small d-block mb-1">No. HP / WhatsApp</label>
                             <span id="viewNoHp" class="text-dark fw-bold"></span>
                         </div>
-
                         <div class="col-md-6 mb-3">
                             <label class="text-muted small d-block mb-1">Alamat Email</label>
                             <span id="viewEmail" class="text-dark"></span>
                         </div>
 
+                        {{-- II. INFORMASI PERSONAL --}}
                         <div class="col-12 mt-2 mb-3">
                             <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">II. INFORMASI PERSONAL</span>
                             <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
                         </div>
-
                         <div class="col-md-6 mb-3">
                             <label class="text-muted small d-block mb-1">Tanggal Lahir</label>
                             <span id="viewTglLahir" class="text-dark"></span>
                         </div>
-
                         <div class="col-md-6 mb-3">
                             <label class="text-muted small d-block mb-1">Golongan Darah / Jenis Kelamin</label>
                             <span id="viewGoldarJK" class="text-dark text-uppercase"></span>
                         </div>
 
+                        {{-- III. AFILIASI & MEDIA SOSIAL --}}
                         <div class="col-12 mt-2 mb-3">
                             <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">III. AFILIASI & MEDIA SOSIAL</span>
                             <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
                         </div>
-
                         <div class="col-md-6 mb-3">
                             <label class="text-muted small d-block mb-1">Institusi / Perusahaan</label>
                             <span id="viewInstitusi" class="text-dark"></span>
                         </div>
-
                         <div class="col-md-6 mb-3">
                             <label class="text-muted small d-block mb-1">Media Sosial</label>
                             <span id="viewSosmed" class="text-dark"></span>
                         </div>
 
+                        {{-- IV. LOKASI TEMPAT TINGGAL --}}
                         <div class="col-12 mt-2 mb-3">
                             <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">IV. LOKASI TEMPAT TINGGAL</span>
                             <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
                         </div>
-
                         <div class="col-md-12 mb-3">
                             <label class="text-muted small d-block mb-1">Domisili (Kota / Kabupaten)</label>
                             <span id="viewDomisili" class="text-dark"></span>
                         </div>
-
-                        <div class="col-md-12 mb-2">
+                        <div class="col-md-12 mb-4">
                             <label class="text-muted small d-block mb-1">Alamat Lengkap</label>
                             <div id="viewAlamat" class="text-dark" style="line-height: 1.6; white-space: pre-line; font-size: 0.9rem;"></div>
+                        </div>
+
+                        {{-- V. PEMBAYARAN & BUKTI TRANSFER --}}
+                        <div class="col-12 mt-2 mb-3">
+                            <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">V. PEMBAYARAN & BUKTI TRANSFER</span>
+                            <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small d-block mb-1">Wilayah</label>
+                            <span id="viewWilayah" class="text-dark"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small d-block mb-1">Total Biaya</label>
+                            <span id="viewBiaya" class="text-dark fw-bold text-success"></span>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <label class="text-muted small d-block mb-2">Foto Bukti Transfer</label>
+                            <div id="viewBuktiWrapper" class="bukti-wrapper">
+                                {{-- Diisi oleh JavaScript --}}
+                            </div>
+                            {{-- Tombol buka gambar full tab (disembunyikan jika tidak ada bukti) --}}
+                            <div id="viewBuktiBtnWrap" class="mt-2 d-none">
+                                <a id="viewBuktiLink" href="#" target="_blank" class="btn btn-sm btn-outline-primary btn-round">
+                                    <i class="fas fa-external-link-alt me-1"></i> Buka di Tab Baru
+                                </a>
+                            </div>
                         </div>
 
                     </div>
@@ -259,7 +315,7 @@
         </div>
     </div>
 
-    {{-- MODAL EDIT STATUS (EDIT MODE - CLEAN & PROFESSIONAL) --}}
+    {{-- MODAL EDIT STATUS --}}
     <div class="modal fade" id="modalStatus" tabindex="-1" aria-labelledby="modalStatusLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-lg" style="border-radius: 4px; border: 1px solid #dcdcdc;">
@@ -279,12 +335,10 @@
                     
                     <div class="modal-body p-4 bg-white">
                         <div class="row">
-                            
                             <div class="col-12 mb-3">
                                 <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">IDENTITAS KLIEN: <span id="modalNama" class="text-dark"></span></span>
                                 <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
                             </div>
-
                             <div class="form-group col-md-12 mb-3 p-0">
                                 <label class="text-muted small mb-1 fw-semibold">Pilih Status</label>
                                 <select name="status" id="inputStatus" class="form-control form-select" style="border-radius: 3px;" required>
@@ -293,9 +347,8 @@
                                     <option value="Ditolak">Ditolak</option>
                                 </select>
                             </div>
-                            
                             <div class="form-group col-md-12 mb-2 p-0">
-                                <label class="text-muted small mb-1 fw-semibold">Komentar / Catatan *</label>
+                                <label class="text-muted small mb-1 fw-semibold">Komentar / Catatan</label>
                                 <textarea name="komentar" id="inputKomentar" class="form-control" rows="4" style="border-radius: 3px; resize: none; line-height: 1.5;" placeholder="Alasan ditolak atau informasi tambahan jadwal..."></textarea>
                             </div>
                         </div>
@@ -318,49 +371,73 @@
     <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
     <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
     <script src="{{ asset('assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js') }}"></script>
-    
     <script src="{{ asset('assets/js/plugin/datatables/datatables.min.js') }}"></script>
     <script src="{{ asset('assets/js/kaiadmin.min.js') }}"></script>
 
     <script>
         $(document).ready(function() {
-            // Re-inisialisasi agar fungsi pencarian, sorting, dan filter bawaan tabel aktif kembali
             $('#add-row').DataTable({
                 "pageLength": 10,
                 "language": {
                     "search": "Cari:",
                     "lengthMenu": "Tampilkan _MENU_ data per halaman",
                     "zeroRecords": "Tidak ada data yang cocok ditemukan",
-                    "info":  "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    "info": "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
                     "infoEmpty": "Data tidak tersedia",
                     "infoFiltered": "(difilter dari _MAX_ total data)"
                 }
             });
         });
 
-        const modalViewBS = new bootstrap.Modal(document.getElementById('modalView'));
+        const modalViewBS   = new bootstrap.Modal(document.getElementById('modalView'));
         const modalStatusBS = new bootstrap.Modal(document.getElementById('modalStatus'));
 
-        function openModalView(nama, noHp, email, tglLahir, jk, goldar, institusi, sosmed, domisili, alamat) {
+        function openModalView(nama, noHp, email, tglLahir, jk, goldar, institusi, sosmed, domisili, alamat, buktiTransfer, isLuarSubang) {
             const jkText = jk === 'L' ? 'Laki-laki' : (jk === 'P' ? 'Perempuan' : jk);
-            
-            document.getElementById('viewNama').innerText = nama;
-            document.getElementById('viewNoHp').innerText = noHp;
-            document.getElementById('viewEmail').innerText = email;
-            document.getElementById('viewTglLahir').innerText = tglLahir;
-            document.getElementById('viewGoldarJK').innerText = `${goldar} / ${jkText}`;
+
+            document.getElementById('viewNama').innerText      = nama;
+            document.getElementById('viewNoHp').innerText      = noHp;
+            document.getElementById('viewEmail').innerText     = email;
+            document.getElementById('viewTglLahir').innerText  = tglLahir || '-';
+            document.getElementById('viewGoldarJK').innerText  = `${goldar} / ${jkText}`;
             document.getElementById('viewInstitusi').innerText = institusi;
-            document.getElementById('viewSosmed').innerText = sosmed;
-            document.getElementById('viewDomisili').innerText = domisili;
-            document.getElementById('viewAlamat').innerText = alamat;
+            document.getElementById('viewSosmed').innerText    = sosmed;
+            document.getElementById('viewDomisili').innerText  = domisili;
+            document.getElementById('viewAlamat').innerText    = alamat;
+
+            // Wilayah & biaya
+            document.getElementById('viewWilayah').innerText = isLuarSubang ? 'Luar Subang' : 'Dalam Subang';
+            document.getElementById('viewBiaya').innerText   = isLuarSubang ? 'Rp 650.000' : 'Rp 550.000';
+
+            // Bukti transfer
+            const wrapper  = document.getElementById('viewBuktiWrapper');
+            const btnWrap  = document.getElementById('viewBuktiBtnWrap');
+            const btnLink  = document.getElementById('viewBuktiLink');
+
+            if (buktiTransfer && buktiTransfer.trim() !== '') {
+                const imgUrl = '/uploads/bukti/' + buktiTransfer;
+                wrapper.innerHTML = `<img src="${imgUrl}" alt="Bukti Transfer" class="bukti-img"
+                    onclick="window.open('${imgUrl}', '_blank')"
+                    onerror="this.parentElement.innerHTML='<div class=\\'bukti-empty\\'><i class=\\'fas fa-image fa-2x mb-2\\'></i><small>Gambar tidak dapat dimuat</small></div>'"
+                >`;
+                btnLink.href = imgUrl;
+                btnWrap.classList.remove('d-none');
+            } else {
+                wrapper.innerHTML = `
+                    <div class="bukti-empty">
+                        <i class="fas fa-file-image fa-2x mb-2"></i>
+                        <small>Belum ada bukti transfer yang diupload</small>
+                    </div>`;
+                btnWrap.classList.add('d-none');
+            }
 
             modalViewBS.show();
         }
 
         function openModalStatus(id, nama, status, komentar) {
-            document.getElementById('modalNama').innerText = nama;
-            document.getElementById('inputStatus').value = status;
-            document.getElementById('inputKomentar').value = komentar;
+            document.getElementById('modalNama').innerText      = nama;
+            document.getElementById('inputStatus').value        = status;
+            document.getElementById('inputKomentar').value      = komentar;
 
             const baseUrl = "{{ url('pendaftaran-tes') }}";
             document.getElementById('formStatus').action = `${baseUrl}/${id}`;

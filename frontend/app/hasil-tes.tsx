@@ -5,9 +5,7 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
-  Alert,
   Platform,
-  ViewStyle,
   ScrollView,
   Modal,
   FlatList,
@@ -17,6 +15,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import Toast from 'react-native-toast-message'; 
 import axiosInstance from '@/src/api/axiosConfig';
 
 interface SlotJadwal {
@@ -55,7 +54,7 @@ export default function HasilTes() {
   const belumMengajukan = (!tanggal || tanggal.trim() === '' || tanggal === 'null') && 
                           (!jam || jam.trim() === '' || jam === 'null');
 
-  const fetchJadwalTersedia = async () => {
+const fetchJadwalTersedia = async () => {
     setLoadingJadwal(true);
     try {
       const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -64,11 +63,12 @@ export default function HasilTes() {
       setListJadwal(data);
     } catch (error) {
       console.log("Error fetch jadwal:", error);
-      if (Platform.OS === 'web') {
-        window.alert("Gagal memuat slot jadwal baru.");
-      } else {
-        Alert.alert("Error", "Gagal memuat slot jadwal baru.");
-      }
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal Memuat',
+        text2: 'Gagal memuat slot jadwal baru.',
+        position: 'top',
+      });
     } finally {
       setLoadingJadwal(false);
     }
@@ -80,16 +80,18 @@ export default function HasilTes() {
     }
   }, [modalRescheduleVisible]);
 
-  const downloadFile = async (fileName: string | undefined, titleText: string) => {
+const downloadFile = async (fileName: string | undefined, titleText: string) => {
     try {
       if (!fileName || fileName.trim() === '' || fileName === 'null') {
-        if (Platform.OS === 'web') {
-          window.alert(`File ${titleText} belum diunggah oleh admin`);
-        } else {
-          Alert.alert("Gagal", `File ${titleText} belum diunggah oleh admin`);
-        }
+        Toast.show({
+          type: 'error',
+          text1: 'File Tidak Tersedia',
+          text2: `File ${titleText} belum diunggah oleh admin.`,
+          position: 'top',
+        });
         return;
       }
+
       const BASE_URL = process.env.EXPO_PUBLIC_API_URL?.replace('/api', '');
       const url = `${BASE_URL}/uploads/hasil/${encodeURIComponent(fileName)}`;
 
@@ -103,79 +105,35 @@ export default function HasilTes() {
       const result = await downloadResumable.downloadAsync();
 
       if (!result) {
-        Alert.alert("Gagal", "Gagal mendownload berkas");
+        Toast.show({
+          type: 'error',
+          text1: 'Unduh Gagal',
+          text2: 'Gagal mendownload berkas.',
+          position: 'top',
+        });
         return;
       }
       await Sharing.shareAsync(result.uri);
     } catch (error) {
-      if (Platform.OS === 'web') {
-        window.alert(`Tidak dapat mengunduh berkas ${titleText}`);
-      } else {
-        Alert.alert("Error", `Tidak dapat mengunduh berkas ${titleText}`);
-      }
+      Toast.show({
+        type: 'error',
+        text1: 'Terjadi Kesalahan',
+        text2: `Tidak dapat mengunduh berkas ${titleText}.`,
+        position: 'top',
+      });
     }
   };
 
-  const handleBatalkanJadwal = () => {
-    console.log("--> TOMBOL BATALKAN DIKLIK! ID JADWAL:", id_jadwal);
 
-    if (!id_jadwal || id_jadwal === 'undefined' || id_jadwal === 'null') {
-      if (Platform.OS === 'web') window.alert("ID Jadwal tidak valid");
-      else Alert.alert("Error", "ID Jadwal tidak valid");
-      return;
-    }
-
-    if (Platform.OS === 'web') {
-      const konfirmasiWeb = window.confirm("Apakah Anda yakin ingin membatalkan pendaftaran jadwal pemeriksaan ini?");
-      if (konfirmasiWeb) {
-        eksekusiPembatalanKeBackend();
-      }
-      return;
-    }
-
-    Alert.alert(
-      "Batalkan Pendaftaran",
-      "Apakah Anda yakin ingin membatalkan pendaftaran jadwal pemeriksaan ini?",
-      [
-        { text: "Kembali", style: "cancel" },
-        { text: "Ya, Batalkan", style: "destructive", onPress: () => eksekusiPembatalanKeBackend() }
-      ]
-    );
-  };
-
-  const eksekusiPembatalanKeBackend = async () => {
-    setProsesLoading(true);
-    try {
-      const response = await axiosInstance.put(`/pendaftaran/${id_jadwal}/batalkan`);
-      console.log("--> RESPONSE SUCCESS API BATAL:", response.data);
-
-      if (response.status === 200) {
-        if (Platform.OS === 'web') {
-          window.alert("Jadwal pemeriksaan berhasil dibatalkan.");
-          router.replace('/riwayat');
-        } else {
-          Alert.alert("Berhasil", "Jadwal pemeriksaan berhasil dibatalkan.", [
-            { text: "OK", onPress: () => router.replace('/riwayat') }
-          ]);
-        }
-      }
-    } catch (error: any) {
-      console.log("--> ERROR API BATALKAN:", error?.response?.data || error);
-      const pesanError = error?.response?.data?.message || "Terjadi kesalahan saat membatalkan jadwal.";
-      if (Platform.OS === 'web') {
-        window.alert(pesanError);
-      } else {
-        Alert.alert("Error", pesanError);
-      }
-    } finally {
-      setProsesLoading(false);
-    }
-  };
 
   const handleConfirmReschedule = async (idJadwalBaru: number) => {
     if (!id_jadwal || id_jadwal === 'undefined' || id_jadwal === 'null') {
-      if (Platform.OS === 'web') window.alert("ID Jadwal asal tidak valid");
-      else Alert.alert("Error", "ID Jadwal asal tidak valid");
+      Toast.show({
+        type: 'error',
+        text1: 'Data Tidak Valid',
+        text2: 'ID Jadwal asal tidak valid.',
+        position: 'top',
+      });
       return;
     }
 
@@ -183,35 +141,31 @@ export default function HasilTes() {
     setProsesLoading(true);
 
     try {
-      console.log("--> ID LAMA =", id_jadwal, " | ID BARU =", idJadwalBaru);
-
       const response = await axiosInstance.put(`/pendaftaran/${id_jadwal}/reschedule`, {
-        id_jadwal_baru: idJadwalBaru
+        id_jadwal_baru: idJadwalBaru,
       });
 
-      console.log("--> RESPONSE SUCCESS RESCHEDULE:", response.data);
-
       if (response.status === 200) {
-        if (Platform.OS === 'web') {
-          window.alert("Pengajuan perubahan jadwal berhasil terkirim. Menunggu konfirmasi admin.");
+        Toast.show({
+          type: 'success',
+          text1: 'Reschedule Berhasil',
+          text2: 'Pengajuan perubahan jadwal berhasil terkirim. Menunggu konfirmasi admin.',
+          position: 'top',
+          visibilityTime: 2500,
+        });
+
+        setTimeout(() => {
           router.replace('/riwayat');
-        } else {
-          Alert.alert(
-            "Sukses Reschedule",
-            "Pengajuan perubahan jadwal berhasil terkirim. Menunggu konfirmasi admin.",
-            [{ text: "Selesai", onPress: () => router.replace('/riwayat') }]
-          );
-        }
+        }, 1000);
       }
     } catch (error: any) {
-      console.log("--> ERROR RESCHEDULE =", error?.response?.data || error);
-      const pesanError = error?.response?.data?.message || "Gagal memproses pengubahan jadwal.";
-      
-      if (Platform.OS === 'web') {
-        window.alert(pesanError);
-      } else {
-        Alert.alert("Error", pesanError);
-      }
+      const pesanError = error?.response?.data?.message || 'Gagal memproses pengubahan jadwal.';
+      Toast.show({
+        type: 'error',
+        text1: 'Reschedule Gagal',
+        text2: pesanError,
+        position: 'top',
+      });
     } finally {
       setProsesLoading(false);
     }
@@ -364,31 +318,20 @@ export default function HasilTes() {
           </View>
         )}
 
-        {/* Action Buttons (Batalkan / Reschedule) */}
-        {!belumMengajukan && !berkasTersedia && !isDibatalkan && !isDitolak && (
-          <View style={styles.actionSection}>
-            <Text style={styles.sectionLabel}>Kelola Jadwal</Text>
-            <View style={styles.actionRow}>
-              <TouchableOpacity 
-                style={styles.btnBatal}
-                onPress={handleBatalkanJadwal}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="close-circle-outline" size={17} color="#e53935" />
-                <Text style={styles.btnBatalText}>Batalkan Tes</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.btnReschedule}
-                onPress={() => setModalRescheduleVisible(true)}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="calendar-outline" size={17} color="#fff" />
-                <Text style={styles.btnRescheduleText}>Reschedule</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
+       {/* Action Buttons — hanya Reschedule */}
+{!belumMengajukan && !berkasTersedia && !isDibatalkan && !isDitolak && (
+  <View style={styles.actionSection}>
+    <Text style={styles.sectionLabel}>Kelola Jadwal</Text>
+    <TouchableOpacity
+      style={styles.btnReschedule}
+      onPress={() => setModalRescheduleVisible(true)}
+      activeOpacity={0.7}
+    >
+      <Ionicons name="calendar-outline" size={17} color="#fff" />
+      <Text style={styles.btnRescheduleText}>Ajukan Reschedule</Text>
+    </TouchableOpacity>
+  </View>
+)}
 
         {/* Document Section */}
         <Text style={styles.sectionLabel}>Berkas Dokumen STIFIn</Text>
@@ -644,35 +587,20 @@ const styles = StyleSheet.create({
   sectionLabel: { fontSize: 13, fontWeight: '800', color: '#546e7a', marginBottom: 10, paddingLeft: 2 },
 
   actionSection: { marginBottom: 16 },
-  actionRow: { flexDirection: 'row', gap: 10 },
-  btnBatal: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 13,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#e53935',
-    backgroundColor: '#fff',
-  },
-  btnBatalText: { color: '#e53935', fontWeight: '700', fontSize: 13 },
-  btnReschedule: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 13,
-    borderRadius: 12,
-    backgroundColor: '#f57c00',
-    shadowColor: '#f57c00',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
-  },
+btnReschedule: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 6,
+  paddingVertical: 13,
+  borderRadius: 12,
+  backgroundColor: '#f57c00',
+  shadowColor: '#f57c00',
+  shadowOffset: { width: 0, height: 3 },
+  shadowOpacity: 0.25,
+  shadowRadius: 6,
+  elevation: 3,
+},
   btnRescheduleText: { color: '#fff', fontWeight: '700', fontSize: 13 },
 
   emptyDoc: {

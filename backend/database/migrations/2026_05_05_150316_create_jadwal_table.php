@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('jadwal', function (Blueprint $table) {
-            $table->integer('id_jadwal')->autoIncrement();
-            $table->integer('id_klien')->nullable();
-            $table->integer('id_admin')->nullable();
-            
+            $table->integer('id_jadwal')->autoIncrement()->unsigned();
+            $table->integer('id_klien')->nullable()->unsigned();
+            $table->integer('id_admin')->nullable()->unsigned();
+
             // Kolom data pendaftar (nullable karena Admin buat slot kosong dulu)
             $table->string('nama_klien', 100)->nullable();
             $table->string('no_hp', 15)->nullable();

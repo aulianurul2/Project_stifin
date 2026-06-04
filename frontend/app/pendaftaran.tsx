@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  SafeAreaView, 
-  TouchableOpacity, 
-  ScrollView, 
-  ActivityIndicator, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
   Alert,
-  Platform
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,10 +25,10 @@ interface Jadwal {
 
 export default function PendaftaranTes() {
   const router = useRouter();
-  const [userName, setUserName] = useState("User");
+  const [userName, setUserName] = useState('User');
   const [tempatTes, setTempatTes] = useState('Kantor Cabang');
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [jadwalData, setJadwalData] = useState<Jadwal[]>([]); 
+  const [isLuarSubang, setIsLuarSubang] = useState(false);
+  const [jadwalData, setJadwalData] = useState<Jadwal[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedJadwal, setSelectedJadwal] = useState<Jadwal | null>(null);
 
@@ -39,7 +39,7 @@ export default function PendaftaranTes() {
         if (savedName) setUserName(savedName);
         await fetchJadwal();
       } catch (error) {
-        console.error("Error loading initial data:", error);
+        console.error('Error loading initial data:', error);
       }
     };
     loadData();
@@ -51,32 +51,34 @@ export default function PendaftaranTes() {
       const response = await axiosInstance.get('/jadwal-tersedia');
       setJadwalData(response.data);
     } catch (error) {
-      Alert.alert("Error", "Gagal mengambil data jadwal dari server.");
-    } finally { 
-      setLoading(false); 
+      Alert.alert('Error', 'Gagal mengambil data jadwal dari server.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const filteredJadwal = jadwalData.filter(item => {
-    const lokasiDB = String(item.lokasi || "").toLowerCase().trim();
-    const lokasiPilihan = String(tempatTes || "").toLowerCase().trim();
-    const statusDB = String(item.status || "").toLowerCase().trim();
+  const filteredJadwal = jadwalData.filter((item) => {
+    const lokasiDB = String(item.lokasi || '').toLowerCase().trim();
+    const lokasiPilihan = String(tempatTes || '').toLowerCase().trim();
+    const statusDB = String(item.status || '').toLowerCase().trim();
     return lokasiDB === lokasiPilihan && statusDB === 'tersedia';
   });
 
+  // Navigasi ke halaman form + kirim is_luar_subang sebagai params
   const handleNext = () => {
     if (!selectedJadwal) {
-      Alert.alert("Pilih Jadwal", "Silakan pilih salah satu jadwal yang tersedia.");
+      Alert.alert('Pilih Jadwal', 'Silakan pilih salah satu jadwal yang tersedia.');
       return;
     }
-    
+
     router.push({
       pathname: '/form-pendaftaran',
-      params: { 
-        id_jadwal: selectedJadwal.id_jadwal, 
-        tanggal: selectedJadwal.tanggal, 
-        waktu: selectedJadwal.waktu 
-      }
+      params: {
+        id_jadwal: selectedJadwal.id_jadwal,
+        tanggal: selectedJadwal.tanggal,
+        waktu: selectedJadwal.waktu,
+        is_luar_subang: isLuarSubang ? '1' : '0', // Kirim sebagai string '1'/'0'
+      },
     });
   };
 
@@ -102,10 +104,52 @@ export default function PendaftaranTes() {
         {/* Info Banner */}
         <View style={styles.infoBanner}>
           <Ionicons name="information-circle-outline" size={18} color="#0288d1" />
-          <Text style={styles.infoBannerText}>Pilih lokasi dan waktu tes yang sesuai dengan Anda</Text>
+          <Text style={styles.infoBannerText}>
+            Pilih lokasi dan waktu tes yang sesuai dengan Anda
+          </Text>
         </View>
 
-        {/* Location Selector */}
+        {/* === Selector: Dalam/Luar Subang (menentukan harga) === */}
+        <View style={styles.locationCard}>
+          <Text style={styles.locationLabel}>
+            <Ionicons name="cash-outline" size={13} color="#546e7a" /> Wilayah & Biaya
+          </Text>
+          <View style={styles.locationOptions}>
+            <TouchableOpacity
+              style={[styles.locationChip, !isLuarSubang && styles.locationChipActive]}
+              onPress={() => setIsLuarSubang(false)}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="home-outline"
+                size={14}
+                color={!isLuarSubang ? '#fff' : '#546e7a'}
+              />
+              <Text style={[styles.locationChipText, !isLuarSubang && styles.locationChipTextActive]}>
+                Dalam Subang{'\n'}
+                <Text style={styles.hargaChip}>Rp 550.000</Text>
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.locationChip, isLuarSubang && styles.locationChipActive]}
+              onPress={() => setIsLuarSubang(true)}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="map-outline"
+                size={14}
+                color={isLuarSubang ? '#fff' : '#546e7a'}
+              />
+              <Text style={[styles.locationChipText, isLuarSubang && styles.locationChipTextActive]}>
+                Luar Subang{'\n'}
+                <Text style={styles.hargaChip}>Rp 650.000</Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* === Selector: Lokasi Tes (Home Visit / Kantor Cabang) === */}
         <View style={styles.locationCard}>
           <Text style={styles.locationLabel}>
             <Ionicons name="location-outline" size={13} color="#546e7a" /> Lokasi Tes
@@ -126,7 +170,12 @@ export default function PendaftaranTes() {
                   size={14}
                   color={tempatTes === val ? '#fff' : '#546e7a'}
                 />
-                <Text style={[styles.locationChipText, tempatTes === val && styles.locationChipTextActive]}>
+                <Text
+                  style={[
+                    styles.locationChipText,
+                    tempatTes === val && styles.locationChipTextActive,
+                  ]}
+                >
                   {val}
                 </Text>
               </TouchableOpacity>
@@ -145,7 +194,7 @@ export default function PendaftaranTes() {
               <Text style={styles.countBadgeText}>{filteredJadwal.length} Slot</Text>
             </View>
           </View>
-          
+
           {/* Table Head */}
           <View style={styles.rowHeader}>
             <Text style={[styles.col, styles.colHeader]}>Tanggal</Text>
@@ -162,15 +211,19 @@ export default function PendaftaranTes() {
             filteredJadwal.map((item) => {
               const isSelected = selectedJadwal?.id_jadwal === item.id_jadwal;
               return (
-                <TouchableOpacity 
-                  key={item.id_jadwal} 
-                  onPress={() => setSelectedJadwal(item)} 
+                <TouchableOpacity
+                  key={item.id_jadwal}
+                  onPress={() => setSelectedJadwal(item)}
                   style={[styles.rowData, isSelected && styles.selectedRow]}
                   activeOpacity={0.7}
                 >
                   {isSelected && <View style={styles.selectedIndicator} />}
-                  <Text style={[styles.col, isSelected && styles.selectedText]}>{item.tanggal}</Text>
-                  <Text style={[styles.colMid, isSelected && styles.selectedText]}>{item.waktu} WIB</Text>
+                  <Text style={[styles.col, isSelected && styles.selectedText]}>
+                    {item.tanggal}
+                  </Text>
+                  <Text style={[styles.colMid, isSelected && styles.selectedText]}>
+                    {item.waktu} WIB
+                  </Text>
                   <View style={styles.colEnd}>
                     <View style={styles.statusBadge}>
                       <View style={styles.statusDot} />
@@ -186,7 +239,9 @@ export default function PendaftaranTes() {
                 <Ionicons name="calendar-outline" size={32} color="#90a4ae" />
               </View>
               <Text style={styles.emptyTitle}>Tidak Ada Jadwal</Text>
-              <Text style={styles.emptyText}>Belum ada jadwal tersedia untuk lokasi ini.</Text>
+              <Text style={styles.emptyText}>
+                Belum ada jadwal tersedia untuk lokasi ini.
+              </Text>
             </View>
           )}
         </View>
@@ -196,26 +251,38 @@ export default function PendaftaranTes() {
           <View style={styles.selectedInfo}>
             <Ionicons name="checkmark-circle" size={18} color="#00AA5B" />
             <Text style={styles.selectedInfoText}>
-              Dipilih: <Text style={{ fontWeight: '800' }}>{selectedJadwal.tanggal}</Text> pukul {selectedJadwal.waktu} WIB
+              Dipilih:{' '}
+              <Text style={{ fontWeight: '800' }}>{selectedJadwal.tanggal}</Text> pukul{' '}
+              {selectedJadwal.waktu} WIB
             </Text>
           </View>
         )}
 
         {/* Footer Buttons */}
         <View style={styles.footerBtns}>
-          <TouchableOpacity style={styles.btnBack} onPress={() => router.back()} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.btnBack}
+            onPress={() => router.back()}
+            activeOpacity={0.7}
+          >
             <Ionicons name="arrow-back" size={16} color="#546e7a" />
             <Text style={styles.btnBackText}>Kembali</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.btnNext, !selectedJadwal && styles.btnNextDisabled]} 
+
+          <TouchableOpacity
+            style={[styles.btnNext, !selectedJadwal && styles.btnNextDisabled]}
             onPress={handleNext}
             disabled={!selectedJadwal}
             activeOpacity={0.85}
           >
-            <Text style={[styles.btnNextText, !selectedJadwal && styles.btnNextTextDisabled]}>Berikutnya</Text>
-            <Ionicons name="arrow-forward" size={16} color={selectedJadwal ? '#fff' : '#b0bec5'} />
+            <Text style={[styles.btnNextText, !selectedJadwal && styles.btnNextTextDisabled]}>
+              Berikutnya
+            </Text>
+            <Ionicons
+              name="arrow-forward"
+              size={16}
+              color={selectedJadwal ? '#fff' : '#b0bec5'}
+            />
           </TouchableOpacity>
         </View>
 
@@ -289,10 +356,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     marginBottom: 12,
   },
-  locationOptions: {
-    flexDirection: 'row',
-    gap: 10,
-  },
+  locationOptions: { flexDirection: 'row', gap: 10 },
   locationChip: {
     flex: 1,
     flexDirection: 'row',
@@ -316,6 +380,7 @@ const styles = StyleSheet.create({
   },
   locationChipText: { fontSize: 13, fontWeight: '700', color: '#546e7a' },
   locationChipTextActive: { color: '#fff' },
+  hargaChip: { fontSize: 11, fontWeight: '600' },
 
   tableCard: {
     backgroundColor: '#fff',
@@ -339,11 +404,7 @@ const styles = StyleSheet.create({
     borderColor: '#e8f5e9',
     backgroundColor: '#f5faf7',
   },
-  tableCardHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
+  tableCardHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   tableCardTitle: { fontSize: 13, fontWeight: '800', color: '#1a1a2e' },
   countBadge: {
     backgroundColor: '#e8f5e9',
@@ -352,6 +413,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   countBadgeText: { fontSize: 11, color: '#00AA5B', fontWeight: '800' },
+
   rowHeader: {
     flexDirection: 'row',
     paddingHorizontal: 14,
@@ -370,10 +432,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
   },
-  selectedRow: {
-    backgroundColor: '#e8f5e9',
-    borderColor: '#00AA5B',
-  },
+  selectedRow: { backgroundColor: '#e8f5e9', borderColor: '#00AA5B' },
   selectedIndicator: {
     position: 'absolute',
     left: 0,
@@ -398,6 +457,7 @@ const styles = StyleSheet.create({
   },
   statusDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: '#00AA5B' },
   statusText: { fontSize: 10, color: '#00AA5B', fontWeight: '800', textTransform: 'uppercase' },
+
   loadingBox: { padding: 40, alignItems: 'center', gap: 10 },
   loadingText: { fontSize: 12, color: '#90a4ae' },
   emptyState: { padding: 36, alignItems: 'center' },
@@ -455,11 +515,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  btnNextDisabled: {
-    backgroundColor: '#e0e0e0',
-    shadowOpacity: 0,
-    elevation: 0,
-  },
+  btnNextDisabled: { backgroundColor: '#e0e0e0', shadowOpacity: 0, elevation: 0 },
   btnNextText: { color: '#fff', fontWeight: '800', fontSize: 14 },
   btnNextTextDisabled: { color: '#b0bec5' },
 });

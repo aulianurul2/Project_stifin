@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('klien', function (Blueprint $table) {
-            $table->integer('id_klien')->autoIncrement();
-            $table->integer('id_user')->nullable();
+            $table->integer('id_klien')->autoIncrement()->unsigned();
+            $table->integer('id_user')->nullable()->unsigned();
             $table->string('nama', 100);
             $table->date('tanggal_lahir');
             $table->enum('jenis_kelamin', ['L', 'P']);

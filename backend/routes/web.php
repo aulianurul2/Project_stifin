@@ -72,6 +72,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('hasil-tes')->group(function () {
         Route::get('/', [HasilTesController::class, 'index'])->name('hasil-tes');
         Route::post('/{id}', [HasilTesController::class, 'update'])->name('hasil.update');
+        Route::put('/{id}/edit', [HasilTesController::class, 'edit'])->name('hasil.edit'); // tambah ini
     });
 
     // 6. Laporan

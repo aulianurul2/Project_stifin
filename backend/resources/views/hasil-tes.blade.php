@@ -11,17 +11,10 @@
         WebFont.load({
             google: { families: ["Public Sans:300,400,500,600,700"] },
             custom: {
-                families: [
-                    "Font Awesome 5 Solid",
-                    "Font Awesome 5 Regular",
-                    "Font Awesome 5 Brands",
-                    "simple-line-icons",
-                ],
+                families: ["Font Awesome 5 Solid","Font Awesome 5 Regular","Font Awesome 5 Brands","simple-line-icons"],
                 urls: ["{{ asset('assets/css/fonts.min.css') }}"],
             },
-            active: function () {
-                sessionStorage.fonts = true;
-            },
+            active: function () { sessionStorage.fonts = true; },
         });
     </script>
 
@@ -53,6 +46,20 @@
                         </div>
                     </div>
 
+                    {{-- Flash Messages --}}
+                    @if(session('success'))
+                        <div class="alert alert-success alert-dismissible fade show card-round shadow-sm mb-4" role="alert">
+                            <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+                    @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show card-round shadow-sm mb-4" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i> {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
                     <div class="row mb-4">
                         <div class="col-12">
                             <ul class="nav nav-tabs nav-line nav-color-primary border-bottom" role="tablist">
@@ -73,40 +80,81 @@
                     <div class="row">
                         <div class="col-md-12">
                             <div class="card card-round shadow-sm">
-                                <div class="card-body p-4"> 
+                                <div class="card-body p-4">
                                     <div class="table-responsive">
-                                        <table id="basic-datatables" class="table table-striped table-hover mb-0 align-middle">
-                                            <thead class="bg-light">
-                                                <tr>
-                                                    <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8" style="width: 40%">Nama Klien</th>
-                                                    <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8" style="width: 30%">Hasil</th>
-                                                    <th class="px-4 py-3 text-center text-uppercase font-weight-bold text-muted fs-8" style="width: 30%">Aksi</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach($data as $item)
+                                        {{--
+                                            Tab 'kelola' : DataTable (client-side, pakai get())
+                                            Tab 'riwayat': tabel biasa + server-side pagination (pakai paginate())
+                                            Keduanya pakai tabel terpisah supaya DataTable tidak bentrok dengan paginator Laravel.
+                                        --}}
+                                        @if($tab == 'kelola')
+                                            <table id="basic-datatables" class="table table-striped table-hover mb-0 align-middle">
+                                                <thead class="bg-light">
                                                     <tr>
-                                                        <td class="px-4 py-3">
-                                                            <div class="fw-bold text-dark fs-6">{{ $item->nama }}</div>
-                                                            <small class="text-muted"><i class="fab fa-whatsapp me-1"></i> {{ $item->no_hp }}</small>
-                                                        </td>
-                                                        <td class="px-4 py-3">
-                                                            @if($item->status_tes == 'Selesai')
-                                                                <span class="badge badge-success px-3 py-1 btn-round text-capitalize fs-8 fw-normal">
-                                                                    <i class="fas fa-check-circle me-1"></i> Tersertifikasi
-                                                                </span>
-                                                            @else
+                                                        <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8" style="width: 40%">Nama Klien</th>
+                                                        <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8" style="width: 30%">Status</th>
+                                                        <th class="px-4 py-3 text-center text-uppercase font-weight-bold text-muted fs-8" style="width: 30%">Aksi</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @forelse($data as $item)
+                                                        <tr>
+                                                            <td class="px-4 py-3">
+                                                                <div class="fw-bold text-dark fs-6">{{ $item->nama }}</div>
+                                                                <small class="text-muted"><i class="fab fa-whatsapp me-1"></i> {{ $item->no_hp }}</small>
+                                                            </td>
+                                                            <td class="px-4 py-3">
                                                                 <span class="badge badge-primary px-3 py-1 btn-round text-capitalize fs-8 fw-normal">
                                                                     Belum diinput
                                                                 </span>
-                                                            @endif
-                                                        </td>
-                                                        <td class="px-4 py-3 text-center">
-                                                            @if($tab == 'kelola')
-                                                                <button type="button" onclick="openModal('{{ $item->id_tes }}', '{{ $item->nama }}')" class="btn btn-primary btn-sm btn-round px-3">
+                                                            </td>
+                                                            <td class="px-4 py-3 text-center">
+                                                                {{--
+                                                                    Kirim id_tes (untuk update hasiltes) DAN id_jadwal
+                                                                    (untuk query tabel jadwal di controller).
+                                                                    openModal menerima keduanya.
+                                                                --}}
+                                                                <button type="button"
+                                                                    onclick="openModal('{{ $item->id_tes }}', '{{ $item->id_jadwal }}', '{{ $item->nama }}')"
+                                                                    class="btn btn-primary btn-sm btn-round px-3">
                                                                     <i class="fas fa-check-circle me-1"></i> Input Hasil
                                                                 </button>
-                                                            @else
+                                                            </td>
+                                                        </tr>
+                                                    @empty
+                                                        <tr>
+                                                            <td colspan="3" class="text-center py-4 text-muted">
+                                                                <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                                                                Tidak ada data yang perlu dikelola.
+                                                            </td>
+                                                        </tr>
+                                                    @endforelse
+                                                </tbody>
+                                            </table>
+
+                                        @else
+                                            {{-- Riwayat: server-side pagination, tidak pakai DataTable JS --}}
+                                            <table class="table table-striped table-hover mb-0 align-middle">
+                                                <thead class="bg-light">
+                                                    <tr>
+                                                        <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8" style="width: 40%">Nama Klien</th>
+                                                        <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8" style="width: 30%">Hasil</th>
+                                                        <th class="px-4 py-3 text-center text-uppercase font-weight-bold text-muted fs-8" style="width: 30%">Aksi</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @forelse($data as $item)
+                                                        <tr>
+                                                            <td class="px-4 py-3">
+                                                                <div class="fw-bold text-dark fs-6">{{ $item->nama }}</div>
+                                                                <small class="text-muted"><i class="fab fa-whatsapp me-1"></i> {{ $item->no_hp }}</small>
+                                                            </td>
+                                                            <td class="px-4 py-3">
+                                                                <span class="badge badge-success px-3 py-1 btn-round text-capitalize fs-8 fw-normal">
+                                                                    <i class="fas fa-check-circle me-1"></i> Tersertifikasi
+                                                                </span>
+                                                            </td>
+                                                            <td class="px-4 py-3 text-center">
                                                                 <div class="d-flex justify-content-center align-items-center gap-2">
                                                                     <a href="{{ asset('uploads/hasil/' . $item->file_hasil) }}"
                                                                        download="{{ 'Sertifikat_' . $item->nama }}"
@@ -124,21 +172,42 @@
                                                                         <i class="fas fa-file-alt"></i>
                                                                     </a>
 
-                                                                    <button type="button" onclick="previewFile('{{ asset('uploads/hasil/' . $item->file_hasil) }}')"
+                                                                    <button type="button"
+                                                                            onclick="previewFile('{{ asset('uploads/hasil/' . $item->file_hasil) }}')"
                                                                             class="btn btn-sm p-2 card-round shadow-sm"
                                                                             style="background-color: #586983; border-color: #636d7c; color: #ffffff;"
                                                                             title="Preview Sertifikat">
                                                                         <i class="fas fa-eye"></i>
                                                                     </button>
+                                                                     <button type="button"
+                onclick="openEditModal('{{ $item->id_tes }}', '{{ $item->nama }}')"
+                class="btn btn-sm p-2 card-round shadow-sm"
+                style="background-color: #cfe2ff; border-color: #b6d4fe; color: #084298;"
+                title="Ganti File">
+            <i class="fas fa-pencil-alt"></i>
+        </button>
                                                                 </div>
-                                                            @endif
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
+                                                            </td>
+                                                        </tr>
+                                                    @empty
+                                                        <tr>
+                                                            <td colspan="3" class="text-center py-4 text-muted">
+                                                                <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                                                                Belum ada riwayat tes yang selesai.
+                                                            </td>
+                                                        </tr>
+                                                    @endforelse
+                                                </tbody>
+                                            </table>
+
+                                            {{-- Pagination hanya untuk tab riwayat --}}
+                                            @if($data->hasPages())
+                                                <div class="d-flex justify-content-end mt-3">
+                                                    {{ $data->links() }}
+                                                </div>
+                                            @endif
+                                        @endif
                                     </div>
-                                    
                                 </div>
                             </div>
                         </div>
@@ -157,37 +226,55 @@
         </div>
     </div>
 
+    {{-- Modal Input Hasil --}}
     <div class="modal fade" id="modalHasil" tabindex="-1" aria-labelledby="modalHasilLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content card-round p-2">
                 <div class="modal-header border-bottom-0 pb-0">
-                    <h5 class="modal-title fw-bold text-dark" id="modalHasilLabel">Input Berkas Hasil: <span id="modalNama" class="text-primary"></span></h5>
+                    <h5 class="modal-title fw-bold text-dark" id="modalHasilLabel">
+                        Input Berkas Hasil: <span id="modalNama" class="text-primary"></span>
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+                {{--
+                    Action digenerate dari route hasil.update dengan :id_tes,
+                    tapi controller butuh id_jadwal untuk query tabel jadwal.
+                    Solusi: kirim id_jadwal sebagai hidden input, route tetap pakai id_tes
+                    agar update hasiltes masih menggunakan id_tes yang benar.
+                --}}
                 <form id="formHasil" method="POST" enctype="multipart/form-data">
                     @csrf
+                    @method('POST')
+                    <input type="hidden" name="id_jadwal" id="hiddenIdJadwal">
                     <div class="modal-body">
                         <div class="form-group p-0 mb-3">
-                            <label class="fw-bold small mb-1 text-dark"><i class="fas fa-certificate text-warning me-2"></i>Unggah Sertifikat (Ringkasan)</label>
-                            <input type="file" name="file_hasil" class="form-control" required>
-                            <small class="text-muted d-block mt-1" style="font-size: 11px;">*Format: PDF/JPG/PNG</small>
+                            <label class="fw-bold small mb-1 text-dark">
+                                <i class="fas fa-certificate text-warning me-2"></i>Unggah Sertifikat (Ringkasan)
+                            </label>
+                            <input type="file" name="file_hasil" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
+                            <small class="text-muted d-block mt-1" style="font-size: 11px;">*Format: PDF / JPG / PNG</small>
                         </div>
 
                         <div class="form-group p-0 mb-2">
-                            <label class="fw-bold small mb-1 text-dark"><i class="fas fa-file-alt text-primary me-2"></i>Unggah Hasil Tes Lengkap (Detail)</label>
-                            <input type="file" name="file_detail" class="form-control" required>
-                            <small class="text-muted d-block mt-1" style="font-size: 11px;">*Format: PDF/DOC/DOCX</small>
+                            <label class="fw-bold small mb-1 text-dark">
+                                <i class="fas fa-file-alt text-primary me-2"></i>Unggah Hasil Tes Lengkap (Detail)
+                            </label>
+                            <input type="file" name="file_detail" class="form-control" accept=".pdf,.doc,.docx" required>
+                            <small class="text-muted d-block mt-1" style="font-size: 11px;">*Format: PDF / DOC / DOCX</small>
                         </div>
                     </div>
                     <div class="modal-footer border-top-0 pt-0">
                         <button type="button" class="btn btn-light btn-sm fw-bold px-3 btn-round" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary btn-sm fw-bold px-4 btn-round shadow-sm">Simpan & Selesaikan</button>
+                        <button type="submit" class="btn btn-primary btn-sm fw-bold px-4 btn-round shadow-sm">
+                            <i class="fas fa-save me-1"></i> Simpan & Selesaikan
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
+    {{-- Modal Preview Sertifikat --}}
     <div class="modal fade" id="modalPreview" tabindex="-1" aria-labelledby="modalPreviewLabel" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content card-round overflow-hidden" style="max-height: 95vh;">
@@ -211,6 +298,53 @@
         </div>
     </div>
 
+    {{-- Modal Edit File --}}
+<div class="modal fade" id="modalEdit" tabindex="-1" aria-labelledby="modalEditLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content card-round p-2">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark" id="modalEditLabel">
+                    <i class="fas fa-pencil-alt text-primary me-2"></i>
+                    Ganti Berkas: <span id="editNama" class="text-primary"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formEdit" method="POST" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="alert alert-info alert-sm py-2 px-3 card-round" style="font-size: 12px;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Kosongkan field yang tidak ingin diganti. File lama akan otomatis terhapus.
+                    </div>
+
+                    <div class="form-group p-0 mb-3">
+                        <label class="fw-bold small mb-1 text-dark">
+                            <i class="fas fa-certificate text-warning me-2"></i>Ganti Sertifikat (Opsional)
+                        </label>
+                        <input type="file" name="file_hasil" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                        <small class="text-muted d-block mt-1" style="font-size: 11px;">*Format: PDF / JPG / PNG</small>
+                    </div>
+
+                    <div class="form-group p-0 mb-2">
+                        <label class="fw-bold small mb-1 text-dark">
+                            <i class="fas fa-file-alt text-primary me-2"></i>Ganti Hasil Tes Lengkap (Opsional)
+                        </label>
+                        <input type="file" name="file_detail" class="form-control" accept=".pdf,.doc,.docx">
+                        <small class="text-muted d-block mt-1" style="font-size: 11px;">*Format: PDF / DOC / DOCX</small>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light btn-sm fw-bold px-3 btn-round" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary btn-sm fw-bold px-4 btn-round shadow-sm">
+                        <i class="fas fa-save me-1"></i> Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
     <script src="{{ asset('assets/js/core/jquery-3.7.1.min.js') }}"></script>
     <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
     <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
@@ -220,10 +354,11 @@
 
     <script>
         $(document).ready(function () {
-            // Mengikuti konfigurasi bahasa dan setelan auto-sort dari halaman Manajemen Jadwal Anda
+            // DataTable hanya diinisialisasi di tab kelola
+            @if($tab == 'kelola')
             $('#basic-datatables').DataTable({
                 "pageLength": 10,
-                "order": [], 
+                "order": [],
                 "language": {
                     "search": "Cari Data:",
                     "lengthMenu": "Tampilkan _MENU_ data",
@@ -233,13 +368,21 @@
                     "infoFiltered": "(difilter dari _MAX_ total data)"
                 }
             });
+            @endif
         });
 
-        function openModal(id, nama) {
+        /**
+         * Buka modal input hasil.
+         * @param {string} idTes     — untuk di-set ke action form (update hasiltes)
+         * @param {string} idJadwal  — untuk dikirim sebagai hidden input (query tabel jadwal)
+         * @param {string} nama      — nama klien untuk ditampilkan di judul modal
+         */
+        function openModal(idTes, idJadwal, nama) {
             document.getElementById('modalNama').innerText = nama;
+            document.getElementById('hiddenIdJadwal').value = idJadwal;
 
             let url = "{{ route('hasil.update', ':id') }}";
-            url = url.replace(':id', id);
+            url = url.replace(':id', idTes);
             document.getElementById('formHasil').action = url;
 
             var modalInput = new bootstrap.Modal(document.getElementById('modalHasil'));
@@ -247,9 +390,7 @@
         }
 
         function previewFile(url) {
-            const frame = document.getElementById('previewFrame');
-            frame.src = url;
-
+            document.getElementById('previewFrame').src = url;
             var modalPreview = new bootstrap.Modal(document.getElementById('modalPreview'));
             modalPreview.show();
         }
@@ -262,6 +403,16 @@
             }
             document.getElementById('previewFrame').src = "";
         }
+        function openEditModal(idTes, nama) {
+    document.getElementById('editNama').innerText = nama;
+
+    let url = "{{ route('hasil.edit', ':id') }}";
+    url = url.replace(':id', idTes);
+    document.getElementById('formEdit').action = url;
+
+    var modalEdit = new bootstrap.Modal(document.getElementById('modalEdit'));
+    modalEdit.show();
+}
     </script>
 </body>
 </html>

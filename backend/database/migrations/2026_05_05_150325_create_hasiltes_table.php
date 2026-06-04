@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('hasiltes', function (Blueprint $table) {
-            $table->integer('id_tes')->autoIncrement();
-            $table->integer('id_klien')->nullable();
-            $table->integer('id_admin')->nullable();
-            $table->integer('id_jadwal')->nullable();
-            
+            $table->integer('id_tes')->autoIncrement()->unsigned();
+            $table->integer('id_klien')->nullable()->unsigned();
+            $table->integer('id_admin')->nullable()->unsigned();
+            $table->integer('id_jadwal')->nullable()->unsigned();
+
             $table->date('tanggal')->nullable();
             
             // Kolom untuk 2 file upload
