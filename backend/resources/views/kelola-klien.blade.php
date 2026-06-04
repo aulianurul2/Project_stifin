@@ -38,12 +38,12 @@
             justify-content: center;
         }
         /* Hanya override form khusus di dalam modal agar tidak merusak elemen pencarian tabel luar */
-        .modal-backdrop-custom .form-control, 
+        .modal-backdrop-custom .form-control,
         .modal-backdrop-custom .form-select {
             border: 1px solid #ced4da !important;
             color: #495057 !important;
         }
-        .modal-backdrop-custom .form-control:focus, 
+        .modal-backdrop-custom .form-control:focus,
         .modal-backdrop-custom .form-select:focus {
             border-color: #6c757d !important;
             box-shadow: none !important;
@@ -155,7 +155,7 @@
                                                             <form id="delete-form-{{ $k->id_klien }}" action="{{ route('klien.destroy', $k->id_klien) }}" method="POST" style="display:inline;">
                                                                 @csrf @method('DELETE')
                                                                 <button type="button" class="btn btn-link btn-danger" onclick="konfirmasiHapus('{{ $k->id_klien }}', '{{ $k->nama }}')">
-                                                                    <i class="fa fa-times"></i>
+                                                                    <i class="fas fa-trash-alt"></i>
                                                                 </button>
                                                             </form>
                                                         </div>
@@ -167,10 +167,10 @@
                                                 </tr>
                                                 @endforelse
                                             </tbody>
-                                        </table>    
+                                        </table>
                                     </div>
 
-                    
+
 
                                 </div>
                             </div>
@@ -191,7 +191,7 @@
         {{-- MODAL DETAIL PROFIL KLIEN (VIEW MODE - CLEAN & FORMAL) --}}
         <div x-show="openView" x-cloak class="modal-backdrop-custom">
             <div class="card w-75 shadow-lg" style="max-width: 750px; border-radius: 4px; border: 1px solid #dcdcdc;" @click.away="openView = false">
-                
+
                 <div class="card-header d-flex justify-content-between align-items-center py-3 border-bottom bg-white">
                     <h5 class="card-title mb-0 fw-bold text-dark" style="font-size: 1.1rem; letter-spacing: 0.5px;">
                         DETAIL PROFIL KLIEN
@@ -200,10 +200,10 @@
                         <span>&times;</span>
                     </button>
                 </div>
-                
+
                 <div class="card-body p-4 bg-white" style="max-height: 70vh; overflow-y: auto;">
                     <div class="row">
-                        
+
                         <div class="col-12 mb-3">
                             <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">I. IDENTITAS UTAMA</span>
                             <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
@@ -281,7 +281,7 @@
 
                     </div>
                 </div>
-                
+
                 <div class="card-footer bg-white d-flex justify-content-end py-3 border-top">
                     <button type="button" class="btn btn-outline-secondary btn-sm" @click="openView = false" style="border-radius: 3px; font-weight: 600;">
                         TUTUP
@@ -293,7 +293,7 @@
         {{-- MODAL EDIT KLIEN (EDIT MODE - CLEAN & PROFESSIONAL) --}}
         <div x-show="openModal" x-cloak class="modal-backdrop-custom">
             <div class="card w-75 shadow-lg" style="max-width: 700px; border-radius: 4px; border: 1px solid #dcdcdc;" @click.away="openModal = false">
-                
+
                 <div class="card-header d-flex justify-content-between align-items-center py-3 border-bottom bg-white">
                     <h5 class="card-title mb-0 fw-bold text-dark" style="font-size: 1.1rem; letter-spacing: 0.5px;">
                         PERBARUI DATA KLIEN
@@ -305,10 +305,10 @@
 
                 <form :action="'{{ url('kelola-klien') }}/' + selected.id" method="POST">
                     @csrf @method('PUT')
-                    
+
                     <div class="card-body p-4 bg-white" style="max-height: 65vh; overflow-y: auto;">
                         <div class="row">
-                            
+
                             <div class="col-12 mb-3">
                                 <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">I. DATA IDENTITAS UTAMA</span>
                                 <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
@@ -318,12 +318,12 @@
                                 <label class="text-muted small mb-1 fw-semibold">Nama Lengkap</label>
                                 <input type="text" name="nama" x-model="selected.nama" class="form-control" style="border-radius: 3px;" required>
                             </div>
-                            
+
                             <div class="form-group col-md-6 mb-3">
                                 <label class="text-muted small mb-1 fw-semibold">No. HP / WhatsApp</label>
                                 <input type="text" name="no_hp" x-model="selected.no_hp" class="form-control" style="border-radius: 3px;" required>
                             </div>
-                            
+
                             <div class="form-group col-md-6 mb-3">
                                 <label class="text-muted small mb-1 fw-semibold">Alamat Email</label>
                                 <input type="email" name="email" x-model="selected.email" class="form-control" style="border-radius: 3px;">
@@ -338,7 +338,7 @@
                                 <label class="text-muted small mb-1 fw-semibold">Tanggal Lahir</label>
                                 <input type="date" name="tanggal_lahir" x-model="selected.tanggal_lahir" class="form-control" style="border-radius: 3px;">
                             </div>
-                            
+
                             <div class="form-group col-md-3 mb-3">
                                 <label class="text-muted small mb-1 fw-semibold">Jenis Kelamin</label>
                                 <select name="jenis_kelamin" x-model="selected.jenis_kelamin" class="form-control form-select" style="border-radius: 3px;">
@@ -347,7 +347,7 @@
                                     <option value="P">Perempuan</option>
                                 </select>
                             </div>
-                            
+
                             <div class="form-group col-md-3 mb-3">
                                 <label class="text-muted small mb-1 fw-semibold">Gol. Darah</label>
                                 <select name="golongan_darah" x-model="selected.golongan_darah" class="form-control form-select" style="border-radius: 3px;">
@@ -368,17 +368,17 @@
                                 <label class="text-muted small mb-1 fw-semibold">Institusi / Perusahaan</label>
                                 <input type="text" name="institusi" x-model="selected.institusi" class="form-control" style="border-radius: 3px;">
                             </div>
-                            
+
                             <div class="form-group col-md-6 mb-3">
                                 <label class="text-muted small mb-1 fw-semibold">Media Sosial (IG/FB)</label>
                                 <input type="text" name="sosmed" x-model="selected.sosmed" class="form-control" style="border-radius: 3px;">
                             </div>
-                            
+
                             <div class="form-group col-md-12 mb-3">
                                 <label class="text-muted small mb-1 fw-semibold">Domisili (Kota / Kabupaten)</label>
                                 <input type="text" name="domisili" x-model="selected.domisili" class="form-control" style="border-radius: 3px;">
                             </div>
-                            
+
                             <div class="form-group col-md-12 mb-2">
                                 <label class="text-muted small mb-1 fw-semibold">Alamat Lengkap</label>
                                 <textarea name="alamat" x-model="selected.alamat" class="form-control" rows="3" style="border-radius: 3px; resize: none; line-height: 1.5;"></textarea>
@@ -405,7 +405,7 @@
     <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
     <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
     <script src="{{ asset('assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js') }}"></script>
-    
+
     <!-- Datatables Plugin & Inisialisasi bawaan KaiAdmin -->
     <script src="{{ asset('assets/js/plugin/datatables/datatables.min.js') }}"></script>
     <script src="{{ asset('assets/js/kaiadmin.min.js') }}"></script>
@@ -422,7 +422,7 @@
                     "info":  "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
                     "infoEmpty": "Data tidak tersedia",
                     "infoFiltered": "(difilter dari _MAX_ total data)"
-                    
+
                 }
             });
         });
@@ -433,12 +433,12 @@
                 text: `Apakah Anda yakin ingin menghapus data klien "${nama}" secara permanen? Tindakan ini juga akan menghapus data akun terkait.`,
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#1a202c', 
+                confirmButtonColor: '#1a202c',
                 cancelButtonColor: '#d33',
                 confirmButtonText: 'YA, HAPUS',
                 cancelButtonText: 'BATAL',
                 customClass: {
-                    popup: 'border-radius-0' 
+                    popup: 'border-radius-0'
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
