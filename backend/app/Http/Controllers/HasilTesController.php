@@ -8,6 +8,34 @@ use Illuminate\Support\Facades\DB;
 class HasilTesController extends Controller
 {
     /**
+     * Daftar biaya per kota Ciayumajakuning.
+     * Harus sinkron dengan KOTA_CIAYUMAJAKUNING di frontend.
+     */
+    private const BIAYA_KOTA = [
+        'Kota Cirebon'         => 600000,
+        'Kabupaten Cirebon'    => 600000,
+        'Kabupaten Indramayu'  => 610000,
+        'Kabupaten Majalengka' => 620000,
+        'Kabupaten Kuningan'   => 630000,
+    ];
+
+    /**
+     * Hitung nominal biaya berdasarkan data jadwal.
+     * - Kantor Subang / Home Visit Dalam Subang  : Rp 550.000
+     * - Home Visit Luar Subang (Ciayumajakuning) : sesuai tabel BIAYA_KOTA
+     *   Fallback ke Rp 650.000 jika kota tidak dikenal.
+     */
+    private function hitungNominal(object $jadwal): int
+    {
+        if (!$jadwal->is_luar_subang) {
+            return 550000;
+        }
+
+        $namaKota = trim($jadwal->nama_kota ?? '');
+        return self::BIAYA_KOTA[$namaKota] ?? 650000;
+    }
+
+    /**
      * Menampilkan halaman hasil tes (tab Kelola & Riwayat).
      */
     public function index(Request $request)
@@ -22,7 +50,7 @@ class HasilTesController extends Controller
         if ($tab == 'kelola') {
             $data = $query->where('hasiltes.status_tes', 'Proses')->get();
         } else {
-            $data = $query->where('hasiltes.status_tes', 'Selesai')->paginate(10)->withQueryString();
+            $data = $query->where('hasiltes.status_tes', 'Selesai')->get();
         }
 
         return view('hasil-tes', compact('data', 'tab'));
@@ -31,107 +59,117 @@ class HasilTesController extends Controller
     /**
      * Upload file hasil tes oleh admin dan catat ke tabel pemasukan.
      */
-public function update(Request $request, $id)
-{
-    $request->validate([
-        'file_hasil'  => 'required|mimes:pdf,jpg,png,jpeg|max:2048',
-        'file_detail' => 'required|mimes:pdf,doc,docx|max:5120',
-        'id_jadwal'   => 'required|integer',
-    ]);
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'file_hasil'  => 'required|mimes:pdf,jpg,png,jpeg|max:2048',
+            'file_detail' => 'required|mimes:pdf,doc,docx|max:5120',
+            'id_jadwal'   => 'required|integer',
+        ]);
 
-    if (!file_exists(public_path('uploads/hasil'))) {
-        mkdir(public_path('uploads/hasil'), 0775, true);
-    }
-
-    $idJadwal = $request->input('id_jadwal');
-    $jadwal   = DB::table('jadwal')->where('id_jadwal', $idJadwal)->first();
-
-    if (!$jadwal) {
-        return redirect()->back()->with('error', 'Data jadwal tidak ditemukan.');
-    }
-
-    $nominal = $jadwal->is_luar_subang ? 650000 : 550000;
-
-    $data = [
-        'status_tes' => 'Selesai',
-        'tanggal'    => now(),
-        'updated_at' => now(),
-        'biaya_tes'  => $nominal, // ← sekarang terisi
-    ];
-
-    if ($request->hasFile('file_hasil')) {
-        $nama = time() . '_sertifikat_' . $request->file('file_hasil')->getClientOriginalName();
-        $request->file('file_hasil')->move(public_path('uploads/hasil'), $nama);
-        $data['file_hasil'] = $nama;
-    }
-
-    if ($request->hasFile('file_detail')) {
-        $nama2 = time() . '_detail_' . $request->file('file_detail')->getClientOriginalName();
-        $request->file('file_detail')->move(public_path('uploads/hasil'), $nama2);
-        $data['file_detail'] = $nama2;
-    }
-
-    DB::table('pemasukan')->insert([
-        'id_jadwal'  => $idJadwal,
-        'jumlah'     => $nominal,
-        'keterangan' => 'Pembayaran Tes ' . ($jadwal->is_luar_subang ? 'Luar Subang' : 'Dalam Subang'),
-        'created_at' => now(),
-    ]);
-
-    DB::table('hasiltes')->where('id_tes', $id)->update($data);
-
-    return redirect('/hasil-tes?tab=riwayat')->with('success', 'Upload berhasil.');
-}
-/**
- * Edit/ganti file hasil tes yang sudah diupload.
- */
-public function edit(Request $request, $id)
-{
-    $request->validate([
-        'file_hasil'  => 'nullable|mimes:pdf,jpg,png,jpeg|max:2048',
-        'file_detail' => 'nullable|mimes:pdf,doc,docx|max:5120',
-    ]);
-
-    // Minimal satu file harus dikirim
-    if (!$request->hasFile('file_hasil') && !$request->hasFile('file_detail')) {
-        return redirect()->back()->with('error', 'Pilih minimal satu file yang ingin diganti.');
-    }
-
-    if (!file_exists(public_path('uploads/hasil'))) {
-        mkdir(public_path('uploads/hasil'), 0775, true);
-    }
-
-    // Ambil data lama untuk hapus file lama
-    $existing = DB::table('hasiltes')->where('id_tes', $id)->first();
-
-    if (!$existing) {
-        return redirect()->back()->with('error', 'Data tidak ditemukan.');
-    }
-
-    $data = ['updated_at' => now()];
-
-    if ($request->hasFile('file_hasil')) {
-        // Hapus file lama jika ada
-        if ($existing->file_hasil && file_exists(public_path('uploads/hasil/' . $existing->file_hasil))) {
-            unlink(public_path('uploads/hasil/' . $existing->file_hasil));
+        if (!file_exists(public_path('uploads/hasil'))) {
+            mkdir(public_path('uploads/hasil'), 0775, true);
         }
-        $nama = time() . '_sertifikat_' . $request->file('file_hasil')->getClientOriginalName();
-        $request->file('file_hasil')->move(public_path('uploads/hasil'), $nama);
-        $data['file_hasil'] = $nama;
-    }
 
-    if ($request->hasFile('file_detail')) {
-        // Hapus file lama jika ada
-        if ($existing->file_detail && file_exists(public_path('uploads/hasil/' . $existing->file_detail))) {
-            unlink(public_path('uploads/hasil/' . $existing->file_detail));
+        $idJadwal = $request->input('id_jadwal');
+        $jadwal   = DB::table('jadwal')->where('id_jadwal', $idJadwal)->first();
+
+        if (!$jadwal) {
+            return redirect()->back()->with('error', 'Data jadwal tidak ditemukan.');
         }
-        $nama2 = time() . '_detail_' . $request->file('file_detail')->getClientOriginalName();
-        $request->file('file_detail')->move(public_path('uploads/hasil'), $nama2);
-        $data['file_detail'] = $nama2;
+
+        $nominal  = $this->hitungNominal($jadwal);
+        $namaKota = trim($jadwal->nama_kota ?? '');
+
+        // Label keterangan untuk tabel pemasukan
+        if (!$jadwal->is_luar_subang) {
+            $keterangan = 'Pembayaran Tes Dalam Subang';
+        } elseif ($namaKota !== '') {
+            $keterangan = 'Pembayaran Tes Home Visit – ' . $namaKota;
+        } else {
+            $keterangan = 'Pembayaran Tes Luar Subang';
+        }
+
+        $data = [
+            'status_tes' => 'Selesai',
+            'tanggal'    => now(),
+            'updated_at' => now(),
+            'biaya_tes'  => $nominal,
+            'nama_kota'  => $namaKota ?: null,
+        ];
+
+        if ($request->hasFile('file_hasil')) {
+            $nama = time() . '_sertifikat_' . $request->file('file_hasil')->getClientOriginalName();
+            $request->file('file_hasil')->move(public_path('uploads/hasil'), $nama);
+            $data['file_hasil'] = $nama;
+        }
+
+        if ($request->hasFile('file_detail')) {
+            $nama2 = time() . '_detail_' . $request->file('file_detail')->getClientOriginalName();
+            $request->file('file_detail')->move(public_path('uploads/hasil'), $nama2);
+            $data['file_detail'] = $nama2;
+        }
+
+        DB::table('pemasukan')->insert([
+            'id_jadwal'  => $idJadwal,
+            'jumlah'     => $nominal,
+            'keterangan' => $keterangan,
+            'created_at' => now(),
+        ]);
+
+        DB::table('hasiltes')->where('id_tes', $id)->update($data);
+
+        return redirect('/hasil-tes?tab=riwayat')->with('success', 'Upload berhasil.');
     }
 
-    DB::table('hasiltes')->where('id_tes', $id)->update($data);
+    /**
+     * Edit/ganti file hasil tes yang sudah diupload.
+     */
+    public function edit(Request $request, $id)
+    {
+        $request->validate([
+            'file_hasil'  => 'nullable|mimes:pdf,jpg,png,jpeg|max:2048',
+            'file_detail' => 'nullable|mimes:pdf,doc,docx|max:5120',
+        ]);
 
-    return redirect('/hasil-tes?tab=riwayat')->with('success', 'File berhasil diperbarui.');
-}
+        // Minimal satu file harus dikirim
+        if (!$request->hasFile('file_hasil') && !$request->hasFile('file_detail')) {
+            return redirect()->back()->with('error', 'Pilih minimal satu file yang ingin diganti.');
+        }
+
+        if (!file_exists(public_path('uploads/hasil'))) {
+            mkdir(public_path('uploads/hasil'), 0775, true);
+        }
+
+        // Ambil data lama untuk hapus file lama
+        $existing = DB::table('hasiltes')->where('id_tes', $id)->first();
+
+        if (!$existing) {
+            return redirect()->back()->with('error', 'Data tidak ditemukan.');
+        }
+
+        $data = ['updated_at' => now()];
+
+        if ($request->hasFile('file_hasil')) {
+            if ($existing->file_hasil && file_exists(public_path('uploads/hasil/' . $existing->file_hasil))) {
+                unlink(public_path('uploads/hasil/' . $existing->file_hasil));
+            }
+            $nama = time() . '_sertifikat_' . $request->file('file_hasil')->getClientOriginalName();
+            $request->file('file_hasil')->move(public_path('uploads/hasil'), $nama);
+            $data['file_hasil'] = $nama;
+        }
+
+        if ($request->hasFile('file_detail')) {
+            if ($existing->file_detail && file_exists(public_path('uploads/hasil/' . $existing->file_detail))) {
+                unlink(public_path('uploads/hasil/' . $existing->file_detail));
+            }
+            $nama2 = time() . '_detail_' . $request->file('file_detail')->getClientOriginalName();
+            $request->file('file_detail')->move(public_path('uploads/hasil'), $nama2);
+            $data['file_detail'] = $nama2;
+        }
+
+        DB::table('hasiltes')->where('id_tes', $id)->update($data);
+
+        return redirect('/hasil-tes?tab=riwayat')->with('success', 'File berhasil diperbarui.');
+    }
 }

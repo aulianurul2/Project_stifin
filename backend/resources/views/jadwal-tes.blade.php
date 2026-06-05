@@ -137,7 +137,7 @@
                                                 <div class="form-group p-0">
                                                     <label class="mb-2 text-uppercase font-weight-bold text-muted fs-8">Lokasi</label>
                                                     <select name="lokasi" class="form-select form-control">
-                                                        <option value="Kantor Cabang">Kantor Cabang</option>
+                                                        <option value="Kantor Subang">Kantor Subang</option>
                                                         <option value="Home Visit">Home Visit</option>
                                                     </select>
                                                 </div>
@@ -184,7 +184,7 @@
                                                             </span>
                                                         @else
                                                             <span class="badge badge-info px-3 py-1 btn-round text-capitalize fs-8 fw-normal">
-                                                                <i class="fas fa-building me-1"></i> Kantor Cabang
+                                                                <i class="fas fa-building me-1"></i> Kantor Subang
                                                             </span>
                                                         @endif
                                                     </td>
@@ -208,15 +208,18 @@
                                                     </td>
                                                     <td class="px-4 py-3">
                                                         @if(!empty($item->nama_klien))
-                                                            {{-- Simpan bukti_transfer & is_luar_subang di data attribute --}}
                                                             <button type="button" 
-                                                                    class="btn btn-sm btn-label-info btn-round btn-lihat-klien fw-normal"
+                                                                    class="btn btn-sm p-2 card-round shadow-sm d-flex flex-column align-items-center btn-lihat-klien"
+                                                                    style="background-color: #d1e7dd; border-color: #badbcc; min-width: 56px;"
                                                                     data-id="{{ $item->id_jadwal }}"
                                                                     data-waktu="{{ \Carbon\Carbon::parse($item->tanggal)->translatedFormat('d M Y') }} - {{ \Carbon\Carbon::parse($item->waktu)->format('H:i') }} WIB"
                                                                     data-lokasi="{{ $item->lokasi }}"
                                                                     data-bukti="{{ $item->bukti_transfer ?? '' }}"
-                                                                    data-is-luar="{{ $item->is_luar_subang ? '1' : '0' }}">
-                                                                <i class="fas fa-user me-1"></i> Lihat Detail Klien
+                                                                    data-is-luar="{{ $item->is_luar_subang ? '1' : '0' }}"
+                                                                    data-biaya="{{ $item->biaya ?? 550000 }}"
+                                                                    title="Lihat Detail Klien">
+                                                                <i class="fas fa-user mb-1" style="color: #0f5132;"></i>
+                                                                <span style="font-size: 9px; color: #0f5132; font-weight: 600;">Detail Klien</span>
                                                             </button>
                                                         @else
                                                             <span class="text-muted italic fs-8">Belum ada pemesan</span>
@@ -226,8 +229,13 @@
                                                         <form action="{{ route('jadwal.destroy', $item->id_jadwal) }}" method="POST" id="form-hapus-{{ $item->id_jadwal }}">
                                                             @csrf
                                                             @method('DELETE')
-                                                            <button type="button" class="btn btn-icon btn-link btn-danger btn-sm btn-hapus-jadwal" data-id="{{ $item->id_jadwal }}" data-bs-toggle="tooltip" title="Hapus Slot">
-                                                                <i class="fas fa-trash-alt fs-6"></i>
+                                                            <button type="button"
+                                                                    class="btn btn-sm p-2 card-round shadow-sm d-flex flex-column align-items-center mx-auto btn-hapus-jadwal"
+                                                                    style="background-color: #f8d7da; border-color: #f5c2c7; min-width: 56px;"
+                                                                    data-id="{{ $item->id_jadwal }}"
+                                                                    title="Hapus Slot">
+                                                                <i class="fas fa-trash-alt mb-1" style="color: #842029;"></i>
+                                                                <span style="font-size: 9px; color: #842029; font-weight: 600;">Hapus</span>
                                                             </button>
                                                         </form>
                                                     </td>
@@ -399,21 +407,21 @@
             });
 
             // Buka modal detail klien — juga render bukti transfer
-            $('.btn-lihat-klien').on('click', function() {
+            $('#tabel-jadwal').on('click', '.btn-lihat-klien', function() {
                 var idJadwal   = $(this).data('id');
                 var infoWaktu  = $(this).data('waktu');
                 var infoLokasi = $(this).data('lokasi');
-                var bukti      = $(this).data('bukti');      // nama file bukti
-                var isLuar     = $(this).data('is-luar');    // '1' atau '0'
+                var bukti      = $(this).data('bukti');
+                var isLuar     = $(this).data('is-luar');
+                var biaya      = $(this).data('biaya') || 550000;
 
                 $('#modal-waktu-jadwal').text(infoWaktu);
                 $('#modal-lokasi-jadwal').html('<i class="fas fa-map-marker-alt me-1"></i> ' + infoLokasi);
 
                 // -- Render Bukti Transfer --
                 var wilayahText = isLuar == '1' ? 'Luar Subang' : 'Dalam Subang';
-                var biayaText   = isLuar == '1' ? 'Rp 650.000'  : 'Rp 550.000';
-                $('#bukti-wilayah').text(wilayahText);
-                $('#bukti-biaya').text(biayaText);
+               $('#bukti-wilayah').text(wilayahText);
+$('#bukti-biaya').text('Rp ' + parseInt(biaya).toLocaleString('id-ID'));
 
                 var imgWrap    = $('#bukti-img-wrap');
                 var linkWrap   = $('#bukti-link-wrap');
@@ -552,6 +560,14 @@
                     console.log(xhr.responseText);
                 }
             });
+        }
+    </script>
+    <script>
+        // Set tanggal minimum = hari ini
+        const inputTanggal = document.querySelector('input[name="tanggal"]');
+        if (inputTanggal) {
+            const today = new Date().toISOString().split('T')[0];
+            inputTanggal.setAttribute('min', today);
         }
     </script>
 </body>

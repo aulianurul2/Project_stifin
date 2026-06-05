@@ -80,6 +80,8 @@ class PendaftaranController extends Controller
             ->where('id_jadwal', $request->id_jadwal)
             ->update([
                 'is_luar_subang' => (bool) $request->is_luar_subang,
+                'nama_kota'      => $request->nama_kota ?? null,   // ← tambah ini
+                'biaya'          => (int) $request->biaya,          // ← tambah ini
                 'bukti_transfer' => $namaFile,
                 'id_klien'       => $klien->id_klien,
                 'nama_klien'     => $request->nama_klien,
@@ -213,6 +215,9 @@ class PendaftaranController extends Controller
                 'sosmed'         => null,
                 'bukti_transfer' => null,
                 'is_luar_subang' => false,
+
+                    'nama_kota'      => null,
+                    'biaya'          => null,
                 'status'         => 'Tersedia',
                 'komentar'       => null,
                 'kuota'          => 1,
@@ -275,41 +280,44 @@ class PendaftaranController extends Controller
     /**
      * Batalkan pendaftaran oleh klien — kosongkan slot dan kembalikan kuota.
      */
-    public function batalkanPendaftaranApi(Request $request, $id)
-    {
-        $jadwal = DB::table('jadwal')->where('id_jadwal', $id)->first();
+public function batalkanPendaftaranApi(Request $request, $id)
+{
+    $jadwal = DB::table('jadwal')->where('id_jadwal', $id)->first();
 
-        if (!$jadwal) {
-            return response()->json(['message' => 'Data pendaftaran tidak ditemukan.'], 404);
-        }
-
-        $updated = DB::table('jadwal')->where('id_jadwal', $id)->update([
-            'id_klien'       => null,
-            'nama_klien'     => null,
-            'no_hp'          => null,
-            'email'          => null,
-            'tanggal_lahir'  => null,
-            'jenis_kelamin'  => null,
-            'golongan_darah' => null,
-            'domisili'       => null,
-            'institusi'      => null,
-            'sosmed'         => null,
-            'alamat'         => null,
-            'bukti_transfer' => null,
-            'is_luar_subang' => false,
-            'status'         => 'Tersedia',
-            'komentar'       => null,
-            'kuota'          => $jadwal->kuota + 1,
-            'updated_at'     => now(),
-        ]);
-
-        if ($updated) {
-            DB::table('hasiltes')->where('id_jadwal', $id)->delete();
-            return response()->json(['message' => 'Pendaftaran berhasil dibatalkan, slot kembali tersedia.'], 200);
-        }
-
-        return response()->json(['message' => 'Gagal membatalkan pendaftaran.'], 500);
+    if (!$jadwal) {
+        return response()->json(['message' => 'Data pendaftaran tidak ditemukan.'], 404);
     }
+
+    $updated = DB::table('jadwal')->where('id_jadwal', $id)->update([
+        'id_klien'       => null,
+        'nama_klien'     => null,
+        'no_hp'          => null,
+        'email'          => null,
+        'tanggal_lahir'  => null,
+        'jenis_kelamin'  => null,
+        'golongan_darah' => null,
+        'domisili'       => null,
+        'institusi'      => null,
+        'sosmed'         => null,
+        'alamat'         => null,
+        'bukti_transfer' => null,
+        'is_luar_subang' => false,
+        'nama_kota'      => null,
+        'biaya'          => null,
+        'status'         => 'Tersedia',
+        'komentar'       => null,
+        'kuota'          => $jadwal->kuota + 1,
+        'updated_at'     => now(),
+    ]);
+
+    if ($updated) {
+        DB::table('hasiltes')->where('id_jadwal', $id)->delete();
+        DB::table('pemasukan')->where('id_jadwal', $id)->delete(); // ← TAMBAH INI
+        return response()->json(['message' => 'Pendaftaran berhasil dibatalkan, slot kembali tersedia.'], 200);
+    }
+
+    return response()->json(['message' => 'Gagal membatalkan pendaftaran.'], 500);
+}
 
     // =========================================================
     // API — Reschedule dari Klien
@@ -318,49 +326,63 @@ class PendaftaranController extends Controller
     /**
      * Ajukan reschedule ke slot jadwal lain.
      */
-    public function reschedulePendaftaranApi(Request $request, $id)
-    {
-        $request->validate([
-            'id_jadwal_baru' => 'required|integer',
-        ]);
+   // =========================================================
+    // API — Reschedule dari Klien
+    // =========================================================
 
-        $id_jadwal_lama = $id;
-        $id_jadwal_baru = $request->id_jadwal_baru;
+/**
+     * Ajukan reschedule ke slot jadwal lain.
+     */
+public function reschedulePendaftaranApi(Request $request, $id)
+{
+    $request->validate([
+        'id_jadwal_baru' => 'required|integer',
+        'is_luar_subang' => 'nullable',
+        'nama_kota'      => 'nullable|string',
+        'biaya'          => 'nullable|integer|min:0',
+    ]);
 
-        $pendaftaranLama = DB::table('jadwal')->where('id_jadwal', $id_jadwal_lama)->first();
-        $jadwalBaru      = DB::table('jadwal')->where('id_jadwal', $id_jadwal_baru)->first();
+    $id_jadwal_lama = (int) $id;                        // ✅ cast ke int
+    $id_jadwal_baru = (int) $request->id_jadwal_baru;   // ✅ cast ke int
 
-        if (!$pendaftaranLama) {
-            return response()->json(['message' => 'Data pendaftaran tidak ditemukan.'], 404);
-        }
+    $pendaftaranLama = DB::table('jadwal')->where('id_jadwal', $id_jadwal_lama)->first();
+    $jadwalBaru      = DB::table('jadwal')->where('id_jadwal', $id_jadwal_baru)->first();
 
-        if (!$jadwalBaru || $jadwalBaru->kuota <= 0) {
-            return response()->json(['message' => 'Jadwal baru yang dipilih sudah penuh.'], 400);
-        }
+    if (!$pendaftaranLama) {
+        return response()->json(['message' => 'Data pendaftaran asal tidak ditemukan.'], 404);
+    }
 
-        // Salin data pendaftaran lama ke slot jadwal baru
-        $reschedule = DB::table('jadwal')->where('id_jadwal', $id_jadwal_baru)->update([
-            'id_klien'       => $pendaftaranLama->id_klien,
-            'nama_klien'     => $pendaftaranLama->nama_klien,
-            'no_hp'          => $pendaftaranLama->no_hp,
-            'email'          => $pendaftaranLama->email,
-            'tanggal_lahir'  => $pendaftaranLama->tanggal_lahir,
-            'jenis_kelamin'  => $pendaftaranLama->jenis_kelamin,
-            'golongan_darah' => $pendaftaranLama->golongan_darah,
-            'domisili'       => $pendaftaranLama->domisili,
-            'institusi'      => $pendaftaranLama->institusi,
-            'sosmed'         => $pendaftaranLama->sosmed,
-            'alamat'         => $pendaftaranLama->alamat,
-            'bukti_transfer' => $pendaftaranLama->bukti_transfer,
-            'is_luar_subang' => $pendaftaranLama->is_luar_subang,
-            'status'         => 'Menunggu',
-            'kuota'          => $jadwalBaru->kuota - 1,
-            'komentar'       => 'Reschedule dari jadwal tanggal: ' . $pendaftaranLama->tanggal,
-            'updated_at'     => now(),
-        ]);
+    if (is_null($pendaftaranLama->id_klien)) {
+        return response()->json(['message' => 'Pendaftaran ini sudah tidak aktif atau sudah pernah di-reschedule.'], 400);
+    }
 
-        if ($reschedule) {
-            // Kosongkan slot jadwal lama
+    if (!$jadwalBaru || $jadwalBaru->kuota <= 0 || !is_null($jadwalBaru->id_klien)) {
+        return response()->json(['message' => 'Jadwal baru yang dipilih sudah penuh atau tidak tersedia.'], 400);
+    }
+
+    if ($id_jadwal_lama === $id_jadwal_baru) {          // ✅ sekarang int === int, benar
+        return response()->json(['message' => 'Jadwal baru tidak boleh sama dengan jadwal saat ini.'], 400);
+    }
+
+    $isLuarSubang = false;
+    if ($request->has('is_luar_subang')) {
+        $val = $request->input('is_luar_subang');
+        $isLuarSubang = ($val === true || $val === 'true' || $val == 1 || $val === '1');
+    } else {
+        $isLuarSubang = (bool) $pendaftaranLama->is_luar_subang;
+    }
+
+    try {
+        DB::transaction(function () use (
+            $id_jadwal_lama, $id_jadwal_baru,
+            $pendaftaranLama, $jadwalBaru,
+            $request, $isLuarSubang
+        ) {
+            // ✅ Hapus manual dulu — CASCADE tidak jalan saat UPDATE
+            DB::table('hasiltes')->where('id_jadwal', $id_jadwal_lama)->delete();
+            DB::table('pemasukan')->where('id_jadwal', $id_jadwal_lama)->delete();
+
+            // Step 1: Kosongkan jadwal LAMA
             DB::table('jadwal')->where('id_jadwal', $id_jadwal_lama)->update([
                 'id_klien'       => null,
                 'nama_klien'     => null,
@@ -374,23 +396,50 @@ class PendaftaranController extends Controller
                 'institusi'      => null,
                 'sosmed'         => null,
                 'bukti_transfer' => null,
-                'is_luar_subang' => false,
+                'is_luar_subang' => 0,
+                'nama_kota'      => null,
+                'biaya'          => 550000,  // ✅ kembalikan ke default, bukan 0
                 'status'         => 'Tersedia',
                 'komentar'       => null,
                 'kuota'          => $pendaftaranLama->kuota + 1,
                 'updated_at'     => now(),
             ]);
 
-            // Pindahkan relasi hasiltes ke jadwal baru
-            DB::table('hasiltes')->where('id_jadwal', $id_jadwal_lama)->update([
-                'id_jadwal'  => $id_jadwal_baru,
-                'status_tes' => 'Proses',
-                'updated_at' => now(),
+            // Step 2: Isi jadwal BARU
+            DB::table('jadwal')->where('id_jadwal', $id_jadwal_baru)->update([
+                'id_klien'       => $pendaftaranLama->id_klien,
+                'nama_klien'     => $pendaftaranLama->nama_klien,
+                'no_hp'          => $pendaftaranLama->no_hp,
+                'email'          => $pendaftaranLama->email,
+                'tanggal_lahir'  => $pendaftaranLama->tanggal_lahir,
+                'jenis_kelamin'  => $pendaftaranLama->jenis_kelamin,
+                'golongan_darah' => $pendaftaranLama->golongan_darah,
+                'domisili'       => $pendaftaranLama->domisili,
+                'institusi'      => $pendaftaranLama->institusi,
+                'sosmed'         => $pendaftaranLama->sosmed,
+                'alamat'         => $pendaftaranLama->alamat,
+                'bukti_transfer' => $pendaftaranLama->bukti_transfer,
+                'is_luar_subang' => $isLuarSubang ? 1 : 0,
+                'nama_kota'      => $request->has('nama_kota')
+                                        ? $request->nama_kota
+                                        : $pendaftaranLama->nama_kota,
+                'biaya'          => $request->has('biaya')
+                                        ? (int) $request->biaya
+                                        : (int) $pendaftaranLama->biaya,
+                'status'         => 'Menunggu',
+                'kuota'          => $jadwalBaru->kuota - 1,
+                'komentar'       => 'Reschedule dari jadwal tanggal: ' . $pendaftaranLama->tanggal,
+                'updated_at'     => now(),
             ]);
+        });
 
-            return response()->json(['message' => 'Reschedule berhasil diajukan.'], 200);
-        }
+        return response()->json(['message' => 'Reschedule berhasil diajukan.'], 200);
 
-        return response()->json(['message' => 'Gagal memproses reschedule.'], 500);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Gagal memproses reschedule.',
+            'error'   => $e->getMessage(),
+        ], 500);
     }
+}
 }

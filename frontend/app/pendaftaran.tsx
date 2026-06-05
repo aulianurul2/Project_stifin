@@ -24,14 +24,48 @@ interface Jadwal {
   status: string;
 }
 
+// Daftar kota Ciayumajakuning beserta biaya
+export interface KotaCiayuma {
+  label: string;
+  biaya: number;
+}
+
+export const KOTA_CIAYUMAJAKUNING: KotaCiayuma[] = [
+  { label: 'Kota Cirebon',        biaya: 600000 },
+  { label: 'Kabupaten Cirebon',   biaya: 600000 },
+  { label: 'Kabupaten Indramayu', biaya: 610000 },
+  { label: 'Kabupaten Majalengka',biaya: 620000 },
+  { label: 'Kabupaten Kuningan',  biaya: 630000 },
+];
+
+export function formatRupiah(nominal: number): string {
+  return 'Rp ' + nominal.toLocaleString('id-ID');
+}
+
 export default function PendaftaranTes() {
   const router = useRouter();
   const [userName, setUserName] = useState('User');
-  const [tempatTes, setTempatTes] = useState('Kantor Cabang');
-  const [isLuarSubang, setIsLuarSubang] = useState(false);
+  const [tempatTes, setTempatTes] = useState('Kantor Subang');
+  const [wilayahHomeVisit, setWilayahHomeVisit] = useState<'dalam' | 'luar'>('dalam');
+
+  // Kota terpilih untuk Ciayumajakuning
+  const [selectedKota, setSelectedKota] = useState<KotaCiayuma>(KOTA_CIAYUMAJAKUNING[0]);
+  // Apakah dropdown kota sedang terbuka
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
   const [jadwalData, setJadwalData] = useState<Jadwal[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedJadwal, setSelectedJadwal] = useState<Jadwal | null>(null);
+
+  // Derived
+  const isLuarSubang = tempatTes === 'Home Visit' && wilayahHomeVisit === 'luar';
+
+  // Biaya berdasarkan pilihan
+  const getBiaya = (): number => {
+    if (tempatTes !== 'Home Visit') return 550000;
+    if (wilayahHomeVisit === 'luar') return selectedKota.biaya;
+    return 550000;
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -59,31 +93,31 @@ export default function PendaftaranTes() {
   };
 
   const filteredJadwal = jadwalData.filter((item) => {
-    const lokasiDB = String(item.lokasi || '').toLowerCase().trim();
-    const lokasiPilihan = String(tempatTes || '').toLowerCase().trim();
-    const statusDB = String(item.status || '').toLowerCase().trim();
+    const lokasiDB      = String(item.lokasi || '').toLowerCase().trim();
+    const lokasiPilihan = String(tempatTes   || '').toLowerCase().trim();
+    const statusDB      = String(item.status || '').toLowerCase().trim();
     return lokasiDB === lokasiPilihan && statusDB === 'tersedia';
   });
 
-  // Navigasi ke halaman form + kirim is_luar_subang sebagai params
   const handleNext = () => {
     if (!selectedJadwal) {
       Alert.alert('Pilih Jadwal', 'Silakan pilih salah satu jadwal yang tersedia.');
       return;
     }
-
     router.push({
       pathname: '/form-pendaftaran',
       params: {
-        id_jadwal: selectedJadwal.id_jadwal,
-        tanggal: selectedJadwal.tanggal,
-        waktu: selectedJadwal.waktu,
-        is_luar_subang: isLuarSubang ? '1' : '0', // Kirim sebagai string '1'/'0'
+        id_jadwal:        selectedJadwal.id_jadwal,
+        tanggal:          selectedJadwal.tanggal,
+        waktu:            selectedJadwal.waktu,
+        is_luar_subang:   isLuarSubang ? '1' : '0',
+        nama_kota:        isLuarSubang ? selectedKota.label : '',
+        biaya:            getBiaya().toString(),
       },
     });
   };
 
-  const lokasiOptions = ['Home Visit', 'Kantor Cabang'];
+  const lokasiOptions = ['Home Visit', 'Kantor Subang'];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -110,47 +144,7 @@ export default function PendaftaranTes() {
           </Text>
         </View>
 
-        {/* === Selector: Dalam/Luar Subang (menentukan harga) === */}
-        <View style={styles.locationCard}>
-          <Text style={styles.locationLabel}>
-            <Ionicons name="cash-outline" size={13} color="#546e7a" /> Wilayah & Biaya
-          </Text>
-          <View style={styles.locationOptions}>
-            <TouchableOpacity
-              style={[styles.locationChip, !isLuarSubang && styles.locationChipActive]}
-              onPress={() => setIsLuarSubang(false)}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="home-outline"
-                size={14}
-                color={!isLuarSubang ? '#fff' : '#546e7a'}
-              />
-              <Text style={[styles.locationChipText, !isLuarSubang && styles.locationChipTextActive]}>
-                Dalam Subang{'\n'}
-                <Text style={styles.hargaChip}>Rp 550.000</Text>
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.locationChip, isLuarSubang && styles.locationChipActive]}
-              onPress={() => setIsLuarSubang(true)}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="map-outline"
-                size={14}
-                color={isLuarSubang ? '#fff' : '#546e7a'}
-              />
-              <Text style={[styles.locationChipText, isLuarSubang && styles.locationChipTextActive]}>
-                Luar Subang{'\n'}
-                <Text style={styles.hargaChip}>Rp 650.000</Text>
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* === Selector: Lokasi Tes (Home Visit / Kantor Cabang) === */}
+        {/* === Selector: Lokasi Tes === */}
         <View style={styles.locationCard}>
           <Text style={styles.locationLabel}>
             <Ionicons name="location-outline" size={13} color="#546e7a" /> Lokasi Tes
@@ -163,6 +157,8 @@ export default function PendaftaranTes() {
                 onPress={() => {
                   setTempatTes(val);
                   setSelectedJadwal(null);
+                  setWilayahHomeVisit('dalam');
+                  setDropdownOpen(false);
                 }}
                 activeOpacity={0.7}
               >
@@ -171,16 +167,135 @@ export default function PendaftaranTes() {
                   size={14}
                   color={tempatTes === val ? '#fff' : '#546e7a'}
                 />
-                <Text
-                  style={[
-                    styles.locationChipText,
-                    tempatTes === val && styles.locationChipTextActive,
-                  ]}
-                >
+                <Text style={[styles.locationChipText, tempatTes === val && styles.locationChipTextActive]}>
                   {val}
                 </Text>
               </TouchableOpacity>
             ))}
+          </View>
+
+          {/* Wilayah — hanya muncul jika Home Visit dipilih */}
+          {tempatTes === 'Home Visit' && (
+            <View style={styles.wilayahBox}>
+              <Text style={styles.wilayahLabel}>
+                <Ionicons name="cash-outline" size={12} color="#546e7a" /> Wilayah
+              </Text>
+              <View style={styles.wilayahOptions}>
+                <TouchableOpacity
+                  style={[styles.wilayahChip, wilayahHomeVisit === 'dalam' && styles.wilayahChipActive]}
+                  onPress={() => { setWilayahHomeVisit('dalam'); setDropdownOpen(false); }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.wilayahChipText, wilayahHomeVisit === 'dalam' && styles.wilayahChipTextActive]}>
+                    Dalam Subang
+                  </Text>
+                  <Text style={[styles.wilayahHarga, wilayahHomeVisit === 'dalam' && styles.wilayahHargaActive]}>
+                    Rp 550.000
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.wilayahChip, wilayahHomeVisit === 'luar' && styles.wilayahChipActive]}
+                  onPress={() => setWilayahHomeVisit('luar')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.wilayahChipText, wilayahHomeVisit === 'luar' && styles.wilayahChipTextActive]}>
+                    Luar Subang
+                  </Text>
+                  <Text style={[styles.wilayahHarga, wilayahHomeVisit === 'luar' && styles.wilayahHargaActive]}>
+                    ab Rp 600.000
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Dropdown pilih kota — hanya muncul jika Ciayumajakuning dipilih */}
+              {wilayahHomeVisit === 'luar' && (
+                <View style={styles.kotaBox}>
+                  <Text style={styles.kotaLabel}>
+                    <Ionicons name="business-outline" size={12} color="#546e7a" /> Pilih Kota / Kabupaten
+                  </Text>
+
+                  {/* Trigger dropdown */}
+                  <TouchableOpacity
+                    style={styles.dropdownTrigger}
+                    onPress={() => setDropdownOpen(!dropdownOpen)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.dropdownTriggerLeft}>
+                      <Ionicons name="location-outline" size={15} color="#00AA5B" />
+                      <Text style={styles.dropdownTriggerText}>{selectedKota.label}</Text>
+                    </View>
+                    <View style={styles.dropdownTriggerRight}>
+                      <Text style={styles.dropdownTriggerHarga}>
+                        {formatRupiah(selectedKota.biaya)}
+                      </Text>
+                      <Ionicons
+                        name={dropdownOpen ? 'chevron-up' : 'chevron-down'}
+                        size={16}
+                        color="#546e7a"
+                      />
+                    </View>
+                  </TouchableOpacity>
+
+                  {/* Daftar pilihan kota */}
+                  {dropdownOpen && (
+                    <View style={styles.dropdownList}>
+                      {KOTA_CIAYUMAJAKUNING.map((kota, index) => {
+                        const isActive = selectedKota.label === kota.label;
+                        return (
+                          <TouchableOpacity
+                            key={kota.label}
+                            style={[
+                              styles.dropdownItem,
+                              isActive && styles.dropdownItemActive,
+                              index < KOTA_CIAYUMAJAKUNING.length - 1 && styles.dropdownItemBorder,
+                            ]}
+                            onPress={() => {
+                              setSelectedKota(kota);
+                              setDropdownOpen(false);
+                            }}
+                            activeOpacity={0.7}
+                          >
+                            <View style={styles.dropdownItemLeft}>
+                              <Ionicons
+                                name={isActive ? 'checkmark-circle' : 'radio-button-off-outline'}
+                                size={16}
+                                color={isActive ? '#00AA5B' : '#b0bec5'}
+                              />
+                              <Text style={[styles.dropdownItemText, isActive && styles.dropdownItemTextActive]}>
+                                {kota.label}
+                              </Text>
+                            </View>
+                            <Text style={[styles.dropdownItemHarga, isActive && styles.dropdownItemHargaActive]}>
+                              {formatRupiah(kota.biaya)}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  )}
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Info harga — selalu tampil di bawah */}
+          <View style={styles.hargaInfoRow}>
+            <Ionicons name="pricetag-outline" size={13} color="#00AA5B" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.hargaInfoText}>
+                Biaya:{' '}
+                <Text style={styles.hargaInfoNominal}>
+                  {formatRupiah(getBiaya())}
+                </Text>
+                {isLuarSubang && (
+                  <Text style={styles.hargaInfoKota}> ({selectedKota.label})</Text>
+                )}
+              </Text>
+              <Text style={styles.hargaInfoNote}>
+                * Belum termasuk biaya admin antar bank
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -309,12 +424,9 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 38, height: 38, borderRadius: 19,
     backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
   },
   topBarCenter: { flex: 1, alignItems: 'center' },
   topBarTitle: { fontSize: 18, fontWeight: '800', color: '#fff' },
@@ -323,138 +435,154 @@ const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 48 },
 
   infoBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#e1f5fe',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginBottom: 16,
-    gap: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#0288d1',
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#e1f5fe', borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 10,
+    marginBottom: 16, gap: 8,
+    borderLeftWidth: 3, borderLeftColor: '#0288d1',
   },
   infoBannerText: { fontSize: 12, color: '#01579b', fontWeight: '600', flex: 1 },
 
   locationCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#e8f5e9',
-    shadowColor: '#00AA5B',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    backgroundColor: '#fff', borderRadius: 16,
+    padding: 16, marginBottom: 14,
+    borderWidth: 1, borderColor: '#e8f5e9',
+    shadowColor: '#00AA5B', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
   },
   locationLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#546e7a',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginBottom: 12,
+    fontSize: 11, fontWeight: '700', color: '#546e7a',
+    textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12,
   },
   locationOptions: { flexDirection: 'row', gap: 10 },
   locationChip: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 11,
-    borderRadius: 12,
-    backgroundColor: '#f5faf7',
-    borderWidth: 1.5,
-    borderColor: '#e0f2ec',
+    flex: 1, flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'center', gap: 6, paddingVertical: 11,
+    borderRadius: 12, backgroundColor: '#f5faf7',
+    borderWidth: 1.5, borderColor: '#e0f2ec',
   },
   locationChipActive: {
-    backgroundColor: '#00AA5B',
-    borderColor: '#00AA5B',
-    shadowColor: '#00AA5B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 4,
+    backgroundColor: '#00AA5B', borderColor: '#00AA5B',
+    shadowColor: '#00AA5B', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25, shadowRadius: 6, elevation: 4,
   },
   locationChipText: { fontSize: 13, fontWeight: '700', color: '#546e7a' },
   locationChipTextActive: { color: '#fff' },
-  hargaChip: { fontSize: 11, fontWeight: '600' },
+
+  // Wilayah Home Visit
+  wilayahBox: {
+    marginTop: 14, paddingTop: 14,
+    borderTopWidth: 1, borderTopColor: '#e8f5e9',
+  },
+  wilayahLabel: {
+    fontSize: 11, fontWeight: '700', color: '#546e7a',
+    textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10,
+  },
+  wilayahOptions: { flexDirection: 'row', gap: 10 },
+  wilayahChip: {
+    flex: 1, alignItems: 'center', paddingVertical: 10,
+    borderRadius: 12, backgroundColor: '#f5faf7',
+    borderWidth: 1.5, borderColor: '#e0f2ec',
+  },
+  wilayahChipActive: { backgroundColor: '#00AA5B', borderColor: '#00AA5B' },
+  wilayahChipText: { fontSize: 12, fontWeight: '700', color: '#546e7a', marginBottom: 2 },
+  wilayahChipTextActive: { color: '#fff' },
+  wilayahHarga: { fontSize: 11, fontWeight: '600', color: '#90a4ae' },
+  wilayahHargaActive: { color: 'rgba(255,255,255,0.85)' },
+
+  // Kota Ciayumajakuning
+  kotaBox: {
+    marginTop: 12, paddingTop: 12,
+    borderTopWidth: 1, borderTopColor: '#e8f5e9',
+  },
+  kotaLabel: {
+    fontSize: 11, fontWeight: '700', color: '#546e7a',
+    textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8,
+  },
+  dropdownTrigger: {
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f5faf7', borderRadius: 12,
+    borderWidth: 1.5, borderColor: '#a5d6a7',
+    paddingHorizontal: 14, paddingVertical: 12,
+  },
+  dropdownTriggerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  dropdownTriggerText: { fontSize: 14, fontWeight: '700', color: '#1a1a2e' },
+  dropdownTriggerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  dropdownTriggerHarga: { fontSize: 13, fontWeight: '800', color: '#00AA5B' },
+
+  dropdownList: {
+    marginTop: 6, backgroundColor: '#fff',
+    borderRadius: 12, borderWidth: 1.5, borderColor: '#e0f2ec',
+    overflow: 'hidden',
+    shadowColor: '#00AA5B', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08, shadowRadius: 8, elevation: 3,
+  },
+  dropdownItem: {
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14, paddingVertical: 13,
+    backgroundColor: '#fff',
+  },
+  dropdownItemActive: { backgroundColor: '#f0faf5' },
+  dropdownItemBorder: { borderBottomWidth: 1, borderBottomColor: '#f0f4f0' },
+  dropdownItemLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  dropdownItemText: { fontSize: 13, fontWeight: '600', color: '#37474f' },
+  dropdownItemTextActive: { color: '#00AA5B', fontWeight: '800' },
+  dropdownItemHarga: { fontSize: 12, fontWeight: '700', color: '#90a4ae' },
+  dropdownItemHargaActive: { color: '#00AA5B' },
+
+  // Info harga
+  hargaInfoRow: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 6,
+    marginTop: 12, paddingTop: 12,
+    borderTopWidth: 1, borderTopColor: '#e8f5e9',
+  },
+  hargaInfoText: { fontSize: 13, color: '#546e7a', fontWeight: '600' },
+  hargaInfoNominal: { color: '#00AA5B', fontWeight: '800' },
+  hargaInfoKota: { color: '#78909c', fontWeight: '600', fontSize: 12 },
+  hargaInfoNote: {
+    fontSize: 10, color: '#90a4ae',
+    fontStyle: 'italic', marginTop: 2,
+  },
 
   tableCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#e8f5e9',
-    shadowColor: '#00AA5B',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
-    marginBottom: 14,
+    backgroundColor: '#fff', borderRadius: 16,
+    overflow: 'hidden', borderWidth: 1, borderColor: '#e8f5e9',
+    shadowColor: '#00AA5B', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05, shadowRadius: 6, elevation: 2, marginBottom: 14,
   },
   tableCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 14,
-    borderBottomWidth: 1,
-    borderColor: '#e8f5e9',
-    backgroundColor: '#f5faf7',
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    padding: 14, borderBottomWidth: 1, borderColor: '#e8f5e9', backgroundColor: '#f5faf7',
   },
   tableCardHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   tableCardTitle: { fontSize: 13, fontWeight: '800', color: '#1a1a2e' },
-  countBadge: {
-    backgroundColor: '#e8f5e9',
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-  },
+  countBadge: { backgroundColor: '#e8f5e9', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3 },
   countBadgeText: { fontSize: 11, color: '#00AA5B', fontWeight: '800' },
 
   rowHeader: {
-    flexDirection: 'row',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderColor: '#f5faf7',
-    backgroundColor: '#fafffe',
+    flexDirection: 'row', paddingHorizontal: 14, paddingVertical: 10,
+    borderBottomWidth: 1, borderColor: '#f5faf7', backgroundColor: '#fafffe',
   },
   colHeader: { color: '#90a4ae', fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
   rowData: {
-    flexDirection: 'row',
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderColor: '#f5faf7',
-    alignItems: 'center',
-    position: 'relative',
+    flexDirection: 'row', paddingHorizontal: 14, paddingVertical: 14,
+    borderBottomWidth: 1, borderColor: '#f5faf7', alignItems: 'center', position: 'relative',
   },
   selectedRow: { backgroundColor: '#e8f5e9', borderColor: '#00AA5B' },
   selectedIndicator: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 3,
-    backgroundColor: '#00AA5B',
-    borderRadius: 2,
+    position: 'absolute', left: 0, top: 0, bottom: 0,
+    width: 3, backgroundColor: '#00AA5B', borderRadius: 2,
   },
   col: { flex: 2, fontSize: 13, color: '#37474f', fontWeight: '600' },
   colMid: { flex: 2, fontSize: 13, color: '#37474f', fontWeight: '600' },
   colEnd: { flex: 1.5, alignItems: 'flex-end' },
   selectedText: { color: '#00AA5B', fontWeight: '700' },
   statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#e8f5e9',
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    gap: 4,
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#e8f5e9', borderRadius: 12,
+    paddingHorizontal: 8, paddingVertical: 4, gap: 4,
   },
   statusDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: '#00AA5B' },
   statusText: { fontSize: 10, color: '#00AA5B', fontWeight: '800', textTransform: 'uppercase' },
@@ -463,58 +591,33 @@ const styles = StyleSheet.create({
   loadingText: { fontSize: 12, color: '#90a4ae' },
   emptyState: { padding: 36, alignItems: 'center' },
   emptyIconBg: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 70, height: 70, borderRadius: 35,
     backgroundColor: '#f5faf7',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
+    justifyContent: 'center', alignItems: 'center', marginBottom: 12,
   },
   emptyTitle: { fontSize: 15, fontWeight: '700', color: '#546e7a', marginBottom: 4 },
   emptyText: { fontSize: 12, color: '#90a4ae', textAlign: 'center' },
 
   selectedInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#e8f5e9',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#a5d6a7',
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: '#e8f5e9', borderRadius: 12, padding: 12,
+    marginBottom: 16, borderWidth: 1, borderColor: '#a5d6a7',
   },
   selectedInfoText: { fontSize: 13, color: '#2e7d32', flex: 1 },
 
   footerBtns: { flexDirection: 'row', gap: 12, marginTop: 4, marginBottom: 16 },
   btnBack: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 6,
-    borderWidth: 1.5,
-    borderColor: '#e0f2ec',
+    flex: 1, backgroundColor: '#fff', paddingVertical: 14,
+    borderRadius: 12, alignItems: 'center', flexDirection: 'row',
+    justifyContent: 'center', gap: 6, borderWidth: 1.5, borderColor: '#e0f2ec',
   },
   btnBackText: { color: '#546e7a', fontWeight: '700', fontSize: 14 },
   btnNext: {
-    flex: 1,
-    backgroundColor: '#00AA5B',
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 6,
-    shadowColor: '#00AA5B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    flex: 1, backgroundColor: '#00AA5B', paddingVertical: 14,
+    borderRadius: 12, alignItems: 'center', flexDirection: 'row',
+    justifyContent: 'center', gap: 6,
+    shadowColor: '#00AA5B', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
   },
   btnNextDisabled: { backgroundColor: '#e0e0e0', shadowOpacity: 0, elevation: 0 },
   btnNextText: { color: '#fff', fontWeight: '800', fontSize: 14 },

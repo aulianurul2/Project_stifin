@@ -94,7 +94,7 @@
                                                     <th>Nama</th>
                                                     <th>No. HP</th>
                                                     <th>Status</th>
-                                                    <th style="width: 10%">Aksi</th>
+                                                    <th class="text-center" style="width: 15%">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -112,10 +112,14 @@
                                                         @endphp
                                                         <span class="badge {{ $badgeClass }}">{{ $status }}</span>
                                                     </td>
-                                                    <td>
-                                                        <div class="form-button-action">
+                                                    <td class="text-center">
+                                                        <div class="d-flex justify-content-center align-items-center gap-2">
+
                                                             {{-- Tombol Lihat Detail Profil --}}
-                                                            <button type="button" class="btn btn-link btn-primary btn-lg"
+                                                            <button type="button"
+                                                                class="btn btn-sm p-2 card-round shadow-sm d-flex flex-column align-items-center"
+                                                                style="background-color: #d1e7dd; border-color: #badbcc; min-width: 56px;"
+                                                                title="Lihat Detail"
                                                                 @click="selectedView = {
                                                                     nama: '{{ $k->nama }}',
                                                                     no_hp: '{{ $k->no_hp ?? '-' }}',
@@ -130,11 +134,15 @@
                                                                     domisili: '{{ $k->domisili ?? '-' }}',
                                                                     status: '{{ $status }}'
                                                                 }; openView = true">
-                                                                <i class="fa fa-eye"></i>
+                                                                <i class="fa fa-eye mb-1" style="color: #0f5132;"></i>
+                                                                <span style="font-size: 9px; color: #0f5132; font-weight: 600;">Detail</span>
                                                             </button>
 
                                                             {{-- Tombol Edit Profil --}}
-                                                            <button type="button" class="btn btn-link btn-primary btn-lg"
+                                                            <button type="button"
+                                                                class="btn btn-sm p-2 card-round shadow-sm d-flex flex-column align-items-center"
+                                                                style="background-color: #cfe2ff; border-color: #b6d4fe; min-width: 56px;"
+                                                                title="Edit Profil"
                                                                 @click="selected = {
                                                                     id: '{{ $k->id_klien }}',
                                                                     nama: '{{ $k->nama }}',
@@ -148,16 +156,23 @@
                                                                     domisili: '{{ $k->domisili }}',
                                                                     alamat: '{{ $k->alamat }}'
                                                                 }; openModal = true">
-                                                                <i class="fa fa-edit"></i>
+                                                                <i class="fa fa-edit mb-1" style="color: #084298;"></i>
+                                                                <span style="font-size: 9px; color: #084298; font-weight: 600;">Edit</span>
                                                             </button>
 
-                                                            {{-- Form & Tombol Hapus Klien Berbasis SweetAlert2 --}}
+                                                            {{-- Form & Tombol Hapus Klien --}}
                                                             <form id="delete-form-{{ $k->id_klien }}" action="{{ route('klien.destroy', $k->id_klien) }}" method="POST" style="display:inline;">
                                                                 @csrf @method('DELETE')
-                                                                <button type="button" class="btn btn-link btn-danger" onclick="konfirmasiHapus('{{ $k->id_klien }}', '{{ $k->nama }}')">
-                                                                    <i class="fas fa-trash-alt"></i>
+                                                                <button type="button"
+                                                                    class="btn btn-sm p-2 card-round shadow-sm d-flex flex-column align-items-center"
+                                                                    style="background-color: #f8d7da; border-color: #f5c2c7; min-width: 56px;"
+                                                                    title="Hapus Klien"
+                                                                    onclick="konfirmasiHapus('{{ $k->id_klien }}', '{{ $k->nama }}')">
+                                                                    <i class="fas fa-trash-alt mb-1" style="color: #842029;"></i>
+                                                                    <span style="font-size: 9px; color: #842029; font-weight: 600;">Hapus</span>
                                                                 </button>
                                                             </form>
+
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -169,8 +184,6 @@
                                             </tbody>
                                         </table>
                                     </div>
-
-
 
                                 </div>
                             </div>
@@ -422,7 +435,6 @@
                     "info":  "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
                     "infoEmpty": "Data tidak tersedia",
                     "infoFiltered": "(difilter dari _MAX_ total data)"
-
                 }
             });
         });

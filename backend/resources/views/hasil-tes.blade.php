@@ -133,8 +133,9 @@
                                             </table>
 
                                         @else
-                                            {{-- Riwayat: server-side pagination, tidak pakai DataTable JS --}}
-                                            <table class="table table-striped table-hover mb-0 align-middle">
+    {{-- Riwayat Tes --}}
+    <table id="basic-datatables-riwayat"
+           class="table table-striped table-hover mb-0 align-middle">
                                                 <thead class="bg-light">
                                                     <tr>
                                                         <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8" style="width: 40%">Nama Klien</th>
@@ -154,40 +155,41 @@
                                                                     <i class="fas fa-check-circle me-1"></i> Tersertifikasi
                                                                 </span>
                                                             </td>
-                                                            <td class="px-4 py-3 text-center">
-                                                                <div class="d-flex justify-content-center align-items-center gap-2">
-                                                                    <a href="{{ asset('uploads/hasil/' . $item->file_hasil) }}"
-                                                                       download="{{ 'Sertifikat_' . $item->nama }}"
-                                                                       class="btn btn-sm p-2 text-dark card-round shadow-sm"
-                                                                       style="background-color: #fff3cd; border-color: #ffeeba;"
-                                                                       title="Download Sertifikat">
-                                                                        <i class="fas fa-file-download text-warning"></i>
-                                                                    </a>
+                                                         <td class="px-4 py-3 text-center">
+    <div class="d-flex justify-content-center align-items-center gap-2">
 
-                                                                    <a href="{{ asset('uploads/hasil/' . $item->file_detail) }}"
-                                                                       download="{{ 'Detail_Hasil_' . $item->nama }}"
-                                                                       class="btn btn-sm p-2 card-round shadow-sm"
-                                                                       style="background-color: #d1e7dd; border-color: #badbcc; color: #0f5132;"
-                                                                       title="Download Hasil Lengkap">
-                                                                        <i class="fas fa-file-alt"></i>
-                                                                    </a>
-
-                                                                    <button type="button"
-                                                                            onclick="previewFile('{{ asset('uploads/hasil/' . $item->file_hasil) }}')"
-                                                                            class="btn btn-sm p-2 card-round shadow-sm"
-                                                                            style="background-color: #586983; border-color: #636d7c; color: #ffffff;"
-                                                                            title="Preview Sertifikat">
-                                                                        <i class="fas fa-eye"></i>
-                                                                    </button>
-                                                                     <button type="button"
-                onclick="openEditModal('{{ $item->id_tes }}', '{{ $item->nama }}')"
-                class="btn btn-sm p-2 card-round shadow-sm"
-                style="background-color: #cfe2ff; border-color: #b6d4fe; color: #084298;"
-                title="Ganti File">
-            <i class="fas fa-pencil-alt"></i>
+        {{-- Lihat Sertifikat --}}
+        <button type="button"
+                onclick="previewFile('{{ asset('uploads/hasil/' . $item->file_hasil) }}')"
+                class="btn btn-sm p-2 card-round shadow-sm d-flex flex-column align-items-center"
+                style="background-color: #fff3cd; border-color: #ffeeba; min-width: 56px;"
+                title="Lihat Sertifikat">
+            <i class="fas fa-file-pdf text-warning mb-1"></i>
+            <span style="font-size: 9px; color: #856404; font-weight: 600;">Sertifikat</span>
         </button>
-                                                                </div>
-                                                            </td>
+
+        {{-- Lihat Detail --}}
+        <button type="button"
+                onclick="previewFile('{{ asset('uploads/hasil/' . $item->file_detail) }}')"
+                class="btn btn-sm p-2 card-round shadow-sm d-flex flex-column align-items-center"
+                style="background-color: #d1e7dd; border-color: #badbcc; min-width: 56px;"
+                title="Lihat Detail">
+            <i class="fas fa-file-alt mb-1" style="color: #0f5132;"></i>
+            <span style="font-size: 9px; color: #0f5132; font-weight: 600;">Detail</span>
+        </button>
+
+        {{-- Ganti File --}}
+        <button type="button"
+                onclick="openEditModal('{{ $item->id_tes }}', '{{ $item->nama }}', '{{ $item->file_hasil }}', '{{ $item->file_detail }}')"
+                class="btn btn-sm p-2 card-round shadow-sm d-flex flex-column align-items-center"
+                style="background-color: #cfe2ff; border-color: #b6d4fe; min-width: 56px;"
+                title="Ganti File">
+            <i class="fas fa-pencil-alt mb-1" style="color: #084298;"></i>
+            <span style="font-size: 9px; color: #084298; font-weight: 600;">Edit File</span>
+        </button>
+
+    </div>
+</td>
                                                         </tr>
                                                     @empty
                                                         <tr>
@@ -200,12 +202,6 @@
                                                 </tbody>
                                             </table>
 
-                                            {{-- Pagination hanya untuk tab riwayat --}}
-                                            @if($data->hasPages())
-                                                <div class="d-flex justify-content-end mt-3">
-                                                    {{ $data->links() }}
-                                                </div>
-                                            @endif
                                         @endif
                                     </div>
                                 </div>
@@ -298,7 +294,7 @@
         </div>
     </div>
 
-    {{-- Modal Edit File --}}
+{{-- Modal Edit File --}}
 <div class="modal fade" id="modalEdit" tabindex="-1" aria-labelledby="modalEditLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content card-round p-2">
@@ -313,9 +309,28 @@
                 @csrf
                 @method('PUT')
                 <div class="modal-body">
-                    <div class="alert alert-info alert-sm py-2 px-3 card-round" style="font-size: 12px;">
+                    <div class="alert alert-info py-2 px-3 card-round mb-3" style="font-size: 12px;">
                         <i class="fas fa-info-circle me-1"></i>
                         Kosongkan field yang tidak ingin diganti. File lama akan otomatis terhapus.
+                    </div>
+
+                    {{-- Preview file saat ini --}}
+                    <div class="mb-3 p-3 bg-light card-round border" style="font-size: 12px;">
+                        <p class="fw-bold text-muted mb-2 text-uppercase" style="font-size: 10px; letter-spacing: 0.5px;">
+                            <i class="fas fa-folder-open me-1"></i> File Tersimpan Saat Ini
+                        </p>
+                        <div class="d-flex gap-2">
+                            <button type="button" id="btnPreviewSertifikat"
+                                    onclick="previewFileFromEdit('sertifikat')"
+                                    class="btn btn-sm btn-warning btn-round px-2 py-1" style="font-size: 11px;">
+                                <i class="fas fa-eye me-1"></i> Lihat Sertifikat
+                            </button>
+                            <button type="button" id="btnPreviewDetail"
+                                    onclick="previewFileFromEdit('detail')"
+                                    class="btn btn-sm btn-success btn-round px-2 py-1" style="font-size: 11px;">
+                                <i class="fas fa-eye me-1"></i> Lihat Detail
+                            </button>
+                        </div>
                     </div>
 
                     <div class="form-group p-0 mb-3">
@@ -355,20 +370,35 @@
     <script>
         $(document).ready(function () {
             // DataTable hanya diinisialisasi di tab kelola
-            @if($tab == 'kelola')
-            $('#basic-datatables').DataTable({
-                "pageLength": 10,
-                "order": [],
-                "language": {
-                    "search": "Cari Data:",
-                    "lengthMenu": "Tampilkan _MENU_ data",
-                    "zeroRecords": "Tidak ada data yang cocok",
-                    "info": "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-                    "infoEmpty": "Data tidak tersedia",
-                    "infoFiltered": "(difilter dari _MAX_ total data)"
-                }
-            });
-            @endif
+        @if($tab == 'kelola')
+$('#basic-datatables').DataTable({
+    pageLength: 10,
+    order: [],
+    language: {
+        search: "Cari Data:",
+        lengthMenu: "Tampilkan _MENU_ data",
+        zeroRecords: "Tidak ada data yang cocok",
+        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+        infoEmpty: "Data tidak tersedia",
+        infoFiltered: "(difilter dari _MAX_ total data)"
+    }
+});
+@endif
+
+@if($tab == 'riwayat')
+$('#basic-datatables-riwayat').DataTable({
+    pageLength: 10,
+    order: [],
+    language: {
+        search: "Cari Data:",
+        lengthMenu: "Tampilkan _MENU_ data",
+        zeroRecords: "Tidak ada data yang cocok",
+        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+        infoEmpty: "Data tidak tersedia",
+        infoFiltered: "(difilter dari _MAX_ total data)"
+    }
+});
+@endif
         });
 
         /**
@@ -403,8 +433,24 @@
             }
             document.getElementById('previewFrame').src = "";
         }
-        function openEditModal(idTes, nama) {
+// Simpan URL file aktif untuk dipreview dari dalam modal edit
+let _currentFileHasil = '';
+let _currentFileDetail = '';
+
+function openEditModal(idTes, nama, fileHasil, fileDetail) {
     document.getElementById('editNama').innerText = nama;
+
+    // Simpan path file untuk tombol preview di dalam modal
+    _currentFileHasil  = fileHasil && fileHasil !== 'null' && fileHasil.trim() !== ''
+        ? "{{ asset('uploads/hasil') }}/" + fileHasil
+        : '';
+    _currentFileDetail = fileDetail && fileDetail !== 'null' && fileDetail.trim() !== ''
+        ? "{{ asset('uploads/hasil') }}/" + fileDetail
+        : '';
+
+    // Tampil/sembunyikan tombol preview sesuai ketersediaan file
+    document.getElementById('btnPreviewSertifikat').style.display = _currentFileHasil  ? '' : 'none';
+    document.getElementById('btnPreviewDetail').style.display     = _currentFileDetail ? '' : 'none';
 
     let url = "{{ route('hasil.edit', ':id') }}";
     url = url.replace(':id', idTes);
@@ -412,6 +458,22 @@
 
     var modalEdit = new bootstrap.Modal(document.getElementById('modalEdit'));
     modalEdit.show();
+}
+
+function previewFileFromEdit(tipe) {
+    const url = tipe === 'sertifikat' ? _currentFileHasil : _currentFileDetail;
+    if (!url) return;
+
+    // Tutup modal edit dulu, buka preview
+    var modalEditEl = document.getElementById('modalEdit');
+    var modalEditInstance = bootstrap.Modal.getInstance(modalEditEl);
+    if (modalEditInstance) modalEditInstance.hide();
+
+    // Tunggu modal edit tutup baru buka preview
+    modalEditEl.addEventListener('hidden.bs.modal', function openPreviewAfterEdit() {
+        modalEditEl.removeEventListener('hidden.bs.modal', openPreviewAfterEdit);
+        previewFile(url);
+    });
 }
     </script>
 </body>

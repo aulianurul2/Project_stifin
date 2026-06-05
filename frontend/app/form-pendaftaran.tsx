@@ -17,10 +17,15 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import Toast from 'react-native-toast-message'; 
+import Toast from 'react-native-toast-message';
 import axiosInstance from '@/src/api/axiosConfig';
 
+// ─── Helper format Rupiah ────────────────────────────────────────────────────
+function formatRupiah(nominal: number): string {
+  return 'Rp ' + nominal.toLocaleString('id-ID');
+}
 
+// ─── Types ───────────────────────────────────────────────────────────────────
 interface KlienFormData {
   id_klien: string;
   nama: string;
@@ -48,33 +53,48 @@ interface CustomInputProps {
 // Tipe fleksibel: File (web) atau object uri/name/type (mobile)
 type BuktiFile = File | { uri: string; name: string; type: string };
 
+// ─── Komponen utama ───────────────────────────────────────────────────────────
 export default function FormPendaftaran() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { id_jadwal, tanggal, waktu, is_luar_subang } = params;
 
-  const [loading, setLoading] = useState(false);
+  // Params dari pendaftaran.tsx — termasuk biaya & nama_kota
+  const {
+    id_jadwal,
+    tanggal,
+    waktu,
+    is_luar_subang,
+    nama_kota,
+    biaya: biayaParam,
+  } = params;
+
+  // Konversi biaya ke number (fallback ke 550.000 jika tidak ada)
+  const biayaNominal = biayaParam ? parseInt(String(biayaParam), 10) : 550000;
+  const isLuarSubang = is_luar_subang === '1';
+  const namaKota     = nama_kota ? String(nama_kota) : '';
+
+  const [loading, setLoading]           = useState(false);
   const [fetchingData, setFetchingData] = useState(true);
 
   // State bukti: simpan file asli + URI preview terpisah
-  const [bukti, setBukti] = useState<BuktiFile | null>(null);
+  const [bukti, setBukti]                     = useState<BuktiFile | null>(null);
   const [buktiPreviewUri, setBuktiPreviewUri] = useState<string | null>(null);
 
   // Ref ke input[type=file] tersembunyi (hanya web)
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [formData, setFormData] = useState<KlienFormData>({
-    id_klien: '',
-    nama: '',
-    no_hp: '',
-    tanggal_lahir: '',
-    jenis_kelamin: 'L',
+    id_klien:       '',
+    nama:           '',
+    no_hp:          '',
+    tanggal_lahir:  '',
+    jenis_kelamin:  'L',
     golongan_darah: '-',
-    email: '',
-    alamat: '',
-    institusi: '',
-    sosmed: '',
-    domisili: '',
+    email:          '',
+    alamat:         '',
+    institusi:      '',
+    sosmed:         '',
+    domisili:       '',
   });
 
   useEffect(() => {
@@ -83,12 +103,12 @@ export default function FormPendaftaran() {
     // Buat input[type=file] tersembunyi khusus web
     if (Platform.OS === 'web') {
       const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/jpeg,image/png,image/jpg';
+      input.type    = 'file';
+      input.accept  = 'image/jpeg,image/png,image/jpg';
       input.style.display = 'none';
       input.onchange = (e: Event) => {
         const target = e.target as HTMLInputElement;
-        const file = target.files?.[0];
+        const file   = target.files?.[0];
         if (file) {
           setBukti(file);
           setBuktiPreviewUri(URL.createObjectURL(file));
@@ -106,7 +126,7 @@ export default function FormPendaftaran() {
   const loadProfileData = async () => {
     try {
       const response = await axiosInstance.get('/profile');
-      const u = response.data;
+      const u        = response.data;
       setFormData({
         id_klien:       u.id_user        || '',
         nama:           u.nama           || '',
@@ -153,7 +173,11 @@ export default function FormPendaftaran() {
 
     if (!result.canceled && result.assets.length > 0) {
       const asset = result.assets[0];
-      setBukti({ uri: asset.uri, name: asset.fileName || 'bukti_transfer.jpg', type: asset.mimeType || 'image/jpeg' });
+      setBukti({
+        uri:  asset.uri,
+        name: asset.fileName || 'bukti_transfer.jpg',
+        type: asset.mimeType || 'image/jpeg',
+      });
       setBuktiPreviewUri(asset.uri);
     }
   };
@@ -190,7 +214,9 @@ export default function FormPendaftaran() {
       }
 
       data.append('id_jadwal',      String(id_jadwal));
-      data.append('is_luar_subang', is_luar_subang === '1' ? '1' : '0');
+      data.append('is_luar_subang', isLuarSubang ? '1' : '0');
+      data.append('nama_kota',      namaKota);
+      data.append('biaya',          String(biayaNominal));   // ← kirim biaya aktual
       data.append('nama_klien',     formData.nama);
       data.append('no_hp',          formData.no_hp);
       data.append('email',          formData.email);
@@ -219,7 +245,7 @@ export default function FormPendaftaran() {
     } catch (error: any) {
       console.log('=== ERROR SUBMIT ===');
       if (error.response) {
-        console.log('Data Error:', error.response.data);
+        console.log('Data Error:',   error.response.data);
         console.log('Status Error:', error.response.status);
         Toast.show({
           type: 'error',
@@ -241,6 +267,7 @@ export default function FormPendaftaran() {
     }
   };
 
+  // ─── Loading screen ────────────────────────────────────────────────────────
   if (fetchingData) {
     return (
       <View style={styles.center}>
@@ -252,6 +279,7 @@ export default function FormPendaftaran() {
     );
   }
 
+  // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.container}>
 
@@ -307,7 +335,8 @@ export default function FormPendaftaran() {
                 {['A', 'B', 'AB', 'O'].map((item) => (
                   <TouchableOpacity key={item}
                     style={[styles.bloodBtn, formData.golongan_darah === item && styles.bloodBtnActive]}
-                    onPress={() => setFormData({ ...formData, golongan_darah: item })} activeOpacity={0.7}>
+                    onPress={() => setFormData({ ...formData, golongan_darah: item })}
+                    activeOpacity={0.7}>
                     <Text style={[styles.bloodText, formData.golongan_darah === item && styles.bloodTextActive]}>
                       {item}
                     </Text>
@@ -323,7 +352,8 @@ export default function FormPendaftaran() {
               {[{ label: 'Laki-laki', val: 'L' }, { label: 'Perempuan', val: 'P' }].map((item) => (
                 <TouchableOpacity key={item.val}
                   style={[styles.genderBtn, formData.jenis_kelamin === item.val && styles.bloodBtnActive]}
-                  onPress={() => setFormData({ ...formData, jenis_kelamin: item.val })} activeOpacity={0.7}>
+                  onPress={() => setFormData({ ...formData, jenis_kelamin: item.val })}
+                  activeOpacity={0.7}>
                   <Text style={[styles.bloodText, formData.jenis_kelamin === item.val && styles.bloodTextActive]}>
                     {item.label}
                   </Text>
@@ -360,18 +390,51 @@ export default function FormPendaftaran() {
             <Text style={styles.sectionTitle}>Info Pembayaran</Text>
           </View>
 
+          {/* Ringkasan biaya — dinamis dari params */}
           <View style={styles.biayaBox}>
             <Ionicons name="cash-outline" size={18} color="#00AA5B" />
-            <Text style={styles.biayaText}>
-              Total Biaya:{' '}
-              <Text style={styles.biayaNominal}>
-                {is_luar_subang === '1' ? 'Rp 650.000' : 'Rp 550.000'}
+            <View style={{ flex: 1 }}>
+              <Text style={styles.biayaText}>
+                Total Biaya:{' '}
+                <Text style={styles.biayaNominal}>{formatRupiah(biayaNominal)}</Text>
               </Text>
-            </Text>
+
+              {/* Tampilkan nama kota jika luar Subang */}
+              {isLuarSubang && namaKota !== '' && (
+                <Text style={styles.biayaKota}>
+                  <Ionicons name="location-outline" size={11} color="#546e7a" /> {namaKota}
+                </Text>
+              )}
+
+              {/* Badge wilayah */}
+              <View style={styles.biayaBadgeRow}>
+                <View style={[
+                  styles.biayaBadge,
+                  { backgroundColor: isLuarSubang ? '#fff3e0' : '#e8f5e9' },
+                ]}>
+                  <Ionicons
+                    name={isLuarSubang ? 'car-outline' : 'business-outline'}
+                    size={11}
+                    color={isLuarSubang ? '#e65100' : '#2e7d32'}
+                  />
+                  <Text style={[
+                    styles.biayaBadgeText,
+                    { color: isLuarSubang ? '#e65100' : '#2e7d32' },
+                  ]}>
+                    {isLuarSubang ? 'Luar Subang' : 'Dalam Subang'}
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.biayaNote}>* Belum termasuk biaya admin antar bank</Text>
+            </View>
           </View>
 
+          {/* Info rekening DP */}
           <View style={styles.rekeningBox}>
-            <Text style={styles.rekeningTitle}>Transfer DP 100 Ribu ke rekening berikut:</Text>
+            <Text style={styles.rekeningTitle}>
+              Transfer uang muka (DP) sebesar <Text style={{ color: '#00AA5B', fontWeight: '800' }}>Rp 100.000</Text> ke rekening berikut:
+            </Text>
             <Text style={styles.rekeningItem}>• BSI: 1234567890 a.n Calvin</Text>
           </View>
 
@@ -419,7 +482,7 @@ export default function FormPendaftaran() {
   );
 }
 
-
+// ─── CustomInput ──────────────────────────────────────────────────────────────
 const CustomInput = ({
   label,
   value,
@@ -448,15 +511,18 @@ const CustomInput = ({
   </View>
 );
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5faf7' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5faf7' },
+  container:   { flex: 1, backgroundColor: '#f5faf7' },
+  center:      { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5faf7' },
   loadingCard: { alignItems: 'center', gap: 12 },
   loadingText: { fontSize: 14, color: '#546e7a', fontWeight: '600' },
 
   topBar: {
     backgroundColor: '#00AA5B',
-    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight ? StatusBar.currentHeight + 12 : 30) : 16,
+    paddingTop: Platform.OS === 'android'
+      ? (StatusBar.currentHeight ? StatusBar.currentHeight + 12 : 30)
+      : 16,
     paddingBottom: 18,
     paddingHorizontal: 16,
     flexDirection: 'row',
@@ -468,178 +534,119 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 38, height: 38, borderRadius: 19,
     backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
   },
   topBarCenter: { flex: 1, alignItems: 'center' },
-  topBarTitle: { fontSize: 18, fontWeight: '800', color: '#fff' },
-  topBarSub: { fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+  topBarTitle:  { fontSize: 18, fontWeight: '800', color: '#fff' },
+  topBarSub:    { fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
 
   content: { padding: 16, paddingBottom: 48 },
 
   schedBanner: {
-    backgroundColor: '#00AA5B',
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 16,
-    shadowColor: '#00AA5B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 5,
+    backgroundColor: '#00AA5B', borderRadius: 16, padding: 16,
+    flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16,
+    shadowColor: '#00AA5B', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25, shadowRadius: 8, elevation: 5,
   },
   schedIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 44, height: 44, borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
   },
-  schedInfo: { flex: 1 },
+  schedInfo:  { flex: 1 },
   schedLabel: { fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginBottom: 3 },
   schedValue: { fontSize: 15, fontWeight: '800', color: '#fff' },
   schedCheck: {},
 
   section: {
-    backgroundColor: '#fff',
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#e8f5e9',
-    shadowColor: '#00AA5B',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    backgroundColor: '#fff', borderRadius: 18, padding: 18, marginBottom: 14,
+    borderWidth: 1, borderColor: '#e8f5e9',
+    shadowColor: '#00AA5B', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 18,
-    gap: 10,
-  },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 18, gap: 10 },
   sectionNum: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#00AA5B',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 26, height: 26, borderRadius: 13, backgroundColor: '#00AA5B',
+    justifyContent: 'center', alignItems: 'center',
   },
   sectionNumText: { color: '#fff', fontSize: 12, fontWeight: '800' },
-  sectionTitle: { fontSize: 15, fontWeight: '800', color: '#1a1a2e' },
+  sectionTitle:   { fontSize: 15, fontWeight: '800', color: '#1a1a2e' },
 
   inputGroup: { marginBottom: 14 },
   fieldLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#546e7a',
-    marginBottom: 6,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    fontSize: 11, fontWeight: '700', color: '#546e7a', marginBottom: 6,
+    textTransform: 'uppercase', letterSpacing: 0.6,
   },
   inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f5faf7',
-    borderWidth: 1.5,
-    borderColor: '#e0f2ec',
-    borderRadius: 12,
-    paddingHorizontal: 12,
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#f5faf7', borderWidth: 1.5, borderColor: '#e0f2ec',
+    borderRadius: 12, paddingHorizontal: 12,
   },
   inputIcon: { marginRight: 8 },
-  input: { flex: 1, color: '#1a1a2e', paddingVertical: 12, fontSize: 14 },
-  textArea: { height: 80, textAlignVertical: 'top' },
+  input:     { flex: 1, color: '#1a1a2e', paddingVertical: 12, fontSize: 14 },
+  textArea:  { height: 80, textAlignVertical: 'top' },
 
   row: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 14 },
 
   bloodRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
   bloodBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    backgroundColor: '#f5faf7',
-    borderWidth: 1.5,
-    borderColor: '#e0f2ec',
+    paddingVertical: 8, paddingHorizontal: 12, borderRadius: 10,
+    backgroundColor: '#f5faf7', borderWidth: 1.5, borderColor: '#e0f2ec',
   },
-  bloodBtnActive: { backgroundColor: '#00AA5B', borderColor: '#00AA5B' },
-  bloodText: { color: '#546e7a', fontWeight: '700', fontSize: 12 },
+  bloodBtnActive:  { backgroundColor: '#00AA5B', borderColor: '#00AA5B' },
+  bloodText:       { color: '#546e7a', fontWeight: '700', fontSize: 12 },
   bloodTextActive: { color: '#fff' },
 
   genderBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    backgroundColor: '#f5faf7',
-    borderWidth: 1.5,
-    borderColor: '#e0f2ec',
+    flex: 1, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 10,
+    backgroundColor: '#f5faf7', borderWidth: 1.5, borderColor: '#e0f2ec',
     alignItems: 'center',
   },
 
   // Section 3: Pembayaran
   biayaBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#e8f5e9',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 12,
+    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
+    backgroundColor: '#e8f5e9', borderRadius: 12, padding: 14, marginBottom: 12,
   },
-  biayaText: { fontSize: 14, color: '#37474f', fontWeight: '600' },
+  biayaText:    { fontSize: 14, color: '#37474f', fontWeight: '600' },
   biayaNominal: { fontWeight: '800', color: '#00AA5B', fontSize: 15 },
+  biayaKota:    { fontSize: 11, color: '#546e7a', marginTop: 3 },
+  biayaBadgeRow:{ flexDirection: 'row', marginTop: 6 },
+  biayaBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
+  },
+  biayaBadgeText: { fontSize: 10, fontWeight: '700' },
+  biayaNote: {
+    fontSize: 10, color: '#90a4ae', fontStyle: 'italic', marginTop: 6,
+  },
 
   rekeningBox: {
-    backgroundColor: '#f5faf7',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#e0f2ec',
+    backgroundColor: '#f5faf7', borderRadius: 10, padding: 12, marginBottom: 14,
+    borderWidth: 1, borderColor: '#e0f2ec',
   },
   rekeningTitle: { fontSize: 12, fontWeight: '700', color: '#546e7a', marginBottom: 6 },
-  rekeningItem: { fontSize: 13, color: '#37474f', marginBottom: 4, lineHeight: 20 ,},
+  rekeningItem:  { fontSize: 13, color: '#37474f', marginBottom: 4, lineHeight: 20 },
 
-  previewBox: { alignItems: 'center', marginBottom: 10 },
-  previewImg: { width: '100%', height: 160, borderRadius: 10, marginBottom: 6 },
-  previewLabel: { fontSize: 11, color: '#00AA5B', fontWeight: '700' },
+  previewBox:  { alignItems: 'center', marginBottom: 10 },
+  previewImg:  { width: '100%', height: 160, borderRadius: 10, marginBottom: 6 },
+  previewLabel:{ fontSize: 11, color: '#00AA5B', fontWeight: '700' },
 
   uploadBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderWidth: 1.5,
-    borderColor: '#e0f2ec',
-    borderStyle: 'dashed',
-    borderRadius: 12,
-    paddingVertical: 14,
-    backgroundColor: '#f5faf7',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    borderWidth: 1.5, borderColor: '#e0f2ec', borderStyle: 'dashed',
+    borderRadius: 12, paddingVertical: 14, backgroundColor: '#f5faf7',
   },
   uploadBtnText: { fontSize: 14, fontWeight: '700', color: '#546e7a' },
 
-  footer: { marginTop: 6, marginBottom: 16 },
+  footer:    { marginTop: 6, marginBottom: 16 },
   btnSubmit: {
-    backgroundColor: '#00AA5B',
-    padding: 16,
-    borderRadius: 14,
-    alignItems: 'center',
-    shadowColor: '#00AA5B',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
+    backgroundColor: '#00AA5B', padding: 16, borderRadius: 14, alignItems: 'center',
+    shadowColor: '#00AA5B', shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3, shadowRadius: 10, elevation: 6,
   },
   btnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  btnText: { color: '#fff', fontWeight: '800', fontSize: 16 },
+  btnText:  { color: '#fff', fontWeight: '800', fontSize: 16 },
 });
