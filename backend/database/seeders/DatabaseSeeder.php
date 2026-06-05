@@ -37,6 +37,16 @@ class DatabaseSeeder extends Seeder
             'nama' => 'Admin Utama',
         ]);
 
+        DB::table('panduans')->insert([
+            'id' => 1,
+            'title' => 'Alur Pendaftaran Tes STIFIn',
+            'content' => 'Panduan lengkap mengenai tata cara pendaftaran, pemilihan lokasi, konfirmasi data personal, hingga proses unduh sertifikat resmi hasil analisis kecerdasan.',
+            'category' => 'Pendaftaran',
+            'icon' => 'book-outline',
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+
         // Hidupkan kembali pengecekan foreign key
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
