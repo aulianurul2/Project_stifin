@@ -371,10 +371,8 @@ export default function FormPendaftaran() {
           </View>
 
           <View style={styles.rekeningBox}>
-            <Text style={styles.rekeningTitle}>Transfer DP ke salah satu rekening:</Text>
-            <Text style={styles.rekeningItem}>• BCA: 1234567890 a.n Calvin</Text>
-            <Text style={styles.rekeningItem}>• BRI: 0987654321 a.n Calvin</Text>
-            <Text style={styles.rekeningItem}>• Danamon: 1122334455 a.n Calvin</Text>
+            <Text style={styles.rekeningTitle}>Transfer DP 100 Ribu ke rekening berikut:</Text>
+            <Text style={styles.rekeningItem}>• BSI: 1234567890 a.n Calvin</Text>
           </View>
 
           {/* Preview gambar setelah dipilih */}
@@ -610,7 +608,7 @@ const styles = StyleSheet.create({
     borderColor: '#e0f2ec',
   },
   rekeningTitle: { fontSize: 12, fontWeight: '700', color: '#546e7a', marginBottom: 6 },
-  rekeningItem: { fontSize: 13, color: '#37474f', marginBottom: 4, lineHeight: 20 },
+  rekeningItem: { fontSize: 13, color: '#37474f', marginBottom: 4, lineHeight: 20 ,},
 
   previewBox: { alignItems: 'center', marginBottom: 10 },
   previewImg: { width: '100%', height: 160, borderRadius: 10, marginBottom: 6 },

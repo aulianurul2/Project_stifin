@@ -6,15 +6,13 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\KontenInformasiController;
-use App\Http\Controllers\PanduanController;
 
 // Rute Publik (Tanpa Login)
 Route::post('/addnew', [AuthController::class, 'registerAPI']);
 Route::post('/login', [AuthController::class, 'loginAPI']);
-Route::post('/forgot-password', [AuthController::class, 'updatePassword']);
+Route::post('/forgot-password', [AuthController::class, 'updatePassword']); 
 Route::get('/jadwal-tersedia', [JadwalController::class, 'getJadwalApi']);
 Route::get('/informasi-tes', [KontenInformasiController::class, 'getApiInformasi']);
-Route::apiResource('panduan', PanduanController::class);
 
 // Rute Privat (Harus Login/Membawa Token)
 Route::middleware('auth:sanctum')->group(function () {
@@ -50,5 +48,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/hasil-tes-saya', [PendaftaranController::class, 'hasilTesSaya']);
     Route::put('/pendaftaran/{id}/batalkan', [PendaftaranController::class, 'batalkanPendaftaranApi']);
     Route::put('/pendaftaran/{id}/reschedule', [PendaftaranController::class, 'reschedulePendaftaranApi']);
-    
 });

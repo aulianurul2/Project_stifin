@@ -249,7 +249,7 @@ export default function DashboardIndex() {
     { title: "Daftar Tes", icon: "create-outline", color: "#00AA5B", bgColor: "#e8f5e9", onPress: () => router.push('/pendaftaran') },
     { title: "Riwayat Tes", icon: "calendar-outline", color: "#0288d1", bgColor: "#e1f5fe", onPress: () => router.push('/riwayat') },
     { title: "Hasil Tes", icon: "stats-chart-outline", color: "#f57c00", bgColor: "#fff3e0", isCustom: true },
-    { title: "Panduan", icon: "book-outline", color: "#7b1fa2", bgColor: "#f3e5f5", onPress: () => router.push('/PanduanScreen') },
+    { title: "Panduan", icon: "book-outline", color: "#7b1fa2", bgColor: "#f3e5f5", onPress: () => router.push('/panduan') },
   ];
 
   return (
