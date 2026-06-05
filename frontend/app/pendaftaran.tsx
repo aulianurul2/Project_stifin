@@ -203,7 +203,7 @@ export default function PendaftaranTes() {
                     Luar Subang
                   </Text>
                   <Text style={[styles.wilayahHarga, wilayahHomeVisit === 'luar' && styles.wilayahHargaActive]}>
-                    ab Rp 600.000
+                    Rp 600.000
                   </Text>
                 </TouchableOpacity>
               </View>
