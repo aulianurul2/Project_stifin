@@ -258,7 +258,7 @@ export default function DashboardIndex() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={styles.brandText}>STIFIn Mobile</Text>
+          <Text style={styles.brandText}>STIFIn Expert Mobile</Text>
           <Text style={styles.dateText}>{getFormattedDate()}</Text>
         </View>
 
