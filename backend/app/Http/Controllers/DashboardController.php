@@ -13,7 +13,10 @@ class DashboardController extends Controller
         $tahunIni = date('Y');
 
         // 1. Total Klien keseluruhan (tidak difilter bulan)
-        $totalKlien = DB::table('klien')->count();
+        $totalKlien = DB::table('klien')
+    ->whereMonth('created_at', $bulanIni)
+    ->whereYear('created_at', $tahunIni)
+    ->count();
 
         // 2. Pendaftaran bulan ini
         $pendaftaran = DB::table('jadwal')

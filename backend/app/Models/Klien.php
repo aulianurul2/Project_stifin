@@ -8,19 +8,19 @@ class Klien extends Model
 {
     protected $table = 'klien';
     protected $primaryKey = 'id_klien';
-    public $timestamps = false;
+    public $timestamps = true; // ✅ ubah false → true
 
     protected $fillable = [
-    'id_user',
-    'nama',
-    'tanggal_lahir',
-    'jenis_kelamin',
-    'golongan_darah',
-    'no_hp',
-    'alamat',
-    'institusi',
-    'sosmed',
-    'email',
-    'domisili',
-];
+        'id_user',
+        'nama',
+        'tanggal_lahir',
+        'jenis_kelamin',
+        'golongan_darah',
+        'no_hp',
+        'alamat',
+        'institusi',
+        'sosmed',
+        'email',
+        'domisili',
+    ];
 }

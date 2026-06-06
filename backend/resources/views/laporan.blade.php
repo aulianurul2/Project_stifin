@@ -131,7 +131,7 @@
                                             <div class="numbers">
                                                 <p class="card-category text-uppercase fw-bold text-muted small mb-1">Total Klien</p>
                                                 <h4 class="card-title fw-bold text-dark mb-0">{{ $totalKlien }}</h4>
-                                                <small class="text-muted" style="font-size:11px;">Keseluruhan terdaftar</small>
+                                                <small class="text-muted" style="font-size:11px;">{{ $labelBulan }} {{ $tahun }}</small>
                                             </div>
                                         </div>
                                     </div>

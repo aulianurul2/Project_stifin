@@ -34,7 +34,10 @@ class LaporanController extends Controller
             ->whereYear('updated_at', $tahun);
 
         // Total klien keseluruhan (tidak difilter bulan)
-        $totalKlien = DB::table('klien')->count();
+        $totalKlien = DB::table('klien')
+    ->whereMonth('created_at', $bulan)
+    ->whereYear('created_at', $tahun)
+    ->count();
 
         // Tes selesai bulan ini
         $totalTesSelesai = (clone $baseQuery)->count();
@@ -85,7 +88,10 @@ class LaporanController extends Controller
         ->orderBy('hasiltes.updated_at', 'desc')
         ->get();
 
-    $totalKlien      = DB::table('klien')->count();
+    $totalKlien = DB::table('klien')
+    ->whereMonth('created_at', $bulan)
+    ->whereYear('created_at', $tahun)
+    ->count();
     $totalPendapatan = DB::table('hasiltes')
         ->where('status_tes', 'Selesai')
         ->whereMonth('updated_at', $bulan)

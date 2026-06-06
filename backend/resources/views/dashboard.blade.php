@@ -62,7 +62,7 @@
                                             <div class="numbers">
                                                 <p class="card-category">Total Klien</p>
                                                 <h4 class="card-title">{{ $totalKlien }}</h4>
-                                                <small class="text-muted" style="font-size:10px;">Keseluruhan</small>
+                                               <small class="text-muted" style="font-size:10px;">{{ $labelBulan }}</small>
                                             </div>
                                         </div>
                                     </div>
