@@ -131,60 +131,59 @@ export default function HomeSTIFIn() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 
-{/* Hero Banner */}
-<View style={styles.heroBanner}>
-  <View style={styles.heroBannerContent}>
+      {/* Hero Banner */}
+      <View style={styles.heroBanner}>
+        <View style={styles.heroBannerContent}>
     
-    <View style={styles.heroTagContainer}>
-      <Ionicons name="fitness-outline" size={14} color="rgba(255,255,255,0.9)" />
-      <Text style={styles.heroBannerTag}>Genetik Tes</Text>
-    </View>
+          <View style={styles.heroTagContainer}>
+            <Ionicons name="fitness-outline" size={14} color="rgba(255,255,255,0.9)" />
+              <Text style={styles.heroBannerTag}>Genetik Tes</Text>
+          </View>
     
-    <Text style={styles.heroBannerTitle}>Unlocking Your{'\n'}Genetic Potential</Text>
+          <Text style={styles.heroBannerTitle}>Unlocking Your{'\n'}Genetic Potential</Text>
     
-    <View style={styles.promotorWrapper}>
-      <Image
-        source={require('../../assets/images/promotor.jpeg')}
-        style={styles.promotorProfile}
-        resizeMode="cover"
-      />
-    </View>
+          <View style={styles.promotorWrapper}>
+            <Image
+              source={require('../../assets/images/promotor.jpeg')}
+              style={styles.promotorProfile}
+              resizeMode="cover"
+            />
+          </View>
     
-    <Text style={styles.heroBannerSub}>Bersama Kami, Temukan Jati Diri Anda Lewat Metode STIFIn</Text>
+          <Text style={styles.heroBannerSub}>Bersama Kami, Temukan Jati Diri Anda Lewat Metode STIFIn</Text>
 
-    {/* ====== SEKSYEN KEUNGGULAN BARU ====== */}
-    <View style={styles.advantagesContainer}>
-      <Text style={styles.advantagesHeading}>KEUNGGULAN METODE STIFIn:</Text>
+          <View style={styles.advantagesContainer}>
+            <Text style={styles.advantagesHeading}>KEUNGGULAN METODE STIFIn:</Text>
       
-      <View style={styles.advantageItem}>
-        <View style={styles.advantageIconWrapper}>
-          <Ionicons name="checkbox-outline" size={18} color="#00AA5B" />
-        </View>
-        <Text style={styles.advantageText}>Simpel</Text>
-      </View>
+            <View style={styles.advantageItem}>
+            <View style={styles.advantageIconWrapper}>
+                <Ionicons name="checkbox-outline" size={18} color="#00AA5B" />
+              </View>
+              <Text style={styles.advantageText}>Simpel</Text>
+            </View>
 
-      <View style={styles.advantageItem}>
-        <View style={styles.advantageIconWrapper}>
-          <Ionicons name="create-outline" size={18} color="#00AA5B" />
-        </View>
-        <Text style={styles.advantageText}>Aplikatif</Text>
-      </View>
+            <View style={styles.advantageItem}>
+              <View style={styles.advantageIconWrapper}>
+                <Ionicons name="create-outline" size={18} color="#00AA5B" />
+              </View>
+              <Text style={styles.advantageText}>Aplikatif</Text>
+            </View>
 
-      <View style={styles.advantageItem}>
-        <View style={styles.advantageIconWrapper}>
-          <Ionicons name="disc-outline" size={18} color="#00AA5B" />
+            <View style={styles.advantageItem}>
+              <View style={styles.advantageIconWrapper}>
+                <Ionicons name="disc-outline" size={18} color="#00AA5B" />
+              </View>
+              <Text style={styles.advantageText}>Akurat</Text>
+            </View>
+          </View>
+          {/* ===================================== */}
+      
         </View>
-        <Text style={styles.advantageText}>Akurat</Text>
-      </View>
-    </View>
-    {/* ===================================== */}
 
-  </View>
-  
-  <View style={styles.heroBannerDeco}>
-    <Ionicons name="analytics" size={80} color="rgba(255,255,255,0.15)" />
-  </View>
-</View>
+        <View style={styles.heroBannerDeco}>
+          <Ionicons name="analytics" size={80} color="rgba(255,255,255,0.15)" />
+        </View>
+      </View>
 
         {/* Info Cards Slider */}
         <View style={styles.sliderSection}>
@@ -410,28 +409,28 @@ const styles = StyleSheet.create({
   },
 
   promotorContainer: {
-    flex: 1,               // Mengambil space sisi kanan banner
+    flex: 1,             
     alignItems: 'flex-end',
     justifyContent: 'center',
     zIndex: 2,
   },
 
   heroLeftContainer: {
-    flex: 1.3,             // Mengambil space sedikit lebih besar untuk teks
+    flex: 1.3,             
     zIndex: 2,
     justifyContent: 'center',
   },
 
   promotorWrapper: {
-    alignItems: 'center',       // Membuat gambar pas di tengah secara horizontal
-    marginVertical: 14,         // Memberi jarak space aman ke teks atas dan teks bawah
+    alignItems: 'center',      
+    marginVertical: 14,        
     width: '100%',
   },
 
   promotorProfile: {
-    width: 270,            // Ukuran lebar gambar proporsional
-    height: 270,           // Ukuran tinggi gambar proporsional
-    borderRadius: 14,      // Sudut melengkung halus biar serasi dengan banner
+    width: 270,            
+    height: 270,           
+    borderRadius: 14,      
   },
 
   heroBannerContent: { 
@@ -463,12 +462,12 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.9)',
     lineHeight: 20,
     fontWeight: '600',
-    marginBottom: 16, // Memberi jarak aman sebelum box keunggulan
+    marginBottom: 16, 
   },
 
   /* STYLES BARU UNTUK LIST KEUNGGULAN BANNER */
   advantagesContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.12)', // Box semi-transparan putih
+    backgroundColor: 'rgba(255, 255, 255, 0.12)', 
     borderRadius: 14,
     padding: 12,
     borderWidth: 1,
