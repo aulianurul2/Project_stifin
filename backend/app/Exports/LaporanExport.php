@@ -13,7 +13,7 @@ class LaporanExport implements FromView, ShouldAutoSize // Tambahkan interface i
     {
         $riwayatLaporan = DB::table('hasiltes')
             ->join('klien', 'hasiltes.id_klien', '=', 'klien.id_klien')
-            ->select('klien.nama', 'hasiltes.status_tes as hasil', 'hasiltes.biaya_tes', 'hasiltes.tanggal')
+            ->select('klien.nama', 'klien.alamat', 'hasiltes.hasil_tes', 'hasiltes.status_tes as hasil', 'hasiltes.biaya_tes', 'hasiltes.tanggal')
             ->where('hasiltes.status_tes', 'Selesai')
             ->get();
 

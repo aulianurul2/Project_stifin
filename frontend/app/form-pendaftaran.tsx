@@ -12,6 +12,8 @@ import {
   Platform,
   Image,
   StatusBar,
+  Modal,
+  FlatList,
 } from 'react-native';
 
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -75,6 +77,7 @@ export default function FormPendaftaran() {
 
   const [loading, setLoading]           = useState(false);
   const [fetchingData, setFetchingData] = useState(true);
+  const [activePicker, setActivePicker] = useState<'jk' | 'golDarah' | null>(null);
 
   // State bukti: simpan file asli + URI preview terpisah
   const [bukti, setBukti]                     = useState<BuktiFile | null>(null);
@@ -82,6 +85,19 @@ export default function FormPendaftaran() {
 
   // Ref ke input[type=file] tersembunyi (hanya web)
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const opsiJK = [
+    { label: 'Laki-laki', value: 'L' },
+    { label: 'Perempuan', value: 'P' },
+  ];
+
+  const opsiGolDarah = [
+    { label: '-', value: '-' },
+    { label: 'A', value: 'A' },
+    { label: 'B', value: 'B' },
+    { label: 'AB', value: 'AB' },
+    { label: 'O', value: 'O' },
+  ];
 
   const [formData, setFormData] = useState<KlienFormData>({
     id_klien:       '',
@@ -216,7 +232,7 @@ export default function FormPendaftaran() {
       data.append('id_jadwal',      String(id_jadwal));
       data.append('is_luar_subang', isLuarSubang ? '1' : '0');
       data.append('nama_kota',      namaKota);
-      data.append('biaya',          String(biayaNominal));   // ← kirim biaya aktual
+      data.append('biaya',          String(biayaNominal));
       data.append('nama_klien',     formData.nama);
       data.append('no_hp',          formData.no_hp);
       data.append('email',          formData.email);
@@ -331,35 +347,35 @@ export default function FormPendaftaran() {
             </View>
             <View style={{ width: 145 }}>
               <Text style={styles.fieldLabel}>Gol. Darah</Text>
-              <View style={styles.bloodRow}>
-                {['A', 'B', 'AB', 'O'].map((item) => (
-                  <TouchableOpacity key={item}
-                    style={[styles.bloodBtn, formData.golongan_darah === item && styles.bloodBtnActive]}
-                    onPress={() => setFormData({ ...formData, golongan_darah: item })}
-                    activeOpacity={0.7}>
-                    <Text style={[styles.bloodText, formData.golongan_darah === item && styles.bloodTextActive]}>
-                      {item}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              <TouchableOpacity
+                style={styles.selectorField}
+                activeOpacity={0.7}
+                onPress={() => setActivePicker('golDarah')}
+              >
+                <Ionicons name="water-outline" size={16} color="#00AA5B" />
+                <Text style={styles.selectorValueText}>{formData.golongan_darah}</Text>
+                <Ionicons name="chevron-down" size={14} color="#90a4ae" />
+              </TouchableOpacity>
             </View>
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.fieldLabel}>Jenis Kelamin</Text>
-            <View style={styles.bloodRow}>
-              {[{ label: 'Laki-laki', val: 'L' }, { label: 'Perempuan', val: 'P' }].map((item) => (
-                <TouchableOpacity key={item.val}
-                  style={[styles.genderBtn, formData.jenis_kelamin === item.val && styles.bloodBtnActive]}
-                  onPress={() => setFormData({ ...formData, jenis_kelamin: item.val })}
-                  activeOpacity={0.7}>
-                  <Text style={[styles.bloodText, formData.jenis_kelamin === item.val && styles.bloodTextActive]}>
-                    {item.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <TouchableOpacity
+              style={styles.selectorField}
+              activeOpacity={0.7}
+              onPress={() => setActivePicker('jk')}
+            >
+              <Ionicons
+                name={formData.jenis_kelamin === 'L' ? 'male-outline' : 'female-outline'}
+                size={16}
+                color="#00AA5B"
+              />
+              <Text style={styles.selectorValueText}>
+                {formData.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}
+              </Text>
+              <Ionicons name="chevron-down" size={14} color="#90a4ae" />
+            </TouchableOpacity>
           </View>
 
           <CustomInput label="Email Aktif" value={formData.email} keyboardType="email-address"
@@ -399,14 +415,12 @@ export default function FormPendaftaran() {
                 <Text style={styles.biayaNominal}>{formatRupiah(biayaNominal)}</Text>
               </Text>
 
-              {/* Tampilkan nama kota jika luar Subang */}
               {isLuarSubang && namaKota !== '' && (
                 <Text style={styles.biayaKota}>
                   <Ionicons name="location-outline" size={11} color="#546e7a" /> {namaKota}
                 </Text>
               )}
 
-              {/* Badge wilayah */}
               <View style={styles.biayaBadgeRow}>
                 <View style={[
                   styles.biayaBadge,
@@ -433,9 +447,11 @@ export default function FormPendaftaran() {
           {/* Info rekening DP */}
           <View style={styles.rekeningBox}>
             <Text style={styles.rekeningTitle}>
-              Transfer uang muka (DP) sebesar <Text style={{ color: '#00AA5B', fontWeight: '800' }}>Rp 100.000</Text> ke rekening berikut:
+              Transfer DP sebesar{' '}
+              <Text style={{ color: '#00AA5B', fontWeight: '800' }}>Rp 100.000</Text>{' '}
+              ke rekening berikut:
             </Text>
-            <Text style={styles.rekeningItem}>• BSI: 1234567890 a.n Calvin</Text>
+            <Text style={styles.rekeningItem}>• BSI: 7331440196 An. Ayik Yulia Rn</Text>
           </View>
 
           {/* Preview gambar setelah dipilih */}
@@ -478,6 +494,61 @@ export default function FormPendaftaran() {
         </View>
 
       </ScrollView>
+
+      {/* Custom Picker Modal */}
+      <Modal
+        visible={activePicker !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setActivePicker(null)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setActivePicker(null)}
+        >
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {activePicker === 'jk' ? 'Pilih Jenis Kelamin' : 'Pilih Golongan Darah'}
+              </Text>
+              <TouchableOpacity onPress={() => setActivePicker(null)} style={styles.modalClose}>
+                <Ionicons name="close" size={20} color="#90a4ae" />
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={activePicker === 'jk' ? opsiJK : opsiGolDarah}
+              keyExtractor={(item) => item.value}
+              renderItem={({ item }) => {
+                const isSelected =
+                  (activePicker === 'jk'
+                    ? formData.jenis_kelamin
+                    : formData.golongan_darah) === item.value;
+                return (
+                  <TouchableOpacity
+                    style={[styles.modalItem, isSelected && styles.modalItemSelected]}
+                    onPress={() => {
+                      if (activePicker === 'jk') {
+                        setFormData({ ...formData, jenis_kelamin: item.value });
+                      } else {
+                        setFormData({ ...formData, golongan_darah: item.value });
+                      }
+                      setActivePicker(null);
+                    }}
+                  >
+                    <Text style={[styles.modalItemText, isSelected && styles.modalItemTextSelected]}>
+                      {item.label}
+                    </Text>
+                    {isSelected && <Ionicons name="checkmark-circle" size={20} color="#00AA5B" />}
+                  </TouchableOpacity>
+                );
+              }}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -590,49 +661,44 @@ const styles = StyleSheet.create({
 
   row: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 14 },
 
-  bloodRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
-  bloodBtn: {
-    paddingVertical: 8, paddingHorizontal: 12, borderRadius: 10,
-    backgroundColor: '#f5faf7', borderWidth: 1.5, borderColor: '#e0f2ec',
-  },
-  bloodBtnActive:  { backgroundColor: '#00AA5B', borderColor: '#00AA5B' },
-  bloodText:       { color: '#546e7a', fontWeight: '700', fontSize: 12 },
-  bloodTextActive: { color: '#fff' },
-
-  genderBtn: {
-    flex: 1, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 10,
-    backgroundColor: '#f5faf7', borderWidth: 1.5, borderColor: '#e0f2ec',
+  selectorField: {
+    backgroundColor: '#f5faf7',
+    borderWidth: 1.5,
+    borderColor: '#e0f2ec',
+    borderRadius: 12,
+    height: 48,
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 12,
+    gap: 6,
   },
+  selectorValueText: { flex: 1, fontSize: 14, color: '#1a1a2e' },
 
-  // Section 3: Pembayaran
   biayaBox: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,
     backgroundColor: '#e8f5e9', borderRadius: 12, padding: 14, marginBottom: 12,
   },
-  biayaText:    { fontSize: 14, color: '#37474f', fontWeight: '600' },
-  biayaNominal: { fontWeight: '800', color: '#00AA5B', fontSize: 15 },
-  biayaKota:    { fontSize: 11, color: '#546e7a', marginTop: 3 },
-  biayaBadgeRow:{ flexDirection: 'row', marginTop: 6 },
+  biayaText:     { fontSize: 14, color: '#37474f', fontWeight: '600' },
+  biayaNominal:  { fontWeight: '800', color: '#00AA5B', fontSize: 15 },
+  biayaKota:     { fontSize: 11, color: '#546e7a', marginTop: 3 },
+  biayaBadgeRow: { flexDirection: 'row', marginTop: 6 },
   biayaBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
   },
   biayaBadgeText: { fontSize: 10, fontWeight: '700' },
-  biayaNote: {
-    fontSize: 10, color: '#90a4ae', fontStyle: 'italic', marginTop: 6,
-  },
+  biayaNote:      { fontSize: 10, color: '#90a4ae', fontStyle: 'italic', marginTop: 6 , fontWeight: '600'},
 
   rekeningBox: {
     backgroundColor: '#f5faf7', borderRadius: 10, padding: 12, marginBottom: 14,
     borderWidth: 1, borderColor: '#e0f2ec',
   },
   rekeningTitle: { fontSize: 12, fontWeight: '700', color: '#546e7a', marginBottom: 6 },
-  rekeningItem:  { fontSize: 13, color: '#37474f', marginBottom: 4, lineHeight: 20 },
+  rekeningItem:  { fontSize: 13, color: '#37474f', marginBottom: 4, lineHeight: 20, fontWeight: '600' },
 
-  previewBox:  { alignItems: 'center', marginBottom: 10 },
-  previewImg:  { width: '100%', height: 160, borderRadius: 10, marginBottom: 6 },
-  previewLabel:{ fontSize: 11, color: '#00AA5B', fontWeight: '700' },
+  previewBox:   { alignItems: 'center', marginBottom: 10 },
+  previewImg:   { width: '100%', height: 160, borderRadius: 10, marginBottom: 6 },
+  previewLabel: { fontSize: 11, color: '#00AA5B', fontWeight: '700' },
 
   uploadBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -641,7 +707,7 @@ const styles = StyleSheet.create({
   },
   uploadBtnText: { fontSize: 14, fontWeight: '700', color: '#546e7a' },
 
-  footer:    { marginTop: 6, marginBottom: 16 },
+  footer: { marginTop: 6, marginBottom: 16 },
   btnSubmit: {
     backgroundColor: '#00AA5B', padding: 16, borderRadius: 14, alignItems: 'center',
     shadowColor: '#00AA5B', shadowOffset: { width: 0, height: 6 },
@@ -649,4 +715,38 @@ const styles = StyleSheet.create({
   },
   btnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   btnText:  { color: '#fff', fontWeight: '800', fontSize: 16 },
+
+  // ─── Modal styles ─────────────────────────────────────────────────────────
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  modalSheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    maxHeight: '50%',
+  },
+  modalHandle: {
+    width: 40, height: 4, borderRadius: 2,
+    backgroundColor: '#e0f2ec', alignSelf: 'center', marginBottom: 16,
+  },
+  modalHeader: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', marginBottom: 16,
+  },
+  modalClose: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: '#f5faf7', justifyContent: 'center', alignItems: 'center',
+  },
+  modalTitle:            { fontSize: 16, fontWeight: '800', color: '#1a1a2e' },
+  modalItem: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: 14, paddingHorizontal: 12, borderRadius: 10, marginBottom: 4,
+  },
+  modalItemSelected:     { backgroundColor: '#e8f5e9' },
+  modalItemText:         { fontSize: 15, color: '#37474f', fontWeight: '600' },
+  modalItemTextSelected: { color: '#00AA5B', fontWeight: '700' },
 });

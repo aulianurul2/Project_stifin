@@ -82,11 +82,7 @@
                             <div class="card card-round shadow-sm">
                                 <div class="card-body p-4">
                                     <div class="table-responsive">
-                                        {{--
-                                            Tab 'kelola' : DataTable (client-side, pakai get())
-                                            Tab 'riwayat': tabel biasa + server-side pagination (pakai paginate())
-                                            Keduanya pakai tabel terpisah supaya DataTable tidak bentrok dengan paginator Laravel.
-                                        --}}
+
                                         @if($tab == 'kelola')
                                             <table id="basic-datatables" class="table table-striped table-hover mb-0 align-middle">
                                                 <thead class="bg-light">
@@ -109,11 +105,6 @@
                                                                 </span>
                                                             </td>
                                                             <td class="px-4 py-3 text-center">
-                                                                {{--
-                                                                    Kirim id_tes (untuk update hasiltes) DAN id_jadwal
-                                                                    (untuk query tabel jadwal di controller).
-                                                                    openModal menerima keduanya.
-                                                                --}}
                                                                 <button type="button"
                                                                     onclick="openModal('{{ $item->id_tes }}', '{{ $item->id_jadwal }}', '{{ $item->nama }}')"
                                                                     class="btn btn-primary btn-sm btn-round px-3">
@@ -133,13 +124,13 @@
                                             </table>
 
                                         @else
-    {{-- Riwayat Tes --}}
-    <table id="basic-datatables-riwayat"
-           class="table table-striped table-hover mb-0 align-middle">
+                                            {{-- Riwayat Tes --}}
+                                            <table id="basic-datatables-riwayat" class="table table-striped table-hover mb-0 align-middle">
                                                 <thead class="bg-light">
                                                     <tr>
-                                                        <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8" style="width: 40%">Nama Klien</th>
-                                                        <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8" style="width: 30%">Hasil</th>
+                                                        <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8" style="width: 35%">Nama Klien</th>
+                                                        <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8" style="width: 20%">Hasil STIFIn</th>
+                                                        <th class="px-4 py-3 text-uppercase font-weight-bold text-muted fs-8" style="width: 15%">Status</th>
                                                         <th class="px-4 py-3 text-center text-uppercase font-weight-bold text-muted fs-8" style="width: 30%">Aksi</th>
                                                     </tr>
                                                 </thead>
@@ -151,49 +142,58 @@
                                                                 <small class="text-muted"><i class="fab fa-whatsapp me-1"></i> {{ $item->no_hp }}</small>
                                                             </td>
                                                             <td class="px-4 py-3">
+                                                                @if($item->hasil_tes)
+                                                                    <span class="badge badge-info px-3 py-1 btn-round text-capitalize fs-8 fw-normal">
+                                                                        <i class="fas fa-brain me-1"></i> {{ $item->hasil_tes }}
+                                                                    </span>
+                                                                @else
+                                                                    <span class="text-muted fs-8 fst-italic">-</span>
+                                                                @endif
+                                                            </td>
+                                                            <td class="px-4 py-3">
                                                                 <span class="badge badge-success px-3 py-1 btn-round text-capitalize fs-8 fw-normal">
                                                                     <i class="fas fa-check-circle me-1"></i> Tersertifikasi
                                                                 </span>
                                                             </td>
-                                                         <td class="px-4 py-3 text-center">
-    <div class="d-flex justify-content-center align-items-center gap-2">
+                                                            <td class="px-4 py-3 text-center">
+                                                                <div class="d-flex justify-content-center align-items-center gap-2">
 
-        {{-- Lihat Sertifikat --}}
-        <button type="button"
-                onclick="previewFile('{{ asset('uploads/hasil/' . $item->file_hasil) }}')"
-                class="btn btn-sm p-2 card-round shadow-sm d-flex flex-column align-items-center"
-                style="background-color: #fff3cd; border-color: #ffeeba; min-width: 56px;"
-                title="Lihat Sertifikat">
-            <i class="fas fa-file-pdf text-warning mb-1"></i>
-            <span style="font-size: 9px; color: #856404; font-weight: 600;">Sertifikat</span>
-        </button>
+                                                                    {{-- Lihat Sertifikat --}}
+                                                                    <button type="button"
+                                                                            onclick="previewFile('{{ asset('uploads/hasil/' . $item->file_hasil) }}')"
+                                                                            class="btn btn-sm p-2 card-round shadow-sm d-flex flex-column align-items-center"
+                                                                            style="background-color: #fff3cd; border-color: #ffeeba; min-width: 56px;"
+                                                                            title="Lihat Sertifikat">
+                                                                        <i class="fas fa-file-pdf text-warning mb-1"></i>
+                                                                        <span style="font-size: 9px; color: #856404; font-weight: 600;">Sertifikat</span>
+                                                                    </button>
 
-        {{-- Lihat Detail --}}
-        <button type="button"
-                onclick="previewFile('{{ asset('uploads/hasil/' . $item->file_detail) }}')"
-                class="btn btn-sm p-2 card-round shadow-sm d-flex flex-column align-items-center"
-                style="background-color: #d1e7dd; border-color: #badbcc; min-width: 56px;"
-                title="Lihat Detail">
-            <i class="fas fa-file-alt mb-1" style="color: #0f5132;"></i>
-            <span style="font-size: 9px; color: #0f5132; font-weight: 600;">Detail</span>
-        </button>
+                                                                    {{-- Lihat Detail --}}
+                                                                    <button type="button"
+                                                                            onclick="previewFile('{{ asset('uploads/hasil/' . $item->file_detail) }}')"
+                                                                            class="btn btn-sm p-2 card-round shadow-sm d-flex flex-column align-items-center"
+                                                                            style="background-color: #d1e7dd; border-color: #badbcc; min-width: 56px;"
+                                                                            title="Lihat Detail">
+                                                                        <i class="fas fa-file-alt mb-1" style="color: #0f5132;"></i>
+                                                                        <span style="font-size: 9px; color: #0f5132; font-weight: 600;">Detail</span>
+                                                                    </button>
 
-        {{-- Ganti File --}}
-        <button type="button"
-                onclick="openEditModal('{{ $item->id_tes }}', '{{ $item->nama }}', '{{ $item->file_hasil }}', '{{ $item->file_detail }}')"
-                class="btn btn-sm p-2 card-round shadow-sm d-flex flex-column align-items-center"
-                style="background-color: #cfe2ff; border-color: #b6d4fe; min-width: 56px;"
-                title="Ganti File">
-            <i class="fas fa-pencil-alt mb-1" style="color: #084298;"></i>
-            <span style="font-size: 9px; color: #084298; font-weight: 600;">Edit File</span>
-        </button>
+                                                                    {{-- Edit File & Hasil --}}
+                                                                    <button type="button"
+                                                                            onclick="openEditModal('{{ $item->id_tes }}', '{{ $item->nama }}', '{{ $item->file_hasil }}', '{{ $item->file_detail }}', '{{ $item->hasil_tes }}')"
+                                                                            class="btn btn-sm p-2 card-round shadow-sm d-flex flex-column align-items-center"
+                                                                            style="background-color: #cfe2ff; border-color: #b6d4fe; min-width: 56px;"
+                                                                            title="Edit">
+                                                                        <i class="fas fa-pencil-alt mb-1" style="color: #084298;"></i>
+                                                                        <span style="font-size: 9px; color: #084298; font-weight: 600;">Edit</span>
+                                                                    </button>
 
-    </div>
-</td>
+                                                                </div>
+                                                            </td>
                                                         </tr>
                                                     @empty
                                                         <tr>
-                                                            <td colspan="3" class="text-center py-4 text-muted">
+                                                            <td colspan="4" class="text-center py-4 text-muted">
                                                                 <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
                                                                 Belum ada riwayat tes yang selesai.
                                                             </td>
@@ -232,17 +232,41 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                {{--
-                    Action digenerate dari route hasil.update dengan :id_tes,
-                    tapi controller butuh id_jadwal untuk query tabel jadwal.
-                    Solusi: kirim id_jadwal sebagai hidden input, route tetap pakai id_tes
-                    agar update hasiltes masih menggunakan id_tes yang benar.
-                --}}
                 <form id="formHasil" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('POST')
                     <input type="hidden" name="id_jadwal" id="hiddenIdJadwal">
                     <div class="modal-body">
+
+                        {{-- Dropdown Hasil STIFIn --}}
+                        <div class="form-group p-0 mb-3">
+                            <label class="fw-bold small mb-1 text-dark">
+                                <i class="fas fa-brain text-primary me-2"></i>Hasil STIFIn
+                            </label>
+                            <select name="hasil_tes" class="form-select form-control" required>
+                                <option value="" disabled selected>-- Pilih Hasil STIFIn --</option>
+                                <optgroup label="Feeling">
+                                    <option value="Fe">Fe – Feeling Extrovert</option>
+                                    <option value="Fi">Fi – Feeling Introvert</option>
+                                </optgroup>
+                                <optgroup label="Thinking">
+                                    <option value="Te">Te – Thinking Extrovert</option>
+                                    <option value="Ti">Ti – Thinking Introvert</option>
+                                </optgroup>
+                                <optgroup label="Sensing">
+                                    <option value="Se">Se – Sensing Extrovert</option>
+                                    <option value="Si">Si – Sensing Introvert</option>
+                                </optgroup>
+                                <optgroup label="iNtuiting">
+                                    <option value="Ne">Ne – iNtuiting Extrovert</option>
+                                    <option value="Ni">Ni – iNtuiting Introvert</option>
+                                </optgroup>
+                                <optgroup label="Instinct">
+                                    <option value="I">I – Instinct</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
                         <div class="form-group p-0 mb-3">
                             <label class="fw-bold small mb-1 text-dark">
                                 <i class="fas fa-certificate text-warning me-2"></i>Unggah Sertifikat (Ringkasan)
@@ -253,7 +277,7 @@
 
                         <div class="form-group p-0 mb-2">
                             <label class="fw-bold small mb-1 text-dark">
-                                <i class="fas fa-file-alt text-primary me-2"></i>Unggah Hasil Tes Lengkap (Detail)
+                                <i class="fas fa-file-alt text-primary me-2"></i>Unggah Hasil Tes (Detail)
                             </label>
                             <input type="file" name="file_detail" class="form-control" accept=".pdf,.doc,.docx" required>
                             <small class="text-muted d-block mt-1" style="font-size: 11px;">*Format: PDF / DOC / DOCX</small>
@@ -294,71 +318,100 @@
         </div>
     </div>
 
-{{-- Modal Edit File --}}
-<div class="modal fade" id="modalEdit" tabindex="-1" aria-labelledby="modalEditLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content card-round p-2">
-            <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="modal-title fw-bold text-dark" id="modalEditLabel">
-                    <i class="fas fa-pencil-alt text-primary me-2"></i>
-                    Ganti Berkas: <span id="editNama" class="text-primary"></span>
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="formEdit" method="POST" enctype="multipart/form-data">
-                @csrf
-                @method('PUT')
-                <div class="modal-body">
-                    <div class="alert alert-info py-2 px-3 card-round mb-3" style="font-size: 12px;">
-                        <i class="fas fa-info-circle me-1"></i>
-                        Kosongkan field yang tidak ingin diganti. File lama akan otomatis terhapus.
-                    </div>
+    {{-- Modal Edit File & Hasil --}}
+    <div class="modal fade" id="modalEdit" tabindex="-1" aria-labelledby="modalEditLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content card-round p-2">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark" id="modalEditLabel">
+                        <i class="fas fa-pencil-alt text-primary me-2"></i>
+                        Edit Data: <span id="editNama" class="text-primary"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="formEdit" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-body">
+                        <div class="alert alert-info py-2 px-3 card-round mb-3" style="font-size: 12px;">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Kosongkan field yang tidak ingin diganti. Perubahan hanya diterapkan pada field yang diisi.
+                        </div>
 
-                    {{-- Preview file saat ini --}}
-                    <div class="mb-3 p-3 bg-light card-round border" style="font-size: 12px;">
-                        <p class="fw-bold text-muted mb-2 text-uppercase" style="font-size: 10px; letter-spacing: 0.5px;">
-                            <i class="fas fa-folder-open me-1"></i> File Tersimpan Saat Ini
-                        </p>
-                        <div class="d-flex gap-2">
-                            <button type="button" id="btnPreviewSertifikat"
-                                    onclick="previewFileFromEdit('sertifikat')"
-                                    class="btn btn-sm btn-warning btn-round px-2 py-1" style="font-size: 11px;">
-                                <i class="fas fa-eye me-1"></i> Lihat Sertifikat
-                            </button>
-                            <button type="button" id="btnPreviewDetail"
-                                    onclick="previewFileFromEdit('detail')"
-                                    class="btn btn-sm btn-success btn-round px-2 py-1" style="font-size: 11px;">
-                                <i class="fas fa-eye me-1"></i> Lihat Detail
-                            </button>
+                        {{-- Preview file saat ini --}}
+                        <div class="mb-3 p-3 bg-light card-round border" style="font-size: 12px;">
+                            <p class="fw-bold text-muted mb-2 text-uppercase" style="font-size: 10px; letter-spacing: 0.5px;">
+                                <i class="fas fa-folder-open me-1"></i> File Tersimpan Saat Ini
+                            </p>
+                            <div class="d-flex gap-2">
+                                <button type="button" id="btnPreviewSertifikat"
+                                        onclick="previewFileFromEdit('sertifikat')"
+                                        class="btn btn-sm btn-warning btn-round px-2 py-1" style="font-size: 11px;">
+                                    <i class="fas fa-eye me-1"></i> Lihat Sertifikat
+                                </button>
+                                <button type="button" id="btnPreviewDetail"
+                                        onclick="previewFileFromEdit('detail')"
+                                        class="btn btn-sm btn-success btn-round px-2 py-1" style="font-size: 11px;">
+                                    <i class="fas fa-eye me-1"></i> Lihat Detail
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Dropdown Edit Hasil STIFIn --}}
+                        <div class="form-group p-0 mb-3">
+                            <label class="fw-bold small mb-1 text-dark">
+                                <i class="fas fa-brain text-primary me-2"></i>Ubah Hasil STIFIn <span class="text-muted fw-normal">(Opsional)</span>
+                            </label>
+                            <select name="hasil_tes" id="editHasilTes" class="form-select form-control">
+                                <option value="">-- Biarkan Tetap --</option>
+                                <optgroup label="Feeling">
+                                    <option value="Fe">Fe – Feeling Extrovert</option>
+                                    <option value="Fi">Fi – Feeling Introvert</option>
+                                </optgroup>
+                                <optgroup label="Thinking">
+                                    <option value="Te">Te – Thinking Extrovert</option>
+                                    <option value="Ti">Ti – Thinking Introvert</option>
+                                </optgroup>
+                                <optgroup label="Sensing">
+                                    <option value="Se">Se – Sensing Extrovert</option>
+                                    <option value="Si">Si – Sensing Introvert</option>
+                                </optgroup>
+                                <optgroup label="iNtuiting">
+                                    <option value="Ne">Ne – iNtuiting Extrovert</option>
+                                    <option value="Ni">Ni – iNtuiting Introvert</option>
+                                </optgroup>
+                                <optgroup label="Instinct">
+                                    <option value="I">I – Instinct</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div class="form-group p-0 mb-3">
+                            <label class="fw-bold small mb-1 text-dark">
+                                <i class="fas fa-certificate text-warning me-2"></i>Ganti Sertifikat <span class="text-muted fw-normal">(Opsional)</span>
+                            </label>
+                            <input type="file" name="file_hasil" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                            <small class="text-muted d-block mt-1" style="font-size: 11px;">*Format: PDF / JPG / PNG</small>
+                        </div>
+
+                        <div class="form-group p-0 mb-2">
+                            <label class="fw-bold small mb-1 text-dark">
+                                <i class="fas fa-file-alt text-primary me-2"></i>Ganti Hasil Tes Lengkap <span class="text-muted fw-normal">(Opsional)</span>
+                            </label>
+                            <input type="file" name="file_detail" class="form-control" accept=".pdf,.doc,.docx">
+                            <small class="text-muted d-block mt-1" style="font-size: 11px;">*Format: PDF / DOC / DOCX</small>
                         </div>
                     </div>
-
-                    <div class="form-group p-0 mb-3">
-                        <label class="fw-bold small mb-1 text-dark">
-                            <i class="fas fa-certificate text-warning me-2"></i>Ganti Sertifikat (Opsional)
-                        </label>
-                        <input type="file" name="file_hasil" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                        <small class="text-muted d-block mt-1" style="font-size: 11px;">*Format: PDF / JPG / PNG</small>
+                    <div class="modal-footer border-top-0 pt-0">
+                        <button type="button" class="btn btn-light btn-sm fw-bold px-3 btn-round" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary btn-sm fw-bold px-4 btn-round shadow-sm">
+                            <i class="fas fa-save me-1"></i> Simpan Perubahan
+                        </button>
                     </div>
-
-                    <div class="form-group p-0 mb-2">
-                        <label class="fw-bold small mb-1 text-dark">
-                            <i class="fas fa-file-alt text-primary me-2"></i>Ganti Hasil Tes Lengkap (Opsional)
-                        </label>
-                        <input type="file" name="file_detail" class="form-control" accept=".pdf,.doc,.docx">
-                        <small class="text-muted d-block mt-1" style="font-size: 11px;">*Format: PDF / DOC / DOCX</small>
-                    </div>
-                </div>
-                <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-light btn-sm fw-bold px-3 btn-round" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary btn-sm fw-bold px-4 btn-round shadow-sm">
-                        <i class="fas fa-save me-1"></i> Simpan Perubahan
-                    </button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
     <script src="{{ asset('assets/js/core/jquery-3.7.1.min.js') }}"></script>
     <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
@@ -369,44 +422,37 @@
 
     <script>
         $(document).ready(function () {
-            // DataTable hanya diinisialisasi di tab kelola
         @if($tab == 'kelola')
-$('#basic-datatables').DataTable({
-    pageLength: 10,
-    order: [],
-    language: {
-        search: "Cari Data:",
-        lengthMenu: "Tampilkan _MENU_ data",
-        zeroRecords: "Tidak ada data yang cocok",
-        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-        infoEmpty: "Data tidak tersedia",
-        infoFiltered: "(difilter dari _MAX_ total data)"
-    }
-});
-@endif
+            $('#basic-datatables').DataTable({
+                pageLength: 10,
+                order: [],
+                language: {
+                    search: "Cari Data:",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    zeroRecords: "Tidak ada data yang cocok",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    infoEmpty: "Data tidak tersedia",
+                    infoFiltered: "(difilter dari _MAX_ total data)"
+                }
+            });
+        @endif
 
-@if($tab == 'riwayat')
-$('#basic-datatables-riwayat').DataTable({
-    pageLength: 10,
-    order: [],
-    language: {
-        search: "Cari Data:",
-        lengthMenu: "Tampilkan _MENU_ data",
-        zeroRecords: "Tidak ada data yang cocok",
-        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-        infoEmpty: "Data tidak tersedia",
-        infoFiltered: "(difilter dari _MAX_ total data)"
-    }
-});
-@endif
+        @if($tab == 'riwayat')
+            $('#basic-datatables-riwayat').DataTable({
+                pageLength: 10,
+                order: [],
+                language: {
+                    search: "Cari Data:",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    zeroRecords: "Tidak ada data yang cocok",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    infoEmpty: "Data tidak tersedia",
+                    infoFiltered: "(difilter dari _MAX_ total data)"
+                }
+            });
+        @endif
         });
 
-        /**
-         * Buka modal input hasil.
-         * @param {string} idTes     — untuk di-set ke action form (update hasiltes)
-         * @param {string} idJadwal  — untuk dikirim sebagai hidden input (query tabel jadwal)
-         * @param {string} nama      — nama klien untuk ditampilkan di judul modal
-         */
         function openModal(idTes, idJadwal, nama) {
             document.getElementById('modalNama').innerText = nama;
             document.getElementById('hiddenIdJadwal').value = idJadwal;
@@ -414,6 +460,9 @@ $('#basic-datatables-riwayat').DataTable({
             let url = "{{ route('hasil.update', ':id') }}";
             url = url.replace(':id', idTes);
             document.getElementById('formHasil').action = url;
+
+            // Reset dropdown ke default
+            document.querySelector('#formHasil select[name="hasil_tes"]').value = '';
 
             var modalInput = new bootstrap.Modal(document.getElementById('modalHasil'));
             modalInput.show();
@@ -428,53 +477,51 @@ $('#basic-datatables-riwayat').DataTable({
         function closePreview() {
             var modalEl = document.getElementById('modalPreview');
             var modalInstance = bootstrap.Modal.getInstance(modalEl);
-            if (modalInstance) {
-                modalInstance.hide();
-            }
+            if (modalInstance) modalInstance.hide();
             document.getElementById('previewFrame').src = "";
         }
-// Simpan URL file aktif untuk dipreview dari dalam modal edit
-let _currentFileHasil = '';
-let _currentFileDetail = '';
 
-function openEditModal(idTes, nama, fileHasil, fileDetail) {
-    document.getElementById('editNama').innerText = nama;
+        let _currentFileHasil  = '';
+        let _currentFileDetail = '';
 
-    // Simpan path file untuk tombol preview di dalam modal
-    _currentFileHasil  = fileHasil && fileHasil !== 'null' && fileHasil.trim() !== ''
-        ? "{{ asset('uploads/hasil') }}/" + fileHasil
-        : '';
-    _currentFileDetail = fileDetail && fileDetail !== 'null' && fileDetail.trim() !== ''
-        ? "{{ asset('uploads/hasil') }}/" + fileDetail
-        : '';
+        function openEditModal(idTes, nama, fileHasil, fileDetail, hasilTes) {
+            document.getElementById('editNama').innerText = nama;
 
-    // Tampil/sembunyikan tombol preview sesuai ketersediaan file
-    document.getElementById('btnPreviewSertifikat').style.display = _currentFileHasil  ? '' : 'none';
-    document.getElementById('btnPreviewDetail').style.display     = _currentFileDetail ? '' : 'none';
+            _currentFileHasil  = fileHasil && fileHasil !== 'null' && fileHasil.trim() !== ''
+                ? "{{ asset('uploads/hasil') }}/" + fileHasil
+                : '';
+            _currentFileDetail = fileDetail && fileDetail !== 'null' && fileDetail.trim() !== ''
+                ? "{{ asset('uploads/hasil') }}/" + fileDetail
+                : '';
 
-    let url = "{{ route('hasil.edit', ':id') }}";
-    url = url.replace(':id', idTes);
-    document.getElementById('formEdit').action = url;
+            document.getElementById('btnPreviewSertifikat').style.display = _currentFileHasil  ? '' : 'none';
+            document.getElementById('btnPreviewDetail').style.display     = _currentFileDetail ? '' : 'none';
 
-    var modalEdit = new bootstrap.Modal(document.getElementById('modalEdit'));
-    modalEdit.show();
-}
+            // Set dropdown ke nilai hasil tes saat ini
+            var selectHasil = document.getElementById('editHasilTes');
+            selectHasil.value = hasilTes && hasilTes !== 'null' ? hasilTes : '';
 
-function previewFileFromEdit(tipe) {
-    const url = tipe === 'sertifikat' ? _currentFileHasil : _currentFileDetail;
-    if (!url) return;
+            let url = "{{ route('hasil.edit', ':id') }}";
+            url = url.replace(':id', idTes);
+            document.getElementById('formEdit').action = url;
 
-    // Tutup modal edit dulu, buka preview
-    var modalEditEl = document.getElementById('modalEdit');
-    var modalEditInstance = bootstrap.Modal.getInstance(modalEditEl);
-    if (modalEditInstance) modalEditInstance.hide();
+            var modalEdit = new bootstrap.Modal(document.getElementById('modalEdit'));
+            modalEdit.show();
+        }
 
-    // Tunggu modal edit tutup baru buka preview
-    modalEditEl.addEventListener('hidden.bs.modal', function openPreviewAfterEdit() {
-        modalEditEl.removeEventListener('hidden.bs.modal', openPreviewAfterEdit);
-        previewFile(url);
-    });
-}
+        function previewFileFromEdit(tipe) {
+            const url = tipe === 'sertifikat' ? _currentFileHasil : _currentFileDetail;
+            if (!url) return;
+
+            var modalEditEl = document.getElementById('modalEdit');
+            var modalEditInstance = bootstrap.Modal.getInstance(modalEditEl);
+            if (modalEditInstance) modalEditInstance.hide();
+
+            modalEditEl.addEventListener('hidden.bs.modal', function openPreviewAfterEdit() {
+                modalEditEl.removeEventListener('hidden.bs.modal', openPreviewAfterEdit);
+                previewFile(url);
+            });
+        }
     </script>
 </body>
 </html>

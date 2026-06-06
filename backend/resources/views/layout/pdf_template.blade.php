@@ -2,13 +2,13 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Laporan Statistik STIFIn</title>
+    <title>Laporan Statistik STIFIn Expert Mobile</title>
     <style>
         @page { margin: 1.5cm 1.5cm 2cm 1.5cm; }
         body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333333; line-height: 1.4; font-size: 13px; }
         .header-container { border-bottom: 3px solid #00AA5B; padding-bottom: 15px; margin-bottom: 25px; }
         .brand-section { float: left; width: 60%; }
-        .brand-title { font-size: 24px; font-weight: bold; color: #00AA5B; margin: 0; text-transform: uppercase; }
+        .brand-title { font-size: 24px; font-weight: bold; color: #00AA5B; margin: 0; }
         .brand-subtitle { font-size: 12px; color: #666666; margin: 3px 0 0 0; }
         .meta-section { float: right; width: 40%; text-align: right; font-size: 11px; color: #555555; margin-top: 8px; }
         .meta-section p { margin: 2px 0; }
@@ -34,7 +34,7 @@
 
     <div class="header-container">
         <div class="brand-section">
-            <h1 class="brand-title">STIFIn Mobile</h1>
+            <h1 class="brand-title">STIFIn Expert Mobile</h1>
             <p class="brand-subtitle">Sistem Informasi Manajemen STIFIn Subang</p>
         </div>
         <div class="meta-section">
@@ -60,47 +60,51 @@
         <div class="clearfix"></div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th width="5%" class="text-center">No</th>
-                <th width="35%" class="text-left">Nama Klien</th>
-                <th width="20%" class="text-center">Status</th>
-                <th width="20%" class="text-right">Biaya Tes</th>
-                <th width="20%" class="text-center">Tanggal</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($riwayatLaporan as $index => $row)
-            <tr>
-                <td class="text-center">{{ $index + 1 }}</td>
-                <td class="text-left" style="font-weight: 500;">{{ $row->nama }}</td>
-                <td class="text-center" style="color: #00AA5B; font-weight: bold;">Selesai</td>
-                <td class="text-right">Rp {{ number_format($row->biaya_tes, 0, ',', '.') }}</td>
-                <td class="text-center">{{ $row->tanggal ? date('d M Y', strtotime($row->tanggal)) : '-' }}</td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="5" class="text-center" style="color: #999; padding: 20px;">
-                    Tidak ada data untuk periode {{ $bulan }} {{ $tahun }}.
-                </td>
-            </tr>
-            @endforelse
-        </tbody>
-        @if($riwayatLaporan->count() > 0)
-        <tfoot>
-            <tr style="background-color: #e8f5e9;">
-                <td colspan="3" style="font-weight: bold; text-align: right; padding: 10px 12px; border-top: 2px solid #00AA5B;">
-                    Total Pendapatan
-                </td>
-                <td style="font-weight: bold; text-align: right; padding: 10px 12px; border-top: 2px solid #00AA5B; color: #00AA5B;">
-                    Rp {{ number_format($riwayatLaporan->sum('biaya_tes'), 0, ',', '.') }}
-                </td>
-                <td style="border-top: 2px solid #00AA5B;"></td>
-            </tr>
-        </tfoot>
-        @endif
-    </table>
+<table>
+    <thead>
+        <tr>
+            <th width="4%"  class="text-center">No</th>
+            <th width="22%" class="text-left">Nama Klien</th>
+            <th width="22%" class="text-left">Alamat</th>
+            <th width="12%" class="text-center">Hasil STIFIn</th>
+            <th width="14%" class="text-center">Status</th>
+            <th width="14%" class="text-right">Biaya Tes</th>
+            <th width="12%" class="text-center">Tanggal</th>
+        </tr>
+    </thead>
+    <tbody>
+        @forelse($riwayatLaporan as $index => $row)
+        <tr>
+            <td class="text-center">{{ $index + 1 }}</td>
+            <td class="text-left" style="font-weight: 500;">{{ $row->nama }}</td>
+            <td class="text-left" style="font-size: 11px;"> {{ $row->alamat ?? '-' }}</td>
+            <td class="text-center" style="font-weight: 700;">{{ $row->hasil_tes ?? '-' }}</td>
+            <td class="text-center" style="color: #00AA5B; font-weight: bold;">Selesai</td>
+            <td class="text-right">Rp {{ number_format($row->biaya_tes, 0, ',', '.') }}</td>
+            <td class="text-center">{{ $row->tanggal ? date('d M Y', strtotime($row->tanggal)) : '-' }}</td>
+        </tr>
+        @empty
+        <tr>
+            <td colspan="7" class="text-center" style="color: #999; padding: 20px;">
+                Tidak ada data untuk periode {{ $bulan }} {{ $tahun }}.
+            </td>
+        </tr>
+        @endforelse
+    </tbody>
+    @if($riwayatLaporan->count() > 0)
+    <tfoot>
+        <tr style="background-color: #e8f5e9;">
+            <td colspan="5" style="font-weight: bold; text-align: right; padding: 10px 12px; border-top: 2px solid #00AA5B;">
+                Total Pendapatan
+            </td>
+            <td style="font-weight: bold; text-align: right; padding: 10px 12px; border-top: 2px solid #00AA5B; color: #00AA5B;">
+                Rp {{ number_format($riwayatLaporan->sum('biaya_tes'), 0, ',', '.') }}
+            </td>
+            <td style="border-top: 2px solid #00AA5B;"></td>
+        </tr>
+    </tfoot>
+    @endif
+</table>
 
     <div class="footer-note">
         Dokumen ini dibuat otomatis oleh Sistem Informasi STIFIn Manajemen Subang Ciayumajakuning.

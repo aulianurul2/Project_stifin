@@ -65,70 +65,57 @@
             color: #adb5bd;
         }
 
-        /* Wilayah toggle pills */
-        .wilayah-pill {
-            cursor: pointer;
-            padding: 6px 18px;
-            border-radius: 20px;
-            border: 1px solid #dee2e6;
-            background: #f8f9fa;
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: #6c757d;
-            transition: all .18s;
-            user-select: none;
-        }
-        .wilayah-pill.active {
-            background: #0d6efd;
-            border-color: #0d6efd;
-            color: #fff;
-        }
-
-        /* Kota dropdown */
-        #kotaDropdownList {
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            overflow: hidden;
-            margin-top: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,.07);
-        }
-        .kota-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 14px;
-            cursor: pointer;
-            background: #fff;
-            font-size: 0.875rem;
-            border-bottom: 1px solid #f0f0f0;
-            transition: background .15s;
-        }
-        .kota-item:last-child { border-bottom: none; }
-        .kota-item:hover    { background: #f0f7ff; }
-        .kota-item.selected { background: #e8f4ff; font-weight: 700; color: #0d6efd; }
-        .kota-item .kota-harga { font-size: 0.8rem; font-weight: 700; color: #6c757d; }
-        .kota-item.selected .kota-harga { color: #0d6efd; }
-
-        /* Trigger dropdown */
-        #kotaDropdownTrigger {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 9px 14px;
-            border: 1px solid #a5d6a7;
+        /* Biaya breakdown */
+        .biaya-breakdown {
+            background: #f8faf8;
+            border: 1px solid #e8f5e9;
             border-radius: 8px;
-            background: #f5faf7;
-            cursor: pointer;
-            font-size: 0.875rem;
-            font-weight: 700;
-            color: #1a1a2e;
+            padding: 12px 14px;
         }
-        #kotaDropdownTrigger .trigger-right {
+        .biaya-breakdown .biaya-row {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #546e7a;
+            margin-bottom: 4px;
+        }
+        .biaya-breakdown .biaya-total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            font-weight: 700;
             color: #00AA5B;
-            font-weight: 800;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 8px;
+            margin-top: 6px;
+        }
+        .wilayah-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .wilayah-dalam { background: #e8f5e9; color: #2e7d32; }
+        .wilayah-luar  { background: #e3f2fd; color: #1565c0; }
+
+        /* Komentar box di modal detail */
+        .komentar-box {
+            background: #fffde7;
+            border: 1px solid #fff176;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-size: 0.875rem;
+            color: #5d4037;
+            line-height: 1.6;
+            white-space: pre-line;
+            min-height: 42px;
+        }
+        .komentar-box.empty {
+            background: #f5f5f5;
+            border-color: #e0e0e0;
+            color: #adb5bd;
+            font-style: italic;
         }
     </style>
 </head>
@@ -230,7 +217,8 @@
                                                                     '{{ $item->alamat }}',
                                                                     '{{ $item->bukti_transfer ?? '' }}',
                                                                     {{ $item->is_luar_subang ? 'true' : 'false' }},
-                                                                    '{{ $item->nama_kota ?? '' }}'
+                                                                    '{{ $item->nama_kota ?? '' }}',
+                                                                    {{ json_encode($item->komentar ?? '') }}
                                                                 )">
                                                                 <i class="fa fa-eye mb-1" style="color: #0f5132;"></i>
                                                                 <span style="font-size: 9px; color: #0f5132; font-weight: 600;">Detail</span>
@@ -366,22 +354,22 @@
                             <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
                         </div>
 
-                        {{-- Wilayah & Kota --}}
+                        {{-- Wilayah & Transport --}}
                         <div class="col-md-4 mb-3">
                             <label class="text-muted small d-block mb-1">Wilayah</label>
-                            <span id="viewWilayah" class="text-dark"></span>
+                            <span id="viewWilayah"></span>
                         </div>
-                        <div class="col-md-4 mb-3" id="viewKotaWrap" style="display:none;">
-                            <label class="text-muted small d-block mb-1">Kota / Kabupaten</label>
-                            <span id="viewKota" class="text-dark fw-semibold"></span>
+                        <div class="col-md-4 mb-3" id="viewAreaTransportWrap" style="display:none;">
+                            <label class="text-muted small d-block mb-1">Area Transport</label>
+                            <span id="viewAreaTransport" class="text-dark fw-semibold"></span>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="text-muted small d-block mb-1">Total Biaya</label>
-                            <span id="viewBiaya" class="text-dark fw-bold text-success"></span>
+                            <label class="text-muted small d-block mb-1">Rincian Biaya</label>
+                            <div id="viewBiayaBreakdown" class="biaya-breakdown"></div>
                         </div>
 
                         {{-- Bukti Transfer --}}
-                        <div class="col-12 mb-2">
+                        <div class="col-12 mb-3">
                             <label class="text-muted small d-block mb-2">Foto Bukti Transfer</label>
                             <div id="viewBuktiWrapper" class="bukti-wrapper"></div>
                             <div id="viewBuktiBtnWrap" class="mt-2 d-none">
@@ -389,6 +377,16 @@
                                     <i class="fas fa-external-link-alt me-1"></i> Buka di Tab Baru
                                 </a>
                             </div>
+                        </div>
+
+                        {{-- VI. KOMENTAR / CATATAN ADMIN --}}
+                        <div class="col-12 mt-2 mb-3">
+                            <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">VI. KOMENTAR / CATATAN ADMIN</span>
+                            <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <label class="text-muted small d-block mb-2">Komentar</label>
+                            <div id="viewKomentar" class="komentar-box"></div>
                         </div>
 
                     </div>
@@ -482,14 +480,12 @@
         const modalViewBS   = new bootstrap.Modal(document.getElementById('modalView'));
         const modalStatusBS = new bootstrap.Modal(document.getElementById('modalStatus'));
 
-        // ── Tabel biaya per kota Ciayumajakuning ─────────────────
-        // Harus sinkron dengan KOTA_CIAYUMAJAKUNING di frontend & BIAYA_KOTA di controller
-        const BIAYA_KOTA = {
-            'Kota Cirebon'         : 600000,
-            'Kabupaten Cirebon'    : 600000,
-            'Kabupaten Indramayu'  : 610000,
-            'Kabupaten Majalengka' : 620000,
-            'Kabupaten Kuningan'   : 630000,
+        // ── Konstanta biaya (sinkron dengan backend & frontend) ──
+        const BIAYA_TES = 550000;
+        const BIAYA_TRANSPORT_LUAR = 75000;
+        const TRANSPORT_DALAM = {
+            'Kota Subang': 25000,
+            'Kab. Subang':  50000,
         };
 
         function formatRupiah(nominal) {
@@ -500,7 +496,7 @@
         function openModalView(
             nama, noHp, email, tglLahir, jk, goldar,
             institusi, sosmed, domisili, alamat,
-            buktiTransfer, isLuarSubang, namaKota
+            buktiTransfer, isLuarSubang, namaKota, komentar
         ) {
             const jkText = jk === 'L' ? 'Laki-laki' : (jk === 'P' ? 'Perempuan' : jk);
 
@@ -514,28 +510,59 @@
             document.getElementById('viewDomisili').innerText  = domisili;
             document.getElementById('viewAlamat').innerText    = alamat;
 
-            // Wilayah, kota, dan biaya
-            if (!isLuarSubang) {
-                // Dalam Subang atau Kantor Subang
-                document.getElementById('viewWilayah').innerText = 'Dalam Subang';
-                document.getElementById('viewBiaya').innerText   = formatRupiah(550000);
-                document.getElementById('viewKotaWrap').style.display = 'none';
+            // Komentar admin
+            const komentarEl = document.getElementById('viewKomentar');
+            if (komentar && komentar.trim() !== '') {
+                komentarEl.innerText = komentar;
+                komentarEl.classList.remove('empty');
             } else {
-                // Luar Subang: tampilkan kota dan harga per kota
-                document.getElementById('viewWilayah').innerText = 'Luar Subang (Ciayumajakuning)';
-
-                const kotaBersih = (namaKota || '').trim();
-                const biaya      = BIAYA_KOTA[kotaBersih] ?? 650000;
-
-                document.getElementById('viewBiaya').innerText = formatRupiah(biaya);
-
-                if (kotaBersih !== '') {
-                    document.getElementById('viewKota').innerText           = kotaBersih;
-                    document.getElementById('viewKotaWrap').style.display   = '';
-                } else {
-                    document.getElementById('viewKotaWrap').style.display   = 'none';
-                }
+                komentarEl.innerText = 'Belum ada komentar dari admin.';
+                komentarEl.classList.add('empty');
             }
+
+            const kotaBersih = (namaKota || '').trim();
+            let transport    = 0;
+            let wilayahHTML  = '';
+            let areaLabel    = '';
+
+            if (!isLuarSubang) {
+                // Dalam Subang — cek nama_kota untuk biaya transport
+                transport  = TRANSPORT_DALAM[kotaBersih] ?? 0;
+                wilayahHTML = '<span class="wilayah-badge wilayah-dalam"><i class="fas fa-map-marker-alt me-1"></i>Dalam Subang</span>';
+
+                if (kotaBersih !== '' && TRANSPORT_DALAM[kotaBersih] !== undefined) {
+                    areaLabel = kotaBersih;
+                    document.getElementById('viewAreaTransport').innerText           = kotaBersih;
+                    document.getElementById('viewAreaTransportWrap').style.display   = '';
+                } else {
+                    document.getElementById('viewAreaTransportWrap').style.display   = 'none';
+                }
+            } else {
+                // Luar Subang
+                transport   = BIAYA_TRANSPORT_LUAR;
+                wilayahHTML = '<span class="wilayah-badge wilayah-luar"><i class="fas fa-road me-1"></i>Luar Subang</span>';
+                document.getElementById('viewAreaTransportWrap').style.display = 'none';
+            }
+
+            document.getElementById('viewWilayah').innerHTML = wilayahHTML;
+
+            // Rincian biaya breakdown
+            const total = BIAYA_TES + transport;
+            let breakdownHTML = `
+                <div class="biaya-row">
+                    <span>Biaya Tes</span>
+                    <span>${formatRupiah(BIAYA_TES)}</span>
+                </div>
+                <div class="biaya-row">
+                    <span>Biaya Transport${areaLabel ? ' (' + areaLabel + ')' : ''}</span>
+                    <span>${formatRupiah(transport)}</span>
+                </div>
+                <div class="biaya-total">
+                    <span>Total</span>
+                    <span>${formatRupiah(total)}</span>
+                </div>
+            `;
+            document.getElementById('viewBiayaBreakdown').innerHTML = breakdownHTML;
 
             // Bukti transfer
             const wrapper = document.getElementById('viewBuktiWrapper');

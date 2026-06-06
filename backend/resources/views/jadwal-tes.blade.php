@@ -69,6 +69,40 @@
             color: #adb5bd;
             font-size: 0.8rem;
         }
+
+        /* Biaya breakdown */
+        .biaya-breakdown {
+            background: #f8faf8;
+            border: 1px solid #e8f5e9;
+            border-radius: 8px;
+            padding: 10px 14px;
+        }
+        .biaya-breakdown .biaya-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.82rem;
+            color: #546e7a;
+            margin-bottom: 4px;
+        }
+        .biaya-breakdown .biaya-total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #00AA5B;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 7px;
+            margin-top: 5px;
+        }
+        .wilayah-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .wilayah-dalam { background: #e8f5e9; color: #2e7d32; }
+        .wilayah-luar  { background: #e3f2fd; color: #1565c0; }
     </style>
 </head>
 <body>
@@ -158,7 +192,7 @@
                     <div class="row mt-2">
                         <div class="col-md-12">
                             <div class="card card-round shadow-sm">
-                                <div class="card-body p-4"> 
+                                <div class="card-body p-4">
                                     <div class="table-responsive">
                                         <table id="tabel-jadwal" class="table table-striped table-hover mb-0 align-middle">
                                             <thead class="bg-light">
@@ -192,7 +226,7 @@
                                                         @if(!empty($item->nama_klien))
                                                             @php
                                                                 $statusRaw = strtolower($item->status);
-                                                                $badgeClass = 'badge-warning'; 
+                                                                $badgeClass = 'badge-warning';
                                                                 if(in_array($statusRaw, ['selesai', 'disetujui', 'diterima', 'sukses'])) {
                                                                     $badgeClass = 'badge-success';
                                                                 } elseif(in_array($statusRaw, ['batal', 'ditolak'])) {
@@ -208,7 +242,7 @@
                                                     </td>
                                                     <td class="px-4 py-3">
                                                         @if(!empty($item->nama_klien))
-                                                            <button type="button" 
+                                                            <button type="button"
                                                                     class="btn btn-sm p-2 card-round shadow-sm d-flex flex-column align-items-center btn-lihat-klien"
                                                                     style="background-color: #d1e7dd; border-color: #badbcc; min-width: 56px;"
                                                                     data-id="{{ $item->id_jadwal }}"
@@ -216,6 +250,7 @@
                                                                     data-lokasi="{{ $item->lokasi }}"
                                                                     data-bukti="{{ $item->bukti_transfer ?? '' }}"
                                                                     data-is-luar="{{ $item->is_luar_subang ? '1' : '0' }}"
+                                                                    data-nama-kota="{{ $item->nama_kota ?? '' }}"
                                                                     data-biaya="{{ $item->biaya ?? 550000 }}"
                                                                     title="Lihat Detail Klien">
                                                                 <i class="fas fa-user mb-1" style="color: #0f5132;"></i>
@@ -305,21 +340,31 @@
                     {{-- Container list klien (diisi AJAX) --}}
                     <div id="container-list-klien"></div>
 
-                    {{-- Seksi bukti transfer (diisi JS saat modal dibuka) --}}
+                    {{-- Seksi bukti transfer + rincian biaya --}}
                     <div id="seksi-bukti" class="mt-3 p-3 bg-white rounded card-round shadow-sm border">
-                        <small class="text-uppercase fw-bold text-muted fs-8 d-block mb-2">
-                            <i class="fas fa-receipt me-1"></i> Bukti Transfer
-                        </small>
-                        <div id="bukti-info-bar" class="mb-2 d-flex align-items-center gap-2">
-                            <span id="bukti-wilayah" class="badge badge-secondary px-3 py-1 btn-round fs-8 fw-normal"></span>
-                            <span id="bukti-biaya" class="fw-bold text-success fs-7"></span>
+
+                        {{-- Baris atas: wilayah & rincian biaya --}}
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-5">
+                                <small class="text-uppercase fw-bold text-muted fs-8 d-block mb-2">
+                                    <i class="fas fa-map-pin me-1"></i> Wilayah & Biaya
+                                </small>
+                                <div class="mb-2" id="bukti-wilayah-wrap"></div>
+                                <div id="bukti-biaya-breakdown" class="biaya-breakdown"></div>
+                            </div>
+                            <div class="col-md-7">
+                                <small class="text-uppercase fw-bold text-muted fs-8 d-block mb-2">
+                                    <i class="fas fa-receipt me-1"></i> Bukti Transfer
+                                </small>
+                                <div id="bukti-img-wrap" class="bukti-thumb-wrap"></div>
+                                <div id="bukti-link-wrap" class="mt-2 d-none">
+                                    <a id="bukti-full-link" href="#" target="_blank" class="btn btn-sm btn-outline-primary btn-round">
+                                        <i class="fas fa-external-link-alt me-1"></i> Buka di Tab Baru
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-                        <div id="bukti-img-wrap" class="bukti-thumb-wrap"></div>
-                        <div id="bukti-link-wrap" class="mt-2 d-none">
-                            <a id="bukti-full-link" href="#" target="_blank" class="btn btn-sm btn-outline-primary btn-round">
-                                <i class="fas fa-external-link-alt me-1"></i> Buka di Tab Baru
-                            </a>
-                        </div>
+
                     </div>
 
                 </div>
@@ -346,6 +391,45 @@
     <script src="{{ asset('assets/js/kaiadmin.min.js') }}"></script>
 
     <script>
+        // ── Konstanta biaya (sinkron dengan backend & frontend) ──
+        const BIAYA_TES = 550000;
+        const BIAYA_TRANSPORT_LUAR = 75000;
+        const TRANSPORT_DALAM = {
+            'Kota Subang': 25000,
+            'Kab. Subang': 50000,
+        };
+
+        function formatRupiah(nominal) {
+            return 'Rp ' + parseInt(nominal).toLocaleString('id-ID');
+        }
+
+        function renderBiayaBreakdown(isLuar, namaKota) {
+            var kotaBersih  = (namaKota || '').trim();
+            var transport   = 0;
+            var areaLabel   = '';
+            var wilayahHTML = '';
+
+            if (isLuar == '1') {
+                transport   = BIAYA_TRANSPORT_LUAR;
+                wilayahHTML = '<span class="wilayah-badge wilayah-luar"><i class="fas fa-road me-1"></i>Luar Subang</span>';
+            } else {
+                transport  = TRANSPORT_DALAM[kotaBersih] !== undefined ? TRANSPORT_DALAM[kotaBersih] : 0;
+                wilayahHTML = '<span class="wilayah-badge wilayah-dalam"><i class="fas fa-map-marker-alt me-1"></i>Dalam Subang</span>';
+                if (kotaBersih !== '' && TRANSPORT_DALAM[kotaBersih] !== undefined) {
+                    areaLabel = kotaBersih;
+                }
+            }
+
+            var total = BIAYA_TES + transport;
+
+            $('#bukti-wilayah-wrap').html(wilayahHTML);
+            $('#bukti-biaya-breakdown').html(
+                '<div class="biaya-row"><span>Biaya Tes</span><span>' + formatRupiah(BIAYA_TES) + '</span></div>' +
+                '<div class="biaya-row"><span>Biaya Transport' + (areaLabel ? ' (' + areaLabel + ')' : '') + '</span><span>' + formatRupiah(transport) + '</span></div>' +
+                '<div class="biaya-total"><span>Total</span><span>' + formatRupiah(total) + '</span></div>'
+            );
+        }
+
         $(document).ready(function(){
             $('[data-bs-toggle="tooltip"]').tooltip();
 
@@ -371,7 +455,7 @@
                     text: "Slot jadwal ini akan dihapus secara permanen!",
                     type: 'warning',
                     buttons: {
-                        cancel: { visible: true, text: 'Batal', className: 'btn btn-secondary btn-round fw-bold' },
+                        cancel:  { visible: true, text: 'Batal', className: 'btn btn-secondary btn-round fw-bold' },
                         confirm: { text: 'Ya, Hapus!', className: 'btn btn-danger btn-round fw-bold' }
                     }
                 }).then((willDelete) => {
@@ -382,7 +466,7 @@
             // Aksi Tolak / Buka Kembali dari dalam modal AJAX
             $('#container-list-klien').on('click', '.btn-aksi-status', function(e) {
                 e.preventDefault();
-                var idJadwal    = $(this).data('id');
+                var idJadwal     = $(this).data('id');
                 var statusTarget = $(this).data('status');
 
                 var cfg = {
@@ -406,26 +490,25 @@
                 }).then((ok) => { if (ok) executeUpdateStatus(idJadwal, statusTarget); });
             });
 
-            // Buka modal detail klien — juga render bukti transfer
+            // Buka modal detail klien
             $('#tabel-jadwal').on('click', '.btn-lihat-klien', function() {
                 var idJadwal   = $(this).data('id');
                 var infoWaktu  = $(this).data('waktu');
                 var infoLokasi = $(this).data('lokasi');
                 var bukti      = $(this).data('bukti');
                 var isLuar     = $(this).data('is-luar');
-                var biaya      = $(this).data('biaya') || 550000;
+                var namaKota   = $(this).data('nama-kota') || '';
 
                 $('#modal-waktu-jadwal').text(infoWaktu);
                 $('#modal-lokasi-jadwal').html('<i class="fas fa-map-marker-alt me-1"></i> ' + infoLokasi);
 
-                // -- Render Bukti Transfer --
-                var wilayahText = isLuar == '1' ? 'Luar Subang' : 'Dalam Subang';
-               $('#bukti-wilayah').text(wilayahText);
-$('#bukti-biaya').text('Rp ' + parseInt(biaya).toLocaleString('id-ID'));
+                // -- Render rincian biaya breakdown --
+                renderBiayaBreakdown(isLuar, namaKota);
 
-                var imgWrap    = $('#bukti-img-wrap');
-                var linkWrap   = $('#bukti-link-wrap');
-                var fullLink   = $('#bukti-full-link');
+                // -- Render Bukti Transfer --
+                var imgWrap  = $('#bukti-img-wrap');
+                var linkWrap = $('#bukti-link-wrap');
+                var fullLink = $('#bukti-full-link');
 
                 if (bukti && bukti.trim() !== '') {
                     var imgUrl = '/uploads/bukti/' + bukti;
@@ -469,8 +552,8 @@ $('#bukti-biaya').text('Rp ' + parseInt(biaya).toLocaleString('id-ID'));
                         }
 
                         $.each(data, function(index, item) {
-                            var statusLower  = item.status_jadwal.toLowerCase();
-                            var badgeClass   = 'badge-warning';
+                            var statusLower   = item.status_jadwal.toLowerCase();
+                            var badgeClass    = 'badge-warning';
                             var displayStatus = item.status_jadwal;
 
                             if (['selesai','disetujui','diterima','sukses'].includes(statusLower)) badgeClass = 'badge-success';
@@ -480,7 +563,15 @@ $('#bukti-biaya').text('Rp ' + parseInt(biaya).toLocaleString('id-ID'));
                                 ? 'Menunggu Konfirmasi'
                                 : displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1).toLowerCase();
 
-                            var cleanPhone = item.no_hp ? item.no_hp.replace(/[^0-9]/g, '') : '';
+                            var cleanPhone = '';
+if (item.no_hp) {
+    cleanPhone = item.no_hp.replace(/[^0-9]/g, '');
+    if (cleanPhone.startsWith('0')) {
+        cleanPhone = '62' + cleanPhone.substring(1);
+    } else if (!cleanPhone.startsWith('62')) {
+        cleanPhone = '62' + cleanPhone;
+    }
+}
                             var waButton   = item.no_hp
                                 ? '<a href="https://wa.me/' + cleanPhone + '" target="_blank" class="btn btn-sm btn-success btn-round px-3"><i class="fab fa-whatsapp me-2"></i>Hubungi Klien</a>'
                                 : '<span class="text-muted fs-8">-</span>';

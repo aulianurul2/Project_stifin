@@ -70,10 +70,11 @@ export default function EditProfile() {
   ];
 
   const opsiGolDarah = [
+    { label: '-', value: '-' },
     { label: 'A', value: 'A' },
     { label: 'B', value: 'B' },
     { label: 'AB', value: 'AB' },
-    { label: 'O', value: 'O' }
+    { label: 'O', value: 'O' },
   ];
 
   useEffect(() => {

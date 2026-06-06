@@ -5,10 +5,10 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
+  Platform,
   ScrollView,
   ActivityIndicator,
   Alert,
-  Platform,
   StatusBar,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -24,19 +24,18 @@ interface Jadwal {
   status: string;
 }
 
-// Daftar kota Ciayumajakuning beserta biaya
-export interface KotaCiayuma {
+export interface TransportOption {
   label: string;
   biaya: number;
 }
 
-export const KOTA_CIAYUMAJAKUNING: KotaCiayuma[] = [
-  { label: 'Kota Cirebon',        biaya: 600000 },
-  { label: 'Kabupaten Cirebon',   biaya: 600000 },
-  { label: 'Kabupaten Indramayu', biaya: 610000 },
-  { label: 'Kabupaten Majalengka',biaya: 620000 },
-  { label: 'Kabupaten Kuningan',  biaya: 630000 },
+export const TRANSPORT_DALAM_SUBANG: TransportOption[] = [
+  { label: 'Kota Subang', biaya: 25000 },
+  { label: 'Kab. Subang', biaya: 50000 },
 ];
+
+const BIAYA_TES = 550000;
+const BIAYA_TRANSPORT_LUAR = 75000;
 
 export function formatRupiah(nominal: number): string {
   return 'Rp ' + nominal.toLocaleString('id-ID');
@@ -48,9 +47,8 @@ export default function PendaftaranTes() {
   const [tempatTes, setTempatTes] = useState('Kantor Subang');
   const [wilayahHomeVisit, setWilayahHomeVisit] = useState<'dalam' | 'luar'>('dalam');
 
-  // Kota terpilih untuk Ciayumajakuning
-  const [selectedKota, setSelectedKota] = useState<KotaCiayuma>(KOTA_CIAYUMAJAKUNING[0]);
-  // Apakah dropdown kota sedang terbuka
+  // Transport dropdown untuk Dalam Subang
+  const [selectedTransport, setSelectedTransport] = useState<TransportOption>(TRANSPORT_DALAM_SUBANG[0]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const [jadwalData, setJadwalData] = useState<Jadwal[]>([]);
@@ -60,11 +58,16 @@ export default function PendaftaranTes() {
   // Derived
   const isLuarSubang = tempatTes === 'Home Visit' && wilayahHomeVisit === 'luar';
 
-  // Biaya berdasarkan pilihan
   const getBiaya = (): number => {
-    if (tempatTes !== 'Home Visit') return 550000;
-    if (wilayahHomeVisit === 'luar') return selectedKota.biaya;
-    return 550000;
+    if (tempatTes !== 'Home Visit') return BIAYA_TES;
+    if (wilayahHomeVisit === 'luar') return BIAYA_TES + BIAYA_TRANSPORT_LUAR;
+    return BIAYA_TES + selectedTransport.biaya;
+  };
+
+  const getTransportBiaya = (): number => {
+    if (tempatTes !== 'Home Visit') return 0;
+    if (wilayahHomeVisit === 'luar') return BIAYA_TRANSPORT_LUAR;
+    return selectedTransport.biaya;
   };
 
   useEffect(() => {
@@ -107,12 +110,14 @@ export default function PendaftaranTes() {
     router.push({
       pathname: '/form-pendaftaran',
       params: {
-        id_jadwal:        selectedJadwal.id_jadwal,
-        tanggal:          selectedJadwal.tanggal,
-        waktu:            selectedJadwal.waktu,
-        is_luar_subang:   isLuarSubang ? '1' : '0',
-        nama_kota:        isLuarSubang ? selectedKota.label : '',
-        biaya:            getBiaya().toString(),
+        id_jadwal:      selectedJadwal.id_jadwal,
+        tanggal:        selectedJadwal.tanggal,
+        waktu:          selectedJadwal.waktu,
+        is_luar_subang: isLuarSubang ? '1' : '0',
+        nama_kota:      tempatTes === 'Home Visit' && !isLuarSubang
+                          ? selectedTransport.label
+                          : '',
+        biaya:          getBiaya().toString(),
       },
     });
   };
@@ -178,9 +183,11 @@ export default function PendaftaranTes() {
           {tempatTes === 'Home Visit' && (
             <View style={styles.wilayahBox}>
               <Text style={styles.wilayahLabel}>
-                <Ionicons name="cash-outline" size={12} color="#546e7a" /> Wilayah
+                <Ionicons name="map-outline" size={12} color="#546e7a" /> Wilayah Home Visit
               </Text>
               <View style={styles.wilayahOptions}>
+
+                {/* Dalam Subang */}
                 <TouchableOpacity
                   style={[styles.wilayahChip, wilayahHomeVisit === 'dalam' && styles.wilayahChipActive]}
                   onPress={() => { setWilayahHomeVisit('dalam'); setDropdownOpen(false); }}
@@ -190,32 +197,32 @@ export default function PendaftaranTes() {
                     Dalam Subang
                   </Text>
                   <Text style={[styles.wilayahHarga, wilayahHomeVisit === 'dalam' && styles.wilayahHargaActive]}>
-                    Rp 550.000
+                    + {formatRupiah(selectedTransport.biaya)} transport
                   </Text>
                 </TouchableOpacity>
 
+                {/* Luar Subang */}
                 <TouchableOpacity
                   style={[styles.wilayahChip, wilayahHomeVisit === 'luar' && styles.wilayahChipActive]}
-                  onPress={() => setWilayahHomeVisit('luar')}
+                  onPress={() => { setWilayahHomeVisit('luar'); setDropdownOpen(false); }}
                   activeOpacity={0.7}
                 >
                   <Text style={[styles.wilayahChipText, wilayahHomeVisit === 'luar' && styles.wilayahChipTextActive]}>
                     Luar Subang
                   </Text>
                   <Text style={[styles.wilayahHarga, wilayahHomeVisit === 'luar' && styles.wilayahHargaActive]}>
-                    Rp 600.000
+                    + Rp 75.000 transport
                   </Text>
                 </TouchableOpacity>
               </View>
 
-              {/* Dropdown pilih kota — hanya muncul jika Ciayumajakuning dipilih */}
-              {wilayahHomeVisit === 'luar' && (
+              {/* Dropdown transport — hanya muncul jika Dalam Subang */}
+              {wilayahHomeVisit === 'dalam' && (
                 <View style={styles.kotaBox}>
                   <Text style={styles.kotaLabel}>
-                    <Ionicons name="business-outline" size={12} color="#546e7a" /> Pilih Kota / Kabupaten
+                    <Ionicons name="car-outline" size={12} color="#546e7a" /> Pilih Area Transport
                   </Text>
 
-                  {/* Trigger dropdown */}
                   <TouchableOpacity
                     style={styles.dropdownTrigger}
                     onPress={() => setDropdownOpen(!dropdownOpen)}
@@ -223,11 +230,11 @@ export default function PendaftaranTes() {
                   >
                     <View style={styles.dropdownTriggerLeft}>
                       <Ionicons name="location-outline" size={15} color="#00AA5B" />
-                      <Text style={styles.dropdownTriggerText}>{selectedKota.label}</Text>
+                      <Text style={styles.dropdownTriggerText}>{selectedTransport.label}</Text>
                     </View>
                     <View style={styles.dropdownTriggerRight}>
                       <Text style={styles.dropdownTriggerHarga}>
-                        {formatRupiah(selectedKota.biaya)}
+                        + {formatRupiah(selectedTransport.biaya)}
                       </Text>
                       <Ionicons
                         name={dropdownOpen ? 'chevron-up' : 'chevron-down'}
@@ -237,21 +244,20 @@ export default function PendaftaranTes() {
                     </View>
                   </TouchableOpacity>
 
-                  {/* Daftar pilihan kota */}
                   {dropdownOpen && (
                     <View style={styles.dropdownList}>
-                      {KOTA_CIAYUMAJAKUNING.map((kota, index) => {
-                        const isActive = selectedKota.label === kota.label;
+                      {TRANSPORT_DALAM_SUBANG.map((item, index) => {
+                        const isActive = selectedTransport.label === item.label;
                         return (
                           <TouchableOpacity
-                            key={kota.label}
+                            key={item.label}
                             style={[
                               styles.dropdownItem,
                               isActive && styles.dropdownItemActive,
-                              index < KOTA_CIAYUMAJAKUNING.length - 1 && styles.dropdownItemBorder,
+                              index < TRANSPORT_DALAM_SUBANG.length - 1 && styles.dropdownItemBorder,
                             ]}
                             onPress={() => {
-                              setSelectedKota(kota);
+                              setSelectedTransport(item);
                               setDropdownOpen(false);
                             }}
                             activeOpacity={0.7}
@@ -263,11 +269,11 @@ export default function PendaftaranTes() {
                                 color={isActive ? '#00AA5B' : '#b0bec5'}
                               />
                               <Text style={[styles.dropdownItemText, isActive && styles.dropdownItemTextActive]}>
-                                {kota.label}
+                                {item.label}
                               </Text>
                             </View>
                             <Text style={[styles.dropdownItemHarga, isActive && styles.dropdownItemHargaActive]}>
-                              {formatRupiah(kota.biaya)}
+                              + {formatRupiah(item.biaya)}
                             </Text>
                           </TouchableOpacity>
                         );
@@ -276,27 +282,69 @@ export default function PendaftaranTes() {
                   )}
                 </View>
               )}
+
+              {/* Keterangan biaya luar subang */}
+              {wilayahHomeVisit === 'luar' && (
+                <View style={styles.luarSubangInfo}>
+                  <Ionicons name="information-circle-outline" size={15} color="#0288d1" />
+                  <Text style={styles.luarSubangInfoText}>
+                    Biaya transport luar Subang sebesar{' '}
+                    <Text style={{ fontWeight: '800', color: '#01579b' }}>Rp 75.000</Text>{' '}
+                    berlaku untuk semua wilayah di luar Kabupaten Subang.
+                  </Text>
+                </View>
+              )}
+
+              {/* Info biaya total */}
+              <View style={styles.hargaInfoRow}>
+                <Ionicons name="pricetag-outline" size={13} color="#00AA5B" />
+                <View style={{ flex: 1 }}>
+                  {tempatTes === 'Home Visit' ? (
+                    <>
+                      <Text style={styles.hargaInfoText}>
+                        Biaya Tes:{' '}
+                        <Text style={{ color: '#546e7a', fontWeight: '700' }}>
+                          {formatRupiah(BIAYA_TES)}
+                        </Text>
+                        {'  +  '}
+                        Transport:{' '}
+                        <Text style={{ color: '#546e7a', fontWeight: '700' }}>
+                          {formatRupiah(getTransportBiaya())}
+                        </Text>
+                      </Text>
+                      <Text style={styles.hargaInfoTotal}>
+                        Total: {formatRupiah(getBiaya())}
+                      </Text>
+                    </>
+                  ) : (
+                    <Text style={styles.hargaInfoText}>
+                      Biaya:{' '}
+                      <Text style={styles.hargaInfoNominal}>{formatRupiah(getBiaya())}</Text>
+                    </Text>
+                  )}
+                  <Text style={styles.hargaInfoNote}>
+                    * Belum termasuk biaya admin antar bank
+                  </Text>
+                </View>
+              </View>
             </View>
           )}
 
-          {/* Info harga — selalu tampil di bawah */}
-          <View style={styles.hargaInfoRow}>
-            <Ionicons name="pricetag-outline" size={13} color="#00AA5B" />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.hargaInfoText}>
-                Biaya:{' '}
-                <Text style={styles.hargaInfoNominal}>
-                  {formatRupiah(getBiaya())}
+          {/* Info harga untuk Kantor Subang */}
+          {tempatTes !== 'Home Visit' && (
+            <View style={styles.hargaInfoRow}>
+              <Ionicons name="pricetag-outline" size={13} color="#00AA5B" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.hargaInfoText}>
+                  Biaya:{' '}
+                  <Text style={styles.hargaInfoNominal}>{formatRupiah(getBiaya())}</Text>
                 </Text>
-                {isLuarSubang && (
-                  <Text style={styles.hargaInfoKota}> ({selectedKota.label})</Text>
-                )}
-              </Text>
-              <Text style={styles.hargaInfoNote}>
-                * Belum termasuk biaya admin antar bank
-              </Text>
+                <Text style={styles.hargaInfoNote}>
+                  * Belum termasuk biaya admin antar bank
+                </Text>
+              </View>
             </View>
-          </View>
+          )}
         </View>
 
         {/* Schedule Table */}
@@ -490,7 +538,7 @@ const styles = StyleSheet.create({
   wilayahHarga: { fontSize: 11, fontWeight: '600', color: '#90a4ae' },
   wilayahHargaActive: { color: 'rgba(255,255,255,0.85)' },
 
-  // Kota Ciayumajakuning
+  // Dropdown Transport Dalam Subang
   kotaBox: {
     marginTop: 12, paddingTop: 12,
     borderTopWidth: 1, borderTopColor: '#e8f5e9',
@@ -532,6 +580,17 @@ const styles = StyleSheet.create({
   dropdownItemHarga: { fontSize: 12, fontWeight: '700', color: '#90a4ae' },
   dropdownItemHargaActive: { color: '#00AA5B' },
 
+  // Info luar subang
+  luarSubangInfo: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 8,
+    marginTop: 12, padding: 12,
+    backgroundColor: '#e1f5fe', borderRadius: 10,
+    borderWidth: 1, borderColor: '#b3e5fc',
+  },
+  luarSubangInfoText: {
+    flex: 1, fontSize: 12, color: '#01579b', lineHeight: 17,
+  },
+
   // Info harga
   hargaInfoRow: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 6,
@@ -540,10 +599,12 @@ const styles = StyleSheet.create({
   },
   hargaInfoText: { fontSize: 13, color: '#546e7a', fontWeight: '600' },
   hargaInfoNominal: { color: '#00AA5B', fontWeight: '800' },
-  hargaInfoKota: { color: '#78909c', fontWeight: '600', fontSize: 12 },
+  hargaInfoTotal: {
+    fontSize: 14, fontWeight: '800', color: '#00AA5B', marginTop: 4,
+  },
   hargaInfoNote: {
     fontSize: 10, color: '#90a4ae',
-    fontStyle: 'italic', marginTop: 2,
+    fontStyle: 'italic', marginTop: 4,
   },
 
   tableCard: {

@@ -4,40 +4,27 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class HasilTesController extends Controller
 {
-    /**
-     * Daftar biaya per kota Ciayumajakuning.
-     * Harus sinkron dengan KOTA_CIAYUMAJAKUNING di frontend.
-     */
-    private const BIAYA_KOTA = [
-        'Kota Cirebon'         => 600000,
-        'Kabupaten Cirebon'    => 600000,
-        'Kabupaten Indramayu'  => 610000,
-        'Kabupaten Majalengka' => 620000,
-        'Kabupaten Kuningan'   => 630000,
+    private const BIAYA_TRANSPORT = [
+        'Kota Subang' => 25000,
+        'Kab. Subang'  => 50000,
     ];
+    private const BIAYA_TRANSPORT_LUAR = 75000;
+    private const BIAYA_TES = 550000;
 
-    /**
-     * Hitung nominal biaya berdasarkan data jadwal.
-     * - Kantor Subang / Home Visit Dalam Subang  : Rp 550.000
-     * - Home Visit Luar Subang (Ciayumajakuning) : sesuai tabel BIAYA_KOTA
-     *   Fallback ke Rp 650.000 jika kota tidak dikenal.
-     */
     private function hitungNominal(object $jadwal): int
     {
         if (!$jadwal->is_luar_subang) {
-            return 550000;
+            $namaKota  = trim($jadwal->nama_kota ?? '');
+            $transport = self::BIAYA_TRANSPORT[$namaKota] ?? 0;
+            return self::BIAYA_TES + $transport;
         }
-
-        $namaKota = trim($jadwal->nama_kota ?? '');
-        return self::BIAYA_KOTA[$namaKota] ?? 650000;
+        return self::BIAYA_TES + self::BIAYA_TRANSPORT_LUAR;
     }
 
-    /**
-     * Menampilkan halaman hasil tes (tab Kelola & Riwayat).
-     */
     public function index(Request $request)
     {
         $tab = $request->query('tab', 'kelola');
@@ -65,6 +52,7 @@ class HasilTesController extends Controller
             'file_hasil'  => 'required|mimes:pdf,jpg,png,jpeg|max:2048',
             'file_detail' => 'required|mimes:pdf,doc,docx|max:5120',
             'id_jadwal'   => 'required|integer',
+            'hasil_tes'   => 'required|string|max:50',
         ]);
 
         if (!file_exists(public_path('uploads/hasil'))) {
@@ -81,13 +69,13 @@ class HasilTesController extends Controller
         $nominal  = $this->hitungNominal($jadwal);
         $namaKota = trim($jadwal->nama_kota ?? '');
 
-        // Label keterangan untuk tabel pemasukan
         if (!$jadwal->is_luar_subang) {
-            $keterangan = 'Pembayaran Tes Dalam Subang';
-        } elseif ($namaKota !== '') {
-            $keterangan = 'Pembayaran Tes Home Visit – ' . $namaKota;
+            $namaKota   = trim($jadwal->nama_kota ?? '');
+            $transport  = self::BIAYA_TRANSPORT[$namaKota] ?? 0;
+            $keterangan = 'Pembayaran Tes' . ($namaKota !== '' ? ' – ' . $namaKota : ' Dalam Subang');
         } else {
-            $keterangan = 'Pembayaran Tes Luar Subang';
+            $namaKota   = '';
+            $keterangan = 'Pembayaran Tes Luar Subang (Home Visit)';
         }
 
         $data = [
@@ -96,6 +84,7 @@ class HasilTesController extends Controller
             'updated_at' => now(),
             'biaya_tes'  => $nominal,
             'nama_kota'  => $namaKota ?: null,
+            'hasil_tes'  => $request->input('hasil_tes'),
         ];
 
         if ($request->hasFile('file_hasil')) {
@@ -123,25 +112,25 @@ class HasilTesController extends Controller
     }
 
     /**
-     * Edit/ganti file hasil tes yang sudah diupload.
+     * Edit/ganti file hasil tes dan/atau hasil STIFIn.
      */
     public function edit(Request $request, $id)
     {
         $request->validate([
             'file_hasil'  => 'nullable|mimes:pdf,jpg,png,jpeg|max:2048',
             'file_detail' => 'nullable|mimes:pdf,doc,docx|max:5120',
+            'hasil_tes'   => 'nullable|string|max:50',
         ]);
 
-        // Minimal satu file harus dikirim
-        if (!$request->hasFile('file_hasil') && !$request->hasFile('file_detail')) {
-            return redirect()->back()->with('error', 'Pilih minimal satu file yang ingin diganti.');
+        // Minimal satu field harus diisi
+        if (!$request->hasFile('file_hasil') && !$request->hasFile('file_detail') && !$request->filled('hasil_tes')) {
+            return redirect()->back()->with('error', 'Pilih minimal satu perubahan yang ingin disimpan.');
         }
 
         if (!file_exists(public_path('uploads/hasil'))) {
             mkdir(public_path('uploads/hasil'), 0775, true);
         }
 
-        // Ambil data lama untuk hapus file lama
         $existing = DB::table('hasiltes')->where('id_tes', $id)->first();
 
         if (!$existing) {
@@ -149,6 +138,11 @@ class HasilTesController extends Controller
         }
 
         $data = ['updated_at' => now()];
+
+        // Simpan hasil_tes jika diisi
+        if ($request->filled('hasil_tes')) {
+            $data['hasil_tes'] = $request->input('hasil_tes');
+        }
 
         if ($request->hasFile('file_hasil')) {
             if ($existing->file_hasil && file_exists(public_path('uploads/hasil/' . $existing->file_hasil))) {
@@ -170,6 +164,6 @@ class HasilTesController extends Controller
 
         DB::table('hasiltes')->where('id_tes', $id)->update($data);
 
-        return redirect('/hasil-tes?tab=riwayat')->with('success', 'File berhasil diperbarui.');
+        return redirect('/hasil-tes?tab=riwayat')->with('success', 'Data berhasil diperbarui.');
     }
 }

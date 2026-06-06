@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   StatusBar,
   TouchableWithoutFeedback,
+  Linking,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -19,22 +20,58 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import Toast from 'react-native-toast-message';
 import axiosInstance from '@/src/api/axiosConfig';
 
-// ─── Daftar kota Ciayumajakuning (sama persis dengan pendaftaran.tsx) ───────
-interface KotaCiayuma {
+// ─── Transport options (sama dengan pendaftaran.tsx) ────────────────────────
+interface TransportOption {
   label: string;
   biaya: number;
 }
 
-const KOTA_CIAYUMAJAKUNING: KotaCiayuma[] = [
-  { label: 'Kota Cirebon',         biaya: 600000 },
-  { label: 'Kabupaten Cirebon',    biaya: 600000 },
-  { label: 'Kabupaten Indramayu',  biaya: 610000 },
-  { label: 'Kabupaten Majalengka', biaya: 620000 },
-  { label: 'Kabupaten Kuningan',   biaya: 630000 },
+const TRANSPORT_DALAM_SUBANG: TransportOption[] = [
+  { label: 'Kota Subang', biaya: 25000 },
+  { label: 'Kab. Subang', biaya: 50000 },
 ];
+
+const BIAYA_TES = 550000;
+const BIAYA_TRANSPORT_LUAR = 75000;
+
+// ─── Kontak Admin WhatsApp ────────────────────────────────────────────────────
+const ADMIN_WA_NUMBER = '6289509482755'; // 089509482755 → format internasional
 
 function formatRupiah(nominal: number): string {
   return 'Rp ' + nominal.toLocaleString('id-ID');
+}
+
+/**
+ * Hitung selisih hari antara tanggal jadwal (string "DD/MM/YYYY" atau ISO)
+ * dan hari ini. Positif = jadwal sudah lewat N hari lalu.
+ */
+function hariSejakJadwal(tanggalStr: string): number {
+  if (!tanggalStr || tanggalStr.trim() === '' || tanggalStr === 'null') return 0;
+
+  let jadwalDate: Date | null = null;
+
+  // Coba format DD/MM/YYYY
+  const dmyMatch = tanggalStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (dmyMatch) {
+    jadwalDate = new Date(
+      parseInt(dmyMatch[3]),
+      parseInt(dmyMatch[2]) - 1,
+      parseInt(dmyMatch[1])
+    );
+  } else {
+    // Fallback: ISO / format lain yang didukung Date
+    jadwalDate = new Date(tanggalStr);
+  }
+
+  if (!jadwalDate || isNaN(jadwalDate.getTime())) return 0;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  jadwalDate.setHours(0, 0, 0, 0);
+
+  const diffMs   = today.getTime() - jadwalDate.getTime();
+  const diffHari = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  return diffHari; // negatif = jadwal belum tiba, 0 = hari ini, positif = sudah lewat
 }
 
 interface SlotJadwal {
@@ -60,7 +97,7 @@ export default function HasilTes() {
     }>();
 
   const [modalRescheduleVisible, setModalRescheduleVisible] = useState(false);
-  const [listJadwal, setListJadwal]     = useState<SlotJadwal[]>([]);
+  const [listJadwal, setListJadwal]       = useState<SlotJadwal[]>([]);
   const [loadingJadwal, setLoadingJadwal] = useState(false);
   const [prosesLoading, setProsesLoading] = useState(false);
 
@@ -68,32 +105,45 @@ export default function HasilTes() {
   const [rescheduleTempatTes, setRescheduleTempatTes] = useState<'Kantor Subang' | 'Home Visit'>('Kantor Subang');
   const [rescheduleWilayah, setRescheduleWilayah]     = useState<'dalam' | 'luar'>('dalam');
 
-  // Kota Ciayumajakuning yang dipilih di modal reschedule
-  const [rescheduleKota, setRescheduleKota]           = useState<KotaCiayuma>(KOTA_CIAYUMAJAKUNING[0]);
-  const [rescheduleDropdownOpen, setRescheduleDropdownOpen] = useState(false);
+  // Transport dropdown untuk Dalam Subang di modal reschedule
+  const [rescheduleTransport, setRescheduleTransport]         = useState<TransportOption>(TRANSPORT_DALAM_SUBANG[0]);
+  const [rescheduleDropdownOpen, setRescheduleDropdownOpen]   = useState(false);
 
-  const isFileHasilAda   = file_hasil  && file_hasil.trim()  !== '' && file_hasil  !== 'null';
-  const isFileDetailAda  = file_detail && file_detail.trim() !== '' && file_detail !== 'null';
-  const berkasTersedia   = isFileHasilAda || isFileDetailAda;
+  const isFileHasilAda  = file_hasil  && file_hasil.trim()  !== '' && file_hasil  !== 'null';
+  const isFileDetailAda = file_detail && file_detail.trim() !== '' && file_detail !== 'null';
+  const berkasTersedia  = isFileHasilAda || isFileDetailAda;
 
-  const statusLower      = status?.toLowerCase() ?? '';
-  const isDitolak        = statusLower === 'ditolak';
-  const isDibatalkan     = statusLower === 'dibatalkan';
-  const isDiterima       = ['diterima', 'disetujui', 'diproses'].includes(statusLower);
-  const belumMengajukan  =
+  const statusLower     = status?.toLowerCase() ?? '';
+  const isDitolak       = statusLower === 'ditolak';
+  const isDibatalkan    = statusLower === 'dibatalkan';
+  const isDiterima      = ['diterima', 'disetujui', 'diproses'].includes(statusLower);
+  const belumMengajukan =
     (!tanggal || tanggal.trim() === '' || tanggal === 'null') &&
     (!jam || jam.trim() === '' || jam === 'null');
-  const isMenunggu       = !belumMengajukan && !berkasTersedia && !isDitolak && !isDibatalkan && !isDiterima;
-  const isKomentarAda    = komentar && komentar.trim() !== '' && komentar !== 'null';
+  const isMenunggu      = !belumMengajukan && !berkasTersedia && !isDitolak && !isDibatalkan && !isDiterima;
+  const isKomentarAda   = komentar && komentar.trim() !== '' && komentar !== 'null';
+
+  // ─── Cek batas 14 hari reschedule ─────────────────────────────────────────
+  const selisihHari         = hariSejakJadwal(tanggal ?? '');
+  // Bisa reschedule: jadwal sudah lewat (≥0) DAN belum melebihi 14 hari
+  // Jika jadwal belum tiba (selisihHari < 0), tetap boleh reschedule
+  const melewatiBatasReschedule = selisihHari > 14;
+  const sisaHariReschedule      = Math.max(0, 14 - selisihHari);
 
   // Derived: apakah reschedule ke luar subang
   const rescheduleIsLuar = rescheduleTempatTes === 'Home Visit' && rescheduleWilayah === 'luar';
 
   // Biaya reschedule
   const getRescheduleBiaya = (): number => {
-    if (rescheduleTempatTes !== 'Home Visit') return 550000;
-    if (rescheduleWilayah === 'luar') return rescheduleKota.biaya;
-    return 550000;
+    if (rescheduleTempatTes !== 'Home Visit') return BIAYA_TES;
+    if (rescheduleWilayah === 'luar') return BIAYA_TES + BIAYA_TRANSPORT_LUAR;
+    return BIAYA_TES + rescheduleTransport.biaya;
+  };
+
+  const getRescheduleTransportBiaya = (): number => {
+    if (rescheduleTempatTes !== 'Home Visit') return 0;
+    if (rescheduleWilayah === 'luar') return BIAYA_TRANSPORT_LUAR;
+    return rescheduleTransport.biaya;
   };
 
   // Filter jadwal sesuai lokasi
@@ -129,10 +179,31 @@ export default function HasilTes() {
       // Reset pilihan saat modal dibuka
       setRescheduleTempatTes('Kantor Subang');
       setRescheduleWilayah('dalam');
-      setRescheduleKota(KOTA_CIAYUMAJAKUNING[0]);
+      setRescheduleTransport(TRANSPORT_DALAM_SUBANG[0]);
       setRescheduleDropdownOpen(false);
     }
   }, [modalRescheduleVisible]);
+
+  const handleOpenReschedule = () => {
+    if (melewatiBatasReschedule) {
+      Toast.show({
+        type: 'error',
+        text1: 'Batas Reschedule Terlewat',
+        text2: 'Reschedule hanya bisa diajukan maksimal 14 hari setelah jadwal. Silakan hubungi admin.',
+        position: 'top',
+        visibilityTime: 3500,
+      });
+      return;
+    }
+    setModalRescheduleVisible(true);
+  };
+
+  const handleHubungiAdmin = () => {
+    const pesan = encodeURIComponent(
+      `Halo Admin, saya ingin menanyakan terkait reschedule untuk jadwal tes STIFIn saya. Mohon bantuannya, terima kasih.`
+    );
+    Linking.openURL(`https://wa.me/${ADMIN_WA_NUMBER}?text=${pesan}`);
+  };
 
   const downloadFile = async (fileName: string | undefined, titleText: string) => {
     try {
@@ -168,47 +239,56 @@ export default function HasilTes() {
     }
   };
 
-// ✅ KODE BARU (Silakan timpa fungsi lama Anda dengan ini):
-const handleConfirmReschedule = async (idJadwalBaru: number) => {
-  if (!id_jadwal || id_jadwal === 'undefined' || id_jadwal === 'null') {
-    Toast.show({ type: 'error', text1: 'Data Tidak Valid', text2: 'ID Jadwal asal tidak valid.', position: 'top' });
-    return;
-  }
-
-  setModalRescheduleVisible(false);
-  setProsesLoading(true);
-
-  try {
-    // Siapkan payload data yang aman dan konsisten dengan validasi backend
-    const payload = {
-      id_jadwal_baru: idJadwalBaru,
-      is_luar_subang: rescheduleIsLuar ? 1 : 0, 
-      nama_kota:      rescheduleIsLuar ? rescheduleKota.label : null, // Gunakan null alih-alih string kosong
-      biaya:          parseInt(String(getRescheduleBiaya()), 10), // Memastikan tipe data berupa integer murni
-    };
-
-    const response = await axiosInstance.put(`/pendaftaran/${id_jadwal}/reschedule`, payload);
-
-    if (response.status === 200) {
-      Toast.show({
-        type: 'success',
-        text1: 'Reschedule Berhasil',
-        text2: 'Pengajuan perubahan jadwal berhasil terkirim. Menunggu konfirmasi admin.',
-        position: 'top',
-        visibilityTime: 2500,
-      });
-      setTimeout(() => { router.replace('/riwayat'); }, 1000);
+  const handleConfirmReschedule = async (idJadwalBaru: number) => {
+    if (!id_jadwal || id_jadwal === 'undefined' || id_jadwal === 'null') {
+      Toast.show({ type: 'error', text1: 'Data Tidak Valid', text2: 'ID Jadwal asal tidak valid.', position: 'top' });
+      return;
     }
-  } catch (error: any) {
-    // Log detail error ke terminal console Anda untuk mempermudah tracking jika terjadi sesuatu
-    console.log("Detail Error Reschedule:", error?.response?.data);
-    
-    const pesanError = error?.response?.data?.message || 'Gagal memproses pengubahan jadwal.';
-    Toast.show({ type: 'error', text1: 'Reschedule Gagal', text2: pesanError, position: 'top' });
-  } finally {
-    setProsesLoading(false);
-  }
-};
+
+    // Double-check batas 14 hari sebelum submit
+    if (melewatiBatasReschedule) {
+      Toast.show({
+        type: 'error',
+        text1: 'Batas Reschedule Terlewat',
+        text2: 'Tidak dapat mengajukan reschedule lebih dari 14 hari setelah jadwal.',
+        position: 'top',
+      });
+      return;
+    }
+
+    setModalRescheduleVisible(false);
+    setProsesLoading(true);
+
+    try {
+      const payload = {
+        id_jadwal_baru: idJadwalBaru,
+        is_luar_subang: rescheduleIsLuar ? 1 : 0,
+        nama_kota: !rescheduleIsLuar && rescheduleTempatTes === 'Home Visit'
+                     ? rescheduleTransport.label
+                     : null,
+        biaya: getRescheduleBiaya(),
+      };
+
+      const response = await axiosInstance.put(`/pendaftaran/${id_jadwal}/reschedule`, payload);
+
+      if (response.status === 200) {
+        Toast.show({
+          type: 'success',
+          text1: 'Reschedule Berhasil',
+          text2: 'Pengajuan perubahan jadwal berhasil terkirim. Menunggu konfirmasi admin.',
+          position: 'top',
+          visibilityTime: 2500,
+        });
+        setTimeout(() => { router.replace('/riwayat'); }, 1000);
+      }
+    } catch (error: any) {
+      console.log('Detail Error Reschedule:', error?.response?.data);
+      const pesanError = error?.response?.data?.message || 'Gagal memproses pengubahan jadwal.';
+      Toast.show({ type: 'error', text1: 'Reschedule Gagal', text2: pesanError, position: 'top' });
+    } finally {
+      setProsesLoading(false);
+    }
+  };
 
   interface StatusCardConfig {
     icon: keyof typeof Ionicons.glyphMap;
@@ -284,17 +364,10 @@ const handleConfirmReschedule = async (idJadwalBaru: number) => {
               <Text style={styles.verifikasiNoteTitle}>Estimasi Waktu Verifikasi</Text>
             </View>
             <View style={styles.verifikasiNoteRow}>
-              <Ionicons name="sunny-outline" size={13} color="#f57c00" />
+              <Ionicons name="time-outline" size={13} color="#f57c00" />
               <Text style={styles.verifikasiNoteText}>
-                <Text style={styles.verifikasiNoteBold}>Jam kerja (08.00–17.00): </Text>
-                Maksimal <Text style={styles.verifikasiNoteBold}>30 menit</Text>
-              </Text>
-            </View>
-            <View style={styles.verifikasiNoteRow}>
-              <Ionicons name="moon-outline" size={13} color="#f57c00" />
-              <Text style={styles.verifikasiNoteText}>
-                <Text style={styles.verifikasiNoteBold}>Di luar jam kerja: </Text>
-                Maksimal <Text style={styles.verifikasiNoteBold}>1×24 jam</Text>
+                Bukti transfer Anda akan diverifikasi maksimal{' '}
+                <Text style={styles.verifikasiNoteBold}>1×24 jam</Text> setelah pengiriman.
               </Text>
             </View>
           </View>
@@ -348,19 +421,84 @@ const handleConfirmReschedule = async (idJadwalBaru: number) => {
         {!belumMengajukan && !berkasTersedia && !isDibatalkan && !isDitolak && (
           <View style={styles.actionSection}>
             <Text style={styles.sectionLabel}>Kelola Jadwal</Text>
+
+            {/* Peringatan batas reschedule */}
+            {!melewatiBatasReschedule && selisihHari >= 0 && selisihHari <= 14 && (
+              <View style={styles.rescheduleWarning}>
+                <Ionicons name="hourglass-outline" size={14} color="#f57c00" />
+                <Text style={styles.rescheduleWarningText}>
+                  Sisa waktu reschedule:{' '}
+                  <Text style={styles.rescheduleWarningBold}>
+                    {sisaHariReschedule} hari lagi
+                  </Text>
+                  {' '}(maks. 14 hari setelah jadwal)
+                </Text>
+              </View>
+            )}
+
+            {melewatiBatasReschedule ? (
+              /* Sudah melewati 14 hari → info terkunci, reschedule hangus */
+              <View style={styles.rescheduleBatasInfo}>
+                <View style={styles.rescheduleBatasHeader}>
+                  <Ionicons name="lock-closed-outline" size={15} color="#e53935" />
+                  <Text style={styles.rescheduleBatasTitle}>Reschedule Hangus</Text>
+                </View>
+                <Text style={styles.rescheduleBatasSub}>
+                  Batas pengajuan reschedule adalah <Text style={{ fontWeight: '800' }}>14 hari</Text> setelah tanggal jadwal.
+                  Jadwal Anda telah lewat <Text style={{ fontWeight: '800' }}>{selisihHari} hari</Text>, sehingga hak reschedule sudah tidak berlaku.
+                </Text>
+              </View>
+            ) : (
+              /* Masih dalam batas 14 hari → tombol reschedule + note */
+              <View style={{ gap: 10 }}>
+                <TouchableOpacity
+                  style={styles.btnReschedule}
+                  onPress={handleOpenReschedule}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="calendar-outline" size={17} color="#fff" />
+                  <Text style={styles.btnRescheduleText}>Ajukan Reschedule</Text>
+                </TouchableOpacity>
+                <View style={styles.rescheduleNote}>
+                  <Ionicons name="alert-circle-outline" size={13} color="#78909c" />
+                  <Text style={styles.rescheduleNoteText}>
+                    Reschedule hanya dapat diajukan maksimal{' '}
+                    <Text style={styles.rescheduleNoteBold}>14 hari</Text> setelah tanggal jadwal. Jika melebihi batas tersebut, hak reschedule akan{' '}
+                    <Text style={styles.rescheduleNoteBold}>hangus</Text>.
+                  </Text>
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Kontak Admin (selalu tampil di bagian bawah, kecuali belum mengajukan) */}
+        {!belumMengajukan && (
+          <View style={styles.kontakAdminCard}>
+            <View style={styles.kontakAdminLeft}>
+              <View style={styles.kontakAdminIconWrap}>
+                <Ionicons name="headset-outline" size={20} color="#00AA5B" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.kontakAdminTitle}>Butuh Bantuan?</Text>
+                <Text style={styles.kontakAdminSub}>
+                  Hubungi Admin untuk pertanyaan seputar jadwal dan hasil tes.
+                </Text>
+              </View>
+            </View>
             <TouchableOpacity
-              style={styles.btnReschedule}
-              onPress={() => setModalRescheduleVisible(true)}
-              activeOpacity={0.7}
+              style={styles.btnWAKecil}
+              onPress={handleHubungiAdmin}
+              activeOpacity={0.75}
             >
-              <Ionicons name="calendar-outline" size={17} color="#fff" />
-              <Text style={styles.btnRescheduleText}>Ajukan Reschedule</Text>
+              <Ionicons name="logo-whatsapp" size={14} color="#fff" />
+              <Text style={styles.btnWAKecilText}>Chat WA</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {/* Document Section */}
-        <Text style={styles.sectionLabel}>Berkas Dokumen STIFIn</Text>
+        <Text style={[styles.sectionLabel, { marginTop: 4 }]}>Berkas Dokumen STIFIn</Text>
 
         {belumMengajukan ? (
           <View style={styles.emptyDoc}>
@@ -459,7 +597,20 @@ const handleConfirmReschedule = async (idJadwalBaru: number) => {
                   </TouchableOpacity>
                 </View>
 
-                {/* ScrollView bisa di-scroll termasuk dropdown */}
+                {/* Info sisa hari di dalam modal */}
+                {selisihHari >= 0 && (
+                  <View style={styles.modalBatasInfo}>
+                    <Ionicons name="hourglass-outline" size={13} color="#f57c00" />
+                    <Text style={styles.modalBatasText}>
+                      Sisa waktu:{' '}
+                      <Text style={{ fontWeight: '800', color: '#e65100' }}>
+                        {sisaHariReschedule} hari
+                      </Text>{' '}
+                      untuk mengajukan reschedule
+                    </Text>
+                  </View>
+                )}
+
                 <ScrollView showsVerticalScrollIndicator={false} nestedScrollEnabled>
 
                   {/* Pilihan Lokasi */}
@@ -496,9 +647,11 @@ const handleConfirmReschedule = async (idJadwalBaru: number) => {
                   {rescheduleTempatTes === 'Home Visit' && (
                     <View style={styles.modalSection}>
                       <Text style={styles.modalSectionLabel}>
-                        <Ionicons name="cash-outline" size={12} color="#546e7a" /> Wilayah
+                        <Ionicons name="map-outline" size={12} color="#546e7a" /> Wilayah Home Visit
                       </Text>
                       <View style={styles.chipRow}>
+
+                        {/* Dalam Subang */}
                         <TouchableOpacity
                           style={[styles.wilayahChip, rescheduleWilayah === 'dalam' && styles.chipActive]}
                           onPress={() => { setRescheduleWilayah('dalam'); setRescheduleDropdownOpen(false); }}
@@ -508,29 +661,30 @@ const handleConfirmReschedule = async (idJadwalBaru: number) => {
                             Dalam Subang
                           </Text>
                           <Text style={[styles.wilayahHarga, rescheduleWilayah === 'dalam' && styles.wilayahHargaActive]}>
-                            Rp 550.000
+                            + {formatRupiah(rescheduleTransport.biaya)} transport
                           </Text>
                         </TouchableOpacity>
 
+                        {/* Luar Subang */}
                         <TouchableOpacity
                           style={[styles.wilayahChip, rescheduleWilayah === 'luar' && styles.chipActive]}
-                          onPress={() => setRescheduleWilayah('luar')}
+                          onPress={() => { setRescheduleWilayah('luar'); setRescheduleDropdownOpen(false); }}
                           activeOpacity={0.7}
                         >
                           <Text style={[styles.wilayahChipText, rescheduleWilayah === 'luar' && styles.chipTextActive]}>
-                            Ciayumajakuning
+                            Luar Subang
                           </Text>
                           <Text style={[styles.wilayahHarga, rescheduleWilayah === 'luar' && styles.wilayahHargaActive]}>
-                            ab Rp 600.000
+                            + Rp 75.000 transport
                           </Text>
                         </TouchableOpacity>
                       </View>
 
-                      {/* Dropdown kota Ciayumajakuning */}
-                      {rescheduleWilayah === 'luar' && (
+                      {/* Dropdown transport Dalam Subang */}
+                      {rescheduleWilayah === 'dalam' && (
                         <View style={styles.kotaBox}>
                           <Text style={styles.kotaLabel}>
-                            <Ionicons name="business-outline" size={12} color="#546e7a" /> Pilih Kota / Kabupaten
+                            <Ionicons name="car-outline" size={12} color="#546e7a" /> Pilih Area Transport
                           </Text>
 
                           <TouchableOpacity
@@ -540,11 +694,11 @@ const handleConfirmReschedule = async (idJadwalBaru: number) => {
                           >
                             <View style={styles.dropdownTriggerLeft}>
                               <Ionicons name="location-outline" size={15} color="#00AA5B" />
-                              <Text style={styles.dropdownTriggerText}>{rescheduleKota.label}</Text>
+                              <Text style={styles.dropdownTriggerText}>{rescheduleTransport.label}</Text>
                             </View>
                             <View style={styles.dropdownTriggerRight}>
                               <Text style={styles.dropdownTriggerHarga}>
-                                {formatRupiah(rescheduleKota.biaya)}
+                                + {formatRupiah(rescheduleTransport.biaya)}
                               </Text>
                               <Ionicons
                                 name={rescheduleDropdownOpen ? 'chevron-up' : 'chevron-down'}
@@ -556,18 +710,18 @@ const handleConfirmReschedule = async (idJadwalBaru: number) => {
 
                           {rescheduleDropdownOpen && (
                             <View style={styles.dropdownList}>
-                              {KOTA_CIAYUMAJAKUNING.map((kota, index) => {
-                                const isActive = rescheduleKota.label === kota.label;
+                              {TRANSPORT_DALAM_SUBANG.map((item, index) => {
+                                const isActive = rescheduleTransport.label === item.label;
                                 return (
                                   <TouchableOpacity
-                                    key={kota.label}
+                                    key={item.label}
                                     style={[
                                       styles.dropdownItem,
                                       isActive && styles.dropdownItemActive,
-                                      index < KOTA_CIAYUMAJAKUNING.length - 1 && styles.dropdownItemBorder,
+                                      index < TRANSPORT_DALAM_SUBANG.length - 1 && styles.dropdownItemBorder,
                                     ]}
                                     onPress={() => {
-                                      setRescheduleKota(kota);
+                                      setRescheduleTransport(item);
                                       setRescheduleDropdownOpen(false);
                                     }}
                                     activeOpacity={0.7}
@@ -579,17 +733,29 @@ const handleConfirmReschedule = async (idJadwalBaru: number) => {
                                         color={isActive ? '#00AA5B' : '#b0bec5'}
                                       />
                                       <Text style={[styles.dropdownItemText, isActive && styles.dropdownItemTextActive]}>
-                                        {kota.label}
+                                        {item.label}
                                       </Text>
                                     </View>
                                     <Text style={[styles.dropdownItemHarga, isActive && styles.dropdownItemHargaActive]}>
-                                      {formatRupiah(kota.biaya)}
+                                      + {formatRupiah(item.biaya)}
                                     </Text>
                                   </TouchableOpacity>
                                 );
                               })}
                             </View>
                           )}
+                        </View>
+                      )}
+
+                      {/* Keterangan luar subang */}
+                      {rescheduleWilayah === 'luar' && (
+                        <View style={styles.luarSubangInfo}>
+                          <Ionicons name="information-circle-outline" size={15} color="#0288d1" />
+                          <Text style={styles.luarSubangInfoText}>
+                            Biaya transport luar Subang sebesar{' '}
+                            <Text style={{ fontWeight: '800', color: '#01579b' }}>Rp 75.000</Text>{' '}
+                            berlaku untuk semua wilayah di luar Kabupaten Subang.
+                          </Text>
                         </View>
                       )}
                     </View>
@@ -599,15 +765,31 @@ const handleConfirmReschedule = async (idJadwalBaru: number) => {
                   <View style={styles.biayaInfoRow}>
                     <Ionicons name="pricetag-outline" size={13} color="#00AA5B" />
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.biayaInfoText}>
-                        Biaya:{' '}
-                        <Text style={styles.biayaInfoNominal}>
-                          {formatRupiah(getRescheduleBiaya())}
+                      {rescheduleTempatTes === 'Home Visit' ? (
+                        <>
+                          <Text style={styles.biayaInfoText}>
+                            Biaya Tes:{' '}
+                            <Text style={{ color: '#546e7a', fontWeight: '700' }}>
+                              {formatRupiah(BIAYA_TES)}
+                            </Text>
+                            {'  +  '}
+                            Transport:{' '}
+                            <Text style={{ color: '#546e7a', fontWeight: '700' }}>
+                              {formatRupiah(getRescheduleTransportBiaya())}
+                            </Text>
+                          </Text>
+                          <Text style={styles.biayaInfoTotal}>
+                            Total: {formatRupiah(getRescheduleBiaya())}
+                          </Text>
+                        </>
+                      ) : (
+                        <Text style={styles.biayaInfoText}>
+                          Biaya:{' '}
+                          <Text style={styles.biayaInfoNominal}>
+                            {formatRupiah(getRescheduleBiaya())}
+                          </Text>
                         </Text>
-                        {rescheduleIsLuar && (
-                          <Text style={styles.biayaInfoKota}> ({rescheduleKota.label})</Text>
-                        )}
-                      </Text>
+                      )}
                       <Text style={styles.biayaInfoNote}>* Belum termasuk biaya admin antar bank</Text>
                     </View>
                   </View>
@@ -710,9 +892,7 @@ const styles = StyleSheet.create({
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 999,
+    justifyContent: 'center', alignItems: 'center', zIndex: 999,
   },
   loadingBox: {
     backgroundColor: '#fff', borderRadius: 16,
@@ -769,6 +949,65 @@ const styles = StyleSheet.create({
   sectionLabel: { fontSize: 13, fontWeight: '800', color: '#546e7a', marginBottom: 10, paddingLeft: 2 },
 
   actionSection: { marginBottom: 16 },
+
+  // Peringatan sisa hari reschedule
+  rescheduleWarning: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: '#fff8f0', borderRadius: 10, padding: 10,
+    borderWidth: 1, borderColor: '#ffe0b2', marginBottom: 10,
+  },
+  rescheduleWarningText: { fontSize: 12, color: '#78909c', flex: 1 },
+  rescheduleWarningBold: { fontWeight: '800', color: '#e65100' },
+
+  // Note di bawah tombol reschedule
+  rescheduleNote: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 6,
+    backgroundColor: '#f5f5f5', borderRadius: 10, padding: 10,
+    borderWidth: 1, borderColor: '#e0e0e0',
+  },
+  rescheduleNoteText: { fontSize: 11, color: '#78909c', flex: 1, lineHeight: 16 },
+  rescheduleNoteBold: { fontWeight: '800', color: '#546e7a' },
+
+  // Info batas reschedule terlewat
+  rescheduleBatasInfo: {
+    backgroundColor: '#ffebee', borderRadius: 12, padding: 14,
+    borderWidth: 1, borderColor: '#ffcdd2',
+    borderLeftWidth: 3, borderLeftColor: '#e53935',
+    marginBottom: 12, gap: 6,
+  },
+  rescheduleBatasHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  rescheduleBatasTitle: { fontSize: 13, fontWeight: '800', color: '#c62828' },
+  rescheduleBatasSub: { fontSize: 12, color: '#78909c', lineHeight: 17 },
+
+  // Tombol hubungi admin (besar, di action section)
+  btnHubungiAdmin: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    paddingVertical: 13, borderRadius: 12, backgroundColor: '#25D366',
+    shadowColor: '#25D366', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 3,
+  },
+  btnHubungiAdminText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+
+  // Kontak admin card (always-visible)
+  kontakAdminCard: {
+    backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 16,
+    borderWidth: 1, borderColor: '#e8f5e9',
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    shadowColor: '#00AA5B', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
+  },
+  kontakAdminLeft: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  kontakAdminIconWrap: {
+    width: 38, height: 38, borderRadius: 10, backgroundColor: '#e8f5e9',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  kontakAdminTitle: { fontSize: 13, fontWeight: '800', color: '#1a1a2e', marginBottom: 2 },
+  kontakAdminSub: { fontSize: 11, color: '#90a4ae', lineHeight: 15 },
+  btnWAKecil: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: '#25D366', paddingVertical: 8, paddingHorizontal: 12,
+    borderRadius: 10,
+  },
+  btnWAKecilText: { color: '#fff', fontWeight: '700', fontSize: 12 },
+
   btnReschedule: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     paddingVertical: 13, borderRadius: 12, backgroundColor: '#f57c00',
@@ -814,10 +1053,18 @@ const styles = StyleSheet.create({
     paddingTop: 12, paddingHorizontal: 20, paddingBottom: 32, height: '88%',
   },
   modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#e0f2ec', alignSelf: 'center', marginBottom: 16 },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 },
   modalTitle: { fontSize: 16, fontWeight: '800', color: '#1a1a2e' },
   modalSub: { fontSize: 11, color: '#90a4ae', marginTop: 3 },
   modalClose: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#f5faf7', justifyContent: 'center', alignItems: 'center' },
+
+  // Info batas waktu di dalam modal
+  modalBatasInfo: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: '#fff8f0', borderRadius: 10, padding: 10,
+    borderWidth: 1, borderColor: '#ffe0b2', marginBottom: 14,
+  },
+  modalBatasText: { fontSize: 12, color: '#78909c', flex: 1 },
 
   modalSection: { marginBottom: 14 },
   modalSectionLabel: { fontSize: 11, fontWeight: '700', color: '#546e7a', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 },
@@ -838,7 +1085,6 @@ const styles = StyleSheet.create({
   wilayahHarga: { fontSize: 11, fontWeight: '600', color: '#90a4ae' },
   wilayahHargaActive: { color: 'rgba(255,255,255,0.85)' },
 
-  // Kota dropdown (dipakai di halaman pendaftaran dan modal reschedule)
   kotaBox: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#e8f5e9' },
   kotaLabel: { fontSize: 11, fontWeight: '700', color: '#546e7a', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 },
   dropdownTrigger: {
@@ -866,15 +1112,23 @@ const styles = StyleSheet.create({
   dropdownItemHarga: { fontSize: 12, fontWeight: '700', color: '#90a4ae' },
   dropdownItemHargaActive: { color: '#00AA5B' },
 
+  luarSubangInfo: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 8,
+    marginTop: 12, padding: 12,
+    backgroundColor: '#e1f5fe', borderRadius: 10,
+    borderWidth: 1, borderColor: '#b3e5fc',
+  },
+  luarSubangInfoText: { flex: 1, fontSize: 12, color: '#01579b', lineHeight: 17 },
+
   biayaInfoRow: {
-    flexDirection: 'row', alignItems: 'flex-start', flexWrap: 'wrap', gap: 6,
+    flexDirection: 'row', alignItems: 'flex-start', gap: 6,
     paddingVertical: 10, paddingHorizontal: 12,
     backgroundColor: '#f5faf7', borderRadius: 10, borderWidth: 1, borderColor: '#e8f5e9', marginBottom: 14,
   },
   biayaInfoText: { fontSize: 13, color: '#546e7a', fontWeight: '600' },
   biayaInfoNominal: { color: '#00AA5B', fontWeight: '800' },
-  biayaInfoKota: { color: '#78909c', fontWeight: '600', fontSize: 12 },
-  biayaInfoNote: { fontSize: 10, color: '#90a4ae', fontStyle: 'italic', flex: 1 },
+  biayaInfoTotal: { fontSize: 14, fontWeight: '800', color: '#00AA5B', marginTop: 4 },
+  biayaInfoNote: { fontSize: 10, color: '#90a4ae', fontStyle: 'italic', marginTop: 2 },
 
   modalDivider: { height: 1, backgroundColor: '#e8f5e9', marginBottom: 14 },
 
@@ -897,7 +1151,6 @@ const styles = StyleSheet.create({
   kuotaBadge: { backgroundColor: '#e8f5e9', paddingVertical: 4, paddingHorizontal: 10, borderRadius: 10 },
   kuotaText: { fontSize: 11, color: '#00AA5B', fontWeight: '800' },
   emptyModal: { textAlign: 'center', color: '#90a4ae', fontSize: 13, fontStyle: 'italic' },
-  modalScrollContent: { paddingBottom: 8 },
 
   modalBtnBatal: {
     marginTop: 12, paddingVertical: 14, borderRadius: 14, alignItems: 'center',

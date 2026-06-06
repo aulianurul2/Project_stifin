@@ -2,7 +2,7 @@ import React, { useState, type ComponentProps } from 'react';
 import { 
   View, Text, TextInput, TouchableOpacity, StyleSheet, 
   ScrollView, SafeAreaView, ActivityIndicator, 
-  KeyboardAvoidingView, Platform 
+  KeyboardAvoidingView, Platform, Modal, FlatList 
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -37,6 +37,22 @@ export default function RegisterScreen() {
     email: '',
     domisili: ''
   });
+  const [activePicker, setActivePicker] = useState<'jk' | 'golDarah' | null>(null);
+
+const opsiJK = [
+  { label: 'Laki-laki', value: 'L' },
+  { label: 'Perempuan', value: 'P' },
+];
+
+const opsiGolDarah = [
+  { label: '-', value: '-' },
+  { label: 'A', value: 'A' },
+  { label: 'B', value: 'B' },
+  { label: 'AB', value: 'AB' },
+  { label: 'O', value: 'O' },
+];
+
+const labelJK = opsiJK.find(o => o.value === form.jenis_kelamin)?.label || 'Pilih';
 
   const handleDateChange = (text: string) => {
     let cleaned = text.replace(/\D/g, '');
@@ -170,44 +186,33 @@ export default function RegisterScreen() {
             </View>
 
             <View style={styles.row}>
-              <View style={{ flex: 1, marginRight: 10 }}>
-                <Text style={styles.inputLabel}>Gender</Text>
-                <View style={styles.genderContainer}>
-                  <TouchableOpacity
-                    style={[styles.genderBox, form.jenis_kelamin === 'L' && styles.boxActive]}
-                    onPress={() => setForm({ ...form, jenis_kelamin: 'L' })}
-                  >
-                    <Ionicons name="male-outline" size={14} color={form.jenis_kelamin === 'L' ? '#fff' : '#78909c'} />
-                    <Text style={[styles.boxText, form.jenis_kelamin === 'L' && styles.textActive]}> L</Text>
-                  </TouchableOpacity>
+  <View style={{ flex: 1, marginRight: 10 }}>
+    <Text style={styles.inputLabel}>Gender</Text>
+    <TouchableOpacity
+      style={styles.selectorField}
+      activeOpacity={0.7}
+      onPress={() => setActivePicker('jk')}
+    >
+      <Ionicons name={form.jenis_kelamin === 'L' ? 'male-outline' : 'female-outline'} size={16} color="#00AA5B" />
+      <Text style={styles.selectorValueText}>{labelJK}</Text>
+      <Ionicons name="chevron-down" size={14} color="#90a4ae" />
+    </TouchableOpacity>
+  </View>
 
-                  <TouchableOpacity
-                    style={[styles.genderBox, form.jenis_kelamin === 'P' && styles.boxActive]}
-                    onPress={() => setForm({ ...form, jenis_kelamin: 'P' })}
-                  >
-                    <Ionicons name="female-outline" size={14} color={form.jenis_kelamin === 'P' ? '#fff' : '#78909c'} />
-                    <Text style={[styles.boxText, form.jenis_kelamin === 'P' && styles.textActive]}> P</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              <View style={{ flex: 1 }}>
-                <Text style={styles.inputLabel}>Gol. Darah</Text>
-                <View style={styles.goldarContainer}>
-                  {['A', 'B', 'AB', 'O'].map((item) => (
-                    <TouchableOpacity
-                      key={item}
-                      style={[styles.goldarBox, form.golongan_darah === item && styles.boxActive]}
-                      onPress={() => setForm({ ...form, golongan_darah: item })}
-                    >
-                      <Text style={[styles.boxText, form.golongan_darah === item && styles.textActive]}>{item}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            </View>
-          </View>
-
+  <View style={{ flex: 1 }}>
+    <Text style={styles.inputLabel}>Gol. Darah</Text>
+    <TouchableOpacity
+      style={styles.selectorField}
+      activeOpacity={0.7}
+      onPress={() => setActivePicker('golDarah')}
+    >
+      <Ionicons name="water-outline" size={16} color="#00AA5B" />
+      <Text style={styles.selectorValueText}>{form.golongan_darah}</Text>
+      <Ionicons name="chevron-down" size={14} color="#90a4ae" />
+    </TouchableOpacity>
+  </View>
+</View>
+</View>
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionBadge}>
@@ -216,7 +221,7 @@ export default function RegisterScreen() {
               <Text style={styles.sectionTitle}>Kontak & Lainnya</Text>
             </View>
 
-            <InputBox label="No. HP / WhatsApp" icon="call-outline" placeholder="812xxx" keyboardType="numeric" onChangeText={(v) => setForm({...form, no_hp: v})} />
+            <InputBox label="No. HP / WhatsApp" icon="call-outline" placeholder="0812xxx" keyboardType="numeric" onChangeText={(v) => setForm({...form, no_hp: v})} />
             <InputBox label="Email" icon="mail-outline" placeholder="email@anda.com" keyboardType="email-address" onChangeText={(v) => setForm({...form, email: v})} />
             <InputBox label="Institusi" icon="business-outline" placeholder="Nama Sekolah/Kantor" onChangeText={(v) => setForm({...form, institusi: v})} />
             <InputBox label="FB/Instagram" icon="logo-instagram" placeholder="@username" onChangeText={(v) => setForm({...form, sosmed: v})} />
@@ -239,9 +244,58 @@ export default function RegisterScreen() {
               <Text style={styles.loginLinkBold}>Masuk di sini</Text>
             </TouchableOpacity>
           </View>
-
+          <Modal
+  visible={activePicker !== null}
+  transparent
+  animationType="slide"
+  onRequestClose={() => setActivePicker(null)}
+>
+  <TouchableOpacity
+    style={styles.modalOverlay}
+    activeOpacity={1}
+    onPress={() => setActivePicker(null)}
+  >
+    <View style={styles.modalSheet}>
+      <View style={styles.modalHandle} />
+      <View style={styles.modalHeader}>
+        <Text style={styles.modalTitle}>
+          {activePicker === 'jk' ? 'Pilih Jenis Kelamin' : 'Pilih Golongan Darah'}
+        </Text>
+        <TouchableOpacity onPress={() => setActivePicker(null)} style={styles.modalClose}>
+          <Ionicons name="close" size={20} color="#90a4ae" />
+        </TouchableOpacity>
+      </View>
+      <FlatList
+        data={activePicker === 'jk' ? opsiJK : opsiGolDarah}
+        keyExtractor={(item) => item.value}
+        renderItem={({ item }) => {
+          const isSelected = (activePicker === 'jk' ? form.jenis_kelamin : form.golongan_darah) === item.value;
+          return (
+            <TouchableOpacity
+              style={[styles.modalItem, isSelected && styles.modalItemSelected]}
+              onPress={() => {
+                if (activePicker === 'jk') {
+                  setForm({ ...form, jenis_kelamin: item.value });
+                } else {
+                  setForm({ ...form, golongan_darah: item.value });
+                }
+                setActivePicker(null);
+              }}
+            >
+              <Text style={[styles.modalItemText, isSelected && styles.modalItemTextSelected]}>
+                {item.label}
+              </Text>
+              {isSelected && <Ionicons name="checkmark-circle" size={20} color="#00AA5B" />}
+            </TouchableOpacity>
+          );
+        }}
+      />
+    </View>
+  </TouchableOpacity>
+</Modal>
         </ScrollView>
       </KeyboardAvoidingView>
+      
     </SafeAreaView>
   );
 }
@@ -345,13 +399,43 @@ const styles = StyleSheet.create({
   fieldIcon: { marginRight: 10 },
   textInput: { flex: 1, color: '#1a1a2e', paddingVertical: 12, fontSize: 14 },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
-  genderContainer: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
-  genderBox: { flex: 1, backgroundColor: '#f5faf7', borderRadius: 10, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#e0f2ec', paddingVertical: 10 },
-  goldarContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  goldarBox: { width: '47%', backgroundColor: '#f5faf7', borderRadius: 10, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#e0f2ec', paddingVertical: 9 },
-  boxActive: { backgroundColor: '#00AA5B', borderColor: '#00AA5B' },
-  boxText: { color: '#78909c', fontWeight: '700', fontSize: 11 },
-  textActive: { color: '#fff' },
+  selectorField: {
+  backgroundColor: '#f5faf7',
+  borderWidth: 1.5,
+  borderColor: '#e0f2ec',
+  borderRadius: 12,
+  height: 48,
+  flexDirection: 'row',
+  alignItems: 'center',
+  paddingHorizontal: 12,
+  gap: 6,
+},
+selectorValueText: { flex: 1, fontSize: 14, color: '#1a1a2e' },
+modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+modalSheet: {
+  backgroundColor: '#fff',
+  borderTopLeftRadius: 24,
+  borderTopRightRadius: 24,
+  padding: 20,
+  maxHeight: '50%',
+},
+modalHandle: {
+  width: 40, height: 4, borderRadius: 2,
+  backgroundColor: '#e0f2ec', alignSelf: 'center', marginBottom: 16,
+},
+modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+modalClose: {
+  width: 32, height: 32, borderRadius: 16,
+  backgroundColor: '#f5faf7', justifyContent: 'center', alignItems: 'center',
+},
+modalTitle: { fontSize: 16, fontWeight: '800', color: '#1a1a2e' },
+modalItem: {
+  flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+  paddingVertical: 14, paddingHorizontal: 12, borderRadius: 10, marginBottom: 4,
+},
+modalItemSelected: { backgroundColor: '#e8f5e9' },
+modalItemText: { fontSize: 15, color: '#37474f', fontWeight: '600' },
+modalItemTextSelected: { color: '#00AA5B', fontWeight: '700' },
   primaryBtn: {
     backgroundColor: '#00AA5B',
     paddingVertical: 16,
