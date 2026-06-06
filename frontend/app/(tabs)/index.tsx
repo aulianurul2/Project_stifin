@@ -131,20 +131,60 @@ export default function HomeSTIFIn() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 
-        {/* Hero Banner */}
-        <View style={styles.heroBanner}>
-          <View style={styles.heroBannerContent}>
-            <View style={styles.heroTagContainer}>
-              <Ionicons name="fitness-outline" size={14} color="rgba(255,255,255,0.9)" />
-              <Text style={styles.heroBannerTag}>Genetik Tes</Text>
-            </View>
-            <Text style={styles.heroBannerTitle}>Kenali Potensi{'\n'}Genetik Anda</Text>
-            <Text style={styles.heroBannerSub}>Temukan Jati Diri Anda Lewat Metode STIFIn</Text>
-          </View>
-          <View style={styles.heroBannerDeco}>
-            <Ionicons name="analytics" size={80} color="rgba(255,255,255,0.15)" />
-          </View>
+{/* Hero Banner */}
+<View style={styles.heroBanner}>
+  <View style={styles.heroBannerContent}>
+    
+    <View style={styles.heroTagContainer}>
+      <Ionicons name="fitness-outline" size={14} color="rgba(255,255,255,0.9)" />
+      <Text style={styles.heroBannerTag}>Genetik Tes</Text>
+    </View>
+    
+    <Text style={styles.heroBannerTitle}>Unlocking Your{'\n'}Genetic Potential</Text>
+    
+    <View style={styles.promotorWrapper}>
+      <Image
+        source={require('../../assets/images/promotor.jpeg')}
+        style={styles.promotorProfile}
+        resizeMode="cover"
+      />
+    </View>
+    
+    <Text style={styles.heroBannerSub}>Bersama Kami, Temukan Jati Diri Anda Lewat Metode STIFIn</Text>
+
+    {/* ====== SEKSYEN KEUNGGULAN BARU ====== */}
+    <View style={styles.advantagesContainer}>
+      <Text style={styles.advantagesHeading}>KEUNGGULAN METODE STIFIn:</Text>
+      
+      <View style={styles.advantageItem}>
+        <View style={styles.advantageIconWrapper}>
+          <Ionicons name="checkbox-outline" size={18} color="#00AA5B" />
         </View>
+        <Text style={styles.advantageText}>Simpel</Text>
+      </View>
+
+      <View style={styles.advantageItem}>
+        <View style={styles.advantageIconWrapper}>
+          <Ionicons name="create-outline" size={18} color="#00AA5B" />
+        </View>
+        <Text style={styles.advantageText}>Aplikatif</Text>
+      </View>
+
+      <View style={styles.advantageItem}>
+        <View style={styles.advantageIconWrapper}>
+          <Ionicons name="disc-outline" size={18} color="#00AA5B" />
+        </View>
+        <Text style={styles.advantageText}>Akurat</Text>
+      </View>
+    </View>
+    {/* ===================================== */}
+
+  </View>
+  
+  <View style={styles.heroBannerDeco}>
+    <Ionicons name="analytics" size={80} color="rgba(255,255,255,0.15)" />
+  </View>
+</View>
 
         {/* Info Cards Slider */}
         <View style={styles.sliderSection}>
@@ -357,8 +397,9 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     backgroundColor: '#00AA5B',
     borderRadius: 20,
-    padding: 22,
-    flexDirection: 'row',
+    padding: 16,            // padding disesuaikan biar seimbang kiri-kanan
+    flexDirection: 'row',   // WAJIB: Membagi layout jadi kiri (teks) dan kanan (gambar)
+    alignItems: 'center',   // Membuat teks dan gambar rata tengah secara vertikal
     position: 'relative',
     overflow: 'hidden',
     shadowColor: '#00AA5B',
@@ -367,6 +408,32 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
+
+  promotorContainer: {
+    flex: 1,               // Mengambil space sisi kanan banner
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
+
+  heroLeftContainer: {
+    flex: 1.3,             // Mengambil space sedikit lebih besar untuk teks
+    zIndex: 2,
+    justifyContent: 'center',
+  },
+
+  promotorWrapper: {
+    alignItems: 'center',       // Membuat gambar pas di tengah secara horizontal
+    marginVertical: 14,         // Memberi jarak space aman ke teks atas dan teks bawah
+    width: '100%',
+  },
+
+  promotorProfile: {
+    width: 270,            // Ukuran lebar gambar proporsional
+    height: 270,           // Ukuran tinggi gambar proporsional
+    borderRadius: 14,      // Sudut melengkung halus biar serasi dengan banner
+  },
+
   heroBannerContent: { 
     flex: 1,
     zIndex: 2,
@@ -392,10 +459,48 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   heroBannerSub: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
-    lineHeight: 17,
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.9)',
+    lineHeight: 20,
+    fontWeight: '600',
+    marginBottom: 16, // Memberi jarak aman sebelum box keunggulan
   },
+
+  /* STYLES BARU UNTUK LIST KEUNGGULAN BANNER */
+  advantagesContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)', // Box semi-transparan putih
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    marginTop: 6,
+  },
+  advantagesHeading: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#fff',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  advantageItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    gap: 8,
+  },
+  advantageIconWrapper: {
+    backgroundColor: '#fff',
+    borderRadius: 6,
+    padding: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  advantageText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#fff',
+  },
+
   heroBannerDeco: {
     position: 'absolute',
     right: -10,
