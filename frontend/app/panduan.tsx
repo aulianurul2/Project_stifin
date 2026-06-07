@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   Platform,
   TouchableOpacity,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -148,7 +149,10 @@ const styles = StyleSheet.create({
 
   topBar: {
     backgroundColor: '#00AA5B',
-    paddingTop: Platform.OS === 'ios' ? 0 : 10,
+    // FIX: samakan dengan pendaftaran.tsx — pakai StatusBar.currentHeight di Android
+    paddingTop: Platform.OS === 'android'
+      ? (StatusBar.currentHeight ? StatusBar.currentHeight + 12 : 30)
+      : 16,
     paddingBottom: 18,
     paddingHorizontal: 16,
     flexDirection: 'row',
