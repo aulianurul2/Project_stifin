@@ -48,7 +48,7 @@
                             <ul class="breadcrumbs mb-0 p-0" style="background: transparent;">
                                 <li class="nav-home"><a href="{{ route('dashboard') }}"><i class="icon-home"></i></a></li>
                                 <li class="separator"><i class="icon-arrow-right"></i></li>
-                                <li class="nav-item"><a href="#" class="text-muted">Kelola Konten</a></li>
+                                <li class="nav-item"><a href="{{ route('kelola-konten.index') }}" class="text-muted">Kelola Konten</a></li>
                             </ul>
                         </div>
                         <button type="button" class="btn btn-primary btn-round" data-bs-toggle="modal" data-bs-target="#modalTambahKonten">
@@ -73,14 +73,28 @@
                     <div class="row">
                         @forelse($konten as $item)
                             <div class="col-md-6 col-lg-4 mb-4">
-                                <div class="card card-round shadow-sm h-100" style="background-color: {{ $item->color ?? '#ffffff' }}; min-height: 220px; border: 1px solid #ebedf2;">
+                                <div class="card card-round shadow-sm h-100" style="background-color: {{ $item->color ?? '#ffffff' }}; border: 1px solid #ebedf2;">
                                     <div class="card-body d-flex flex-column justify-content-between p-4">
                                         <div>
-                                            
-
                                             @if($item->image)
-                                                <div class="mb-3 w-100 rounded overflow-hidden bg-white bg-opacity-50 border" style="height: 120px;">
-                                                    <img src="{{ asset('storage/' . $item->image) }}" class="w-100 h-100" style="object-fit: cover;" alt="Preview Image">
+                                                {{-- 
+                                                    ✅ PERBAIKAN TAMPILAN GAMBAR:
+                                                    - Latar abu-abu muda + checkerboard agar mudah melihat tepi gambar
+                                                    - object-fit: contain → gambar tampil UTUH, tidak terpotong
+                                                    - max-height fleksibel agar gambar vertikal/horizontal sama-sama rapi
+                                                    
+                                                --}}
+                                                <div class="mb-3">
+                                                    
+                                                    <div class="rounded border d-flex align-items-center justify-content-center p-2"
+                                                         style="background-color: #f4f6f9; min-height: 140px; max-height: 200px;">
+                                                        <img src="{{ asset('storage/' . $item->image) }}"
+                                                             style="max-width: 100%; max-height: 180px; object-fit: contain; display: block; border-radius: 6px;"
+                                                             alt="Gambar: {{ $item->title }}">
+                                                    </div>
+                                                    <p class="text-muted mt-1 mb-0" style="font-size: 10px;">
+                                                        <i class="fa fa-info-circle me-1"></i>Gambar ditampilkan utuh sesuai aslinya.
+                                                    </p>
                                                 </div>
                                             @endif
 
@@ -121,16 +135,11 @@
                 </div>
             </div>
 
-            <footer class="footer">
-                <div class="container-fluid d-flex justify-content-between">
-                    <div class="copyright text-center w-100">
-                        2026, made with <i class="fa fa-heart text-danger"></i> by STIFIn Project
-                    </div>
-                </div>
-            </footer>
+              @include('partials.footer')
         </div>
     </div>
 
+    {{-- ── MODAL TAMBAH ── --}}
     <div class="modal fade" id="modalTambahKonten" tabindex="-1" aria-labelledby="modalTambahKontenLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content card-round p-2">
@@ -151,8 +160,23 @@
                         </div>
                         <div class="form-group p-0 mb-3">
                             <label class="fw-semibold small mb-1 text-secondary">Unggah Gambar Sampul (Opsional)</label>
-                            <input type="file" name="image" accept="image/*" class="form-control">
-                            <small class="text-muted d-block mt-1" style="font-size: 10px;">* Format berkas: JPG, PNG, WEBP. Maksimal ukuran 2MB.</small>
+                            <input type="file" name="image" id="tambah_image_input" accept="image/*" class="form-control">
+                            <small class="text-muted d-block mt-1" style="font-size: 10px;">* Format: JPG, PNG, WEBP. Maks. 2MB.</small>
+
+                            {{-- ✅ Preview gambar sebelum disimpan, sehingga admin tahu hasilnya utuh --}}
+                            <div id="tambah_preview_wrap" class="mt-2 d-none">
+                                <p class="text-muted mb-1" style="font-size: 11px;"><i class="fa fa-eye me-1"></i>Pratinjau gambar yang akan diunggah:</p>
+                                <div class="rounded border d-flex align-items-center justify-content-center p-2"
+                                     style="background-color: #f4f6f9; min-height: 120px;">
+                                    <img id="tambah_preview_img"
+                                         src="#"
+                                         style="max-width: 100%; max-height: 160px; object-fit: contain; border-radius: 6px;"
+                                         alt="Pratinjau">
+                                </div>
+                                <p class="text-success mt-1 mb-0" style="font-size: 10px;">
+                                    <i class="fa fa-check-circle me-1"></i>Gambar ditampilkan utuh, tidak ada bagian yang terpotong.
+                                </p>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer border-top-0 pt-0">
@@ -164,6 +188,7 @@
         </div>
     </div>
 
+    {{-- ── MODAL EDIT ── --}}
     <div class="modal fade" id="modalEditKonten" tabindex="-1" aria-labelledby="modalEditKontenLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content card-round p-2">
@@ -184,8 +209,24 @@
                             <textarea name="description" id="edit_description" rows="4" required class="form-control" style="resize: none;"></textarea>
                         </div>
                         <div class="form-group p-0 mb-3">
-                            <label class="fw-semibold small mb-1 text-secondary">Ganti Gambar (Biarkan kosong jika tidak diubah)</label>
-                            <input type="file" name="image" accept="image/*" class="form-control">
+                            <label class="fw-semibold small mb-1 text-secondary">Ganti Gambar <span class="text-muted fw-normal">(biarkan kosong jika tidak diubah)</span></label>
+                            <input type="file" name="image" id="edit_image_input" accept="image/*" class="form-control">
+                            <small class="text-muted d-block mt-1" style="font-size: 10px;">* Format: JPG, PNG, WEBP. Maks. 2MB.</small>
+
+                            {{-- ✅ Preview gambar baru sebelum disimpan --}}
+                            <div id="edit_preview_wrap" class="mt-2 d-none">
+                                <p class="text-muted mb-1" style="font-size: 11px;"><i class="fa fa-eye me-1"></i>Pratinjau gambar baru:</p>
+                                <div class="rounded border d-flex align-items-center justify-content-center p-2"
+                                     style="background-color: #f4f6f9; min-height: 120px;">
+                                    <img id="edit_preview_img"
+                                         src="#"
+                                         style="max-width: 100%; max-height: 160px; object-fit: contain; border-radius: 6px;"
+                                         alt="Pratinjau">
+                                </div>
+                                <p class="text-success mt-1 mb-0" style="font-size: 10px;">
+                                    <i class="fa fa-check-circle me-1"></i>Gambar ditampilkan utuh, tidak ada bagian yang terpotong.
+                                </p>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer border-top-0 pt-0">
@@ -204,22 +245,50 @@
     <script src="{{ asset('assets/js/kaiadmin.min.js') }}"></script>
 
     <script>
-        $(document).ready(function() {
-            $('.btn-edit-konten').on('click', function() {
-                const id = $(this).data('id');
-                const title = $(this).data('title');
-                const description = $(this).data('description');
-    
-                // Inject action route dinamis Laravel
-                $('#formEditKonten').attr('action', "{{ route('kelola-konten.index') }}/" + id);
+        $(document).ready(function () {
 
-                // Inject data ke form modal
+            // ── Buka modal Edit & inject data ──
+            $('.btn-edit-konten').on('click', function () {
+                const id          = $(this).data('id');
+                const title       = $(this).data('title');
+                const description = $(this).data('description');
+
+                $('#formEditKonten').attr('action', "{{ route('kelola-konten.index') }}/" + id);
                 $('#edit_title').val(title);
                 $('#edit_description').val(description);
 
-                // Tampilkan Modal Edit Bootstrap 5
+                // Reset preview gambar setiap kali modal dibuka
+                $('#edit_image_input').val('');
+                $('#edit_preview_wrap').addClass('d-none');
+                $('#edit_preview_img').attr('src', '#');
+
                 $('#modalEditKonten').modal('show');
             });
+
+            // ── Preview gambar — modal Tambah ──
+            $('#tambah_image_input').on('change', function () {
+                previewGambar(this, '#tambah_preview_img', '#tambah_preview_wrap');
+            });
+
+            // ── Preview gambar — modal Edit ──
+            $('#edit_image_input').on('change', function () {
+                previewGambar(this, '#edit_preview_img', '#edit_preview_wrap');
+            });
+
+            // Fungsi preview reusable
+            function previewGambar(input, imgSelector, wrapSelector) {
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        $(imgSelector).attr('src', e.target.result);
+                        $(wrapSelector).removeClass('d-none');
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                } else {
+                    $(wrapSelector).addClass('d-none');
+                    $(imgSelector).attr('src', '#');
+                }
+            }
         });
     </script>
 </body>

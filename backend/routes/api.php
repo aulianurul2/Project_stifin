@@ -13,6 +13,7 @@ Route::post('/login', [AuthController::class, 'loginAPI']);
 Route::post('/forgot-password', [AuthController::class, 'updatePassword']); 
 Route::get('/jadwal-tersedia', [JadwalController::class, 'getJadwalApi']);
 Route::get('/informasi-tes', [KontenInformasiController::class, 'getApiInformasi']);
+Route::get('/admin-contact', [\App\Http\Controllers\ProfilController::class, 'getAdminContact']);
 
 // Rute Privat (Harus Login/Membawa Token)
 Route::middleware('auth:sanctum')->group(function () {

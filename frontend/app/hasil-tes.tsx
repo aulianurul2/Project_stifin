@@ -34,23 +34,15 @@ const TRANSPORT_DALAM_SUBANG: TransportOption[] = [
 const BIAYA_TES = 550000;
 const BIAYA_TRANSPORT_LUAR = 75000;
 
-// ─── Kontak Admin WhatsApp ────────────────────────────────────────────────────
-const ADMIN_WA_NUMBER = '6289509482755'; // 089509482755 → format internasional
-
 function formatRupiah(nominal: number): string {
   return 'Rp ' + nominal.toLocaleString('id-ID');
 }
 
-/**
- * Hitung selisih hari antara tanggal jadwal (string "DD/MM/YYYY" atau ISO)
- * dan hari ini. Positif = jadwal sudah lewat N hari lalu.
- */
 function hariSejakJadwal(tanggalStr: string): number {
   if (!tanggalStr || tanggalStr.trim() === '' || tanggalStr === 'null') return 0;
 
   let jadwalDate: Date | null = null;
 
-  // Coba format DD/MM/YYYY
   const dmyMatch = tanggalStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (dmyMatch) {
     jadwalDate = new Date(
@@ -59,7 +51,6 @@ function hariSejakJadwal(tanggalStr: string): number {
       parseInt(dmyMatch[1])
     );
   } else {
-    // Fallback: ISO / format lain yang didukung Date
     jadwalDate = new Date(tanggalStr);
   }
 
@@ -71,7 +62,7 @@ function hariSejakJadwal(tanggalStr: string): number {
 
   const diffMs   = today.getTime() - jadwalDate.getTime();
   const diffHari = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  return diffHari; // negatif = jadwal belum tiba, 0 = hari ini, positif = sudah lewat
+  return diffHari;
 }
 
 interface SlotJadwal {
@@ -101,11 +92,12 @@ export default function HasilTes() {
   const [loadingJadwal, setLoadingJadwal] = useState(false);
   const [prosesLoading, setProsesLoading] = useState(false);
 
-  // Pilihan lokasi di modal reschedule
+  const [adminWa1, setAdminWa1] = useState<string>('6282127747105');
+  const [adminWa2, setAdminWa2] = useState<string>('6281224595556');
+
   const [rescheduleTempatTes, setRescheduleTempatTes] = useState<'Kantor Subang' | 'Home Visit'>('Kantor Subang');
   const [rescheduleWilayah, setRescheduleWilayah]     = useState<'dalam' | 'luar'>('dalam');
 
-  // Transport dropdown untuk Dalam Subang di modal reschedule
   const [rescheduleTransport, setRescheduleTransport]         = useState<TransportOption>(TRANSPORT_DALAM_SUBANG[0]);
   const [rescheduleDropdownOpen, setRescheduleDropdownOpen]   = useState(false);
 
@@ -123,17 +115,12 @@ export default function HasilTes() {
   const isMenunggu      = !belumMengajukan && !berkasTersedia && !isDitolak && !isDibatalkan && !isDiterima;
   const isKomentarAda   = komentar && komentar.trim() !== '' && komentar !== 'null';
 
-  // ─── Cek batas 14 hari reschedule ─────────────────────────────────────────
-  const selisihHari         = hariSejakJadwal(tanggal ?? '');
-  // Bisa reschedule: jadwal sudah lewat (≥0) DAN belum melebihi 14 hari
-  // Jika jadwal belum tiba (selisihHari < 0), tetap boleh reschedule
+  const selisihHari             = hariSejakJadwal(tanggal ?? '');
   const melewatiBatasReschedule = selisihHari > 14;
   const sisaHariReschedule      = Math.max(0, 14 - selisihHari);
 
-  // Derived: apakah reschedule ke luar subang
   const rescheduleIsLuar = rescheduleTempatTes === 'Home Visit' && rescheduleWilayah === 'luar';
 
-  // Biaya reschedule
   const getRescheduleBiaya = (): number => {
     if (rescheduleTempatTes !== 'Home Visit') return BIAYA_TES;
     if (rescheduleWilayah === 'luar') return BIAYA_TES + BIAYA_TRANSPORT_LUAR;
@@ -146,12 +133,26 @@ export default function HasilTes() {
     return rescheduleTransport.biaya;
   };
 
-  // Filter jadwal sesuai lokasi
   const filteredRescheduleJadwal = listJadwal.filter((item) => {
     const lokasiDB      = String(item.lokasi || '').toLowerCase().trim();
     const lokasiPilihan = rescheduleTempatTes.toLowerCase().trim();
     return lokasiDB === lokasiPilihan;
   });
+
+  useEffect(() => {
+    const fetchAdminContact = async () => {
+      try {
+        const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+        const res  = await fetch(`${BASE_URL}/admin-contact`);
+        const data = await res.json();
+        if (data.wa1) setAdminWa1(data.wa1);
+        if (data.wa2) setAdminWa2(data.wa2);
+      } catch (e) {
+        console.log('Gagal fetch admin contact:', e);
+      }
+    };
+    fetchAdminContact();
+  }, []);
 
   const fetchJadwalTersedia = async () => {
     setLoadingJadwal(true);
@@ -176,7 +177,6 @@ export default function HasilTes() {
   useEffect(() => {
     if (modalRescheduleVisible) {
       fetchJadwalTersedia();
-      // Reset pilihan saat modal dibuka
       setRescheduleTempatTes('Kantor Subang');
       setRescheduleWilayah('dalam');
       setRescheduleTransport(TRANSPORT_DALAM_SUBANG[0]);
@@ -198,11 +198,23 @@ export default function HasilTes() {
     setModalRescheduleVisible(true);
   };
 
-  const handleHubungiAdmin = () => {
+  const toLokalFormat = (nomor: string) => {
+    if (nomor.startsWith('62')) return '0' + nomor.slice(2);
+    return nomor;
+  };
+
+  const handleHubungiAdmin1 = () => {
     const pesan = encodeURIComponent(
       `Halo Admin, saya ingin menanyakan terkait reschedule untuk jadwal tes STIFIn saya. Mohon bantuannya, terima kasih.`
     );
-    Linking.openURL(`https://wa.me/${ADMIN_WA_NUMBER}?text=${pesan}`);
+    Linking.openURL(`https://wa.me/${adminWa1}?text=${pesan}`);
+  };
+
+  const handleHubungiAdmin2 = () => {
+    const pesan = encodeURIComponent(
+      `Halo Admin, saya ingin menanyakan terkait reschedule untuk jadwal tes STIFIn saya. Mohon bantuannya, terima kasih.`
+    );
+    Linking.openURL(`https://wa.me/${adminWa2}?text=${pesan}`);
   };
 
   const downloadFile = async (fileName: string | undefined, titleText: string) => {
@@ -245,7 +257,6 @@ export default function HasilTes() {
       return;
     }
 
-    // Double-check batas 14 hari sebelum submit
     if (melewatiBatasReschedule) {
       Toast.show({
         type: 'error',
@@ -422,7 +433,6 @@ export default function HasilTes() {
           <View style={styles.actionSection}>
             <Text style={styles.sectionLabel}>Kelola Jadwal</Text>
 
-            {/* Peringatan batas reschedule */}
             {!melewatiBatasReschedule && selisihHari >= 0 && selisihHari <= 14 && (
               <View style={styles.rescheduleWarning}>
                 <Ionicons name="hourglass-outline" size={14} color="#f57c00" />
@@ -437,7 +447,6 @@ export default function HasilTes() {
             )}
 
             {melewatiBatasReschedule ? (
-              /* Sudah melewati 14 hari → info terkunci, reschedule hangus */
               <View style={styles.rescheduleBatasInfo}>
                 <View style={styles.rescheduleBatasHeader}>
                   <Ionicons name="lock-closed-outline" size={15} color="#e53935" />
@@ -449,7 +458,6 @@ export default function HasilTes() {
                 </Text>
               </View>
             ) : (
-              /* Masih dalam batas 14 hari → tombol reschedule + note */
               <View style={{ gap: 10 }}>
                 <TouchableOpacity
                   style={styles.btnReschedule}
@@ -472,28 +480,54 @@ export default function HasilTes() {
           </View>
         )}
 
-        {/* Kontak Admin (selalu tampil di bagian bawah, kecuali belum mengajukan) */}
+        {/* ═══ KONTAK ADMIN ═══ */}
         {!belumMengajukan && (
           <View style={styles.kontakAdminCard}>
-            <View style={styles.kontakAdminLeft}>
+            <View style={styles.kontakAdminHeader}>
               <View style={styles.kontakAdminIconWrap}>
-                <Ionicons name="headset-outline" size={20} color="#00AA5B" />
+                <Ionicons name="headset-outline" size={18} color="#00AA5B" />
               </View>
-              <View style={{ flex: 1 }}>
+              <View>
                 <Text style={styles.kontakAdminTitle}>Butuh Bantuan?</Text>
                 <Text style={styles.kontakAdminSub}>
                   Hubungi Admin untuk pertanyaan seputar jadwal dan hasil tes.
                 </Text>
               </View>
             </View>
-            <TouchableOpacity
-              style={styles.btnWAKecil}
-              onPress={handleHubungiAdmin}
-              activeOpacity={0.75}
-            >
-              <Ionicons name="logo-whatsapp" size={14} color="#fff" />
-              <Text style={styles.btnWAKecilText}>Chat WA</Text>
-            </TouchableOpacity>
+
+            <View style={styles.kontakAdminBtnRow}>
+              {/* Admin 1 */}
+              <TouchableOpacity
+                style={styles.kontakAdminBtn}
+                onPress={handleHubungiAdmin1}
+                activeOpacity={0.75}
+              >
+                <View style={styles.kontakAdminBtnIcon}>
+                  <Ionicons name="logo-whatsapp" size={20} color="#25D366" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.kontakAdminBtnLabel}>Chat dengan promotor</Text>
+                  <Text style={styles.kontakAdminBtnNomor}>{toLokalFormat(adminWa1)}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={14} color="#25D366" />
+              </TouchableOpacity>
+
+              {/* Admin 2 */}
+              <TouchableOpacity
+                style={styles.kontakAdminBtn}
+                onPress={handleHubungiAdmin2}
+                activeOpacity={0.75}
+              >
+                <View style={styles.kontakAdminBtnIcon}>
+                  <Ionicons name="logo-whatsapp" size={20} color="#25D366" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.kontakAdminBtnLabel}>Chat dengan admin</Text>
+                  <Text style={styles.kontakAdminBtnNomor}>{toLokalFormat(adminWa2)}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={14} color="#25D366" />
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
@@ -597,7 +631,6 @@ export default function HasilTes() {
                   </TouchableOpacity>
                 </View>
 
-                {/* Info sisa hari di dalam modal */}
                 {selisihHari >= 0 && (
                   <View style={styles.modalBatasInfo}>
                     <Ionicons name="hourglass-outline" size={13} color="#f57c00" />
@@ -643,15 +676,13 @@ export default function HasilTes() {
                     </View>
                   </View>
 
-                  {/* Pilihan Wilayah — hanya muncul jika Home Visit */}
+                  {/* Pilihan Wilayah */}
                   {rescheduleTempatTes === 'Home Visit' && (
                     <View style={styles.modalSection}>
                       <Text style={styles.modalSectionLabel}>
                         <Ionicons name="map-outline" size={12} color="#546e7a" /> Wilayah Home Visit
                       </Text>
                       <View style={styles.chipRow}>
-
-                        {/* Dalam Subang */}
                         <TouchableOpacity
                           style={[styles.wilayahChip, rescheduleWilayah === 'dalam' && styles.chipActive]}
                           onPress={() => { setRescheduleWilayah('dalam'); setRescheduleDropdownOpen(false); }}
@@ -665,7 +696,6 @@ export default function HasilTes() {
                           </Text>
                         </TouchableOpacity>
 
-                        {/* Luar Subang */}
                         <TouchableOpacity
                           style={[styles.wilayahChip, rescheduleWilayah === 'luar' && styles.chipActive]}
                           onPress={() => { setRescheduleWilayah('luar'); setRescheduleDropdownOpen(false); }}
@@ -680,13 +710,11 @@ export default function HasilTes() {
                         </TouchableOpacity>
                       </View>
 
-                      {/* Dropdown transport Dalam Subang */}
                       {rescheduleWilayah === 'dalam' && (
                         <View style={styles.kotaBox}>
                           <Text style={styles.kotaLabel}>
                             <Ionicons name="car-outline" size={12} color="#546e7a" /> Pilih Area Transport
                           </Text>
-
                           <TouchableOpacity
                             style={styles.dropdownTrigger}
                             onPress={() => setRescheduleDropdownOpen(!rescheduleDropdownOpen)}
@@ -747,7 +775,6 @@ export default function HasilTes() {
                         </View>
                       )}
 
-                      {/* Keterangan luar subang */}
                       {rescheduleWilayah === 'luar' && (
                         <View style={styles.luarSubangInfo}>
                           <Ionicons name="information-circle-outline" size={15} color="#0288d1" />
@@ -950,7 +977,6 @@ const styles = StyleSheet.create({
 
   actionSection: { marginBottom: 16 },
 
-  // Peringatan sisa hari reschedule
   rescheduleWarning: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: '#fff8f0', borderRadius: 10, padding: 10,
@@ -959,7 +985,6 @@ const styles = StyleSheet.create({
   rescheduleWarningText: { fontSize: 12, color: '#78909c', flex: 1 },
   rescheduleWarningBold: { fontWeight: '800', color: '#e65100' },
 
-  // Note di bawah tombol reschedule
   rescheduleNote: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 6,
     backgroundColor: '#f5f5f5', borderRadius: 10, padding: 10,
@@ -968,7 +993,6 @@ const styles = StyleSheet.create({
   rescheduleNoteText: { fontSize: 11, color: '#78909c', flex: 1, lineHeight: 16 },
   rescheduleNoteBold: { fontWeight: '800', color: '#546e7a' },
 
-  // Info batas reschedule terlewat
   rescheduleBatasInfo: {
     backgroundColor: '#ffebee', borderRadius: 12, padding: 14,
     borderWidth: 1, borderColor: '#ffcdd2',
@@ -979,34 +1003,66 @@ const styles = StyleSheet.create({
   rescheduleBatasTitle: { fontSize: 13, fontWeight: '800', color: '#c62828' },
   rescheduleBatasSub: { fontSize: 12, color: '#78909c', lineHeight: 17 },
 
-  // Tombol hubungi admin (besar, di action section)
-  btnHubungiAdmin: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    paddingVertical: 13, borderRadius: 12, backgroundColor: '#25D366',
-    shadowColor: '#25D366', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 3,
-  },
-  btnHubungiAdminText: { color: '#fff', fontWeight: '700', fontSize: 13 },
-
-  // Kontak admin card (always-visible)
+  // ═══ KONTAK ADMIN — shadow glowing sama seperti profile.tsx ═══
   kontakAdminCard: {
-    backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 16,
-    borderWidth: 1, borderColor: '#e8f5e9',
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    shadowColor: '#00AA5B', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e8f5e9',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+    gap: 14,
   },
-  kontakAdminLeft: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  kontakAdminHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
   kontakAdminIconWrap: {
-    width: 38, height: 38, borderRadius: 10, backgroundColor: '#e8f5e9',
+    width: 36, height: 36, borderRadius: 10,
+    backgroundColor: '#e8f5e9',
     justifyContent: 'center', alignItems: 'center',
   },
-  kontakAdminTitle: { fontSize: 13, fontWeight: '800', color: '#1a1a2e', marginBottom: 2 },
-  kontakAdminSub: { fontSize: 11, color: '#90a4ae', lineHeight: 15 },
-  btnWAKecil: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: '#25D366', paddingVertical: 8, paddingHorizontal: 12,
-    borderRadius: 10,
+  kontakAdminTitle: { fontSize: 14, fontWeight: '800', color: '#1a1a2e', marginBottom: 2 },
+  kontakAdminSub: { fontSize: 9, color: '#90a4ae', lineHeight: 15 },
+  kontakAdminBtnRow: { gap: 10 },
+
+  // ── Tombol WA — shadow glowing hijau persis seperti waBtn di profile.tsx ──
+  kontakAdminBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#f0fff8',
+    borderRadius: 14,
+    padding: 13,
+    borderWidth: 1.5,
+    borderColor: '#b9f0d0',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    elevation: 6,
   },
-  btnWAKecilText: { color: '#fff', fontWeight: '700', fontSize: 12 },
+  kontakAdminBtnIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: '#e8ffe8',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  kontakAdminBtnLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#78909c',
+    letterSpacing: 0.5,
+  },
+  kontakAdminBtnNomor: { fontSize: 14, fontWeight: '800', color: '#1a1a2e', marginTop: 1 },
 
   btnReschedule: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -1058,7 +1114,6 @@ const styles = StyleSheet.create({
   modalSub: { fontSize: 11, color: '#90a4ae', marginTop: 3 },
   modalClose: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#f5faf7', justifyContent: 'center', alignItems: 'center' },
 
-  // Info batas waktu di dalam modal
   modalBatasInfo: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: '#fff8f0', borderRadius: 10, padding: 10,

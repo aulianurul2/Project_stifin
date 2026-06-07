@@ -54,7 +54,7 @@
                             <ul class="breadcrumbs mb-0 p-0 no-print" style="background: transparent;">
                                 <li class="nav-home"><a href="{{ route('dashboard') }}"><i class="icon-home"></i></a></li>
                                 <li class="separator"><i class="icon-arrow-right"></i></li>
-                                <li class="nav-item"><a href="#" class="text-muted">Laporan</a></li>
+                                <li class="nav-item"><a href="{{ route('laporan.index') }}" class="text-muted">Laporan</a></li>
                             </ul>
                         </div>
                         <div class="d-flex gap-2 no-print">
@@ -281,13 +281,7 @@
                 </div>
             </div>
 
-            <footer class="footer no-print">
-                <div class="container-fluid d-flex justify-content-between">
-                    <div class="copyright text-center w-100">
-                        2026, made with <i class="fa fa-heart text-danger"></i> by STIFIn Project
-                    </div>
-                </div>
-            </footer>
+           @include('partials.footer')
         </div>
     </div>
 

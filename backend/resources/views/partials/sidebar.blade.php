@@ -76,6 +76,12 @@
                         <p>Laporan</p>
                     </a>
                 </li>
+               <li class="nav-item {{ request()->routeIs('profil.*') ? 'active' : '' }}">
+    <a href="{{ route('profil.index') }}">
+        <i class="fas fa-user-cog"></i>
+        <p>Edit Profil</p>
+    </a>
+</li>
                 <li class="nav-item">
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf

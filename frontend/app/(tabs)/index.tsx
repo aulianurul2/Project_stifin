@@ -18,7 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import axiosInstance from '@/src/api/axiosConfig';
 
 const { width, height } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.82; 
+const CARD_WIDTH = width * 0.85; 
 const CARD_GAP = 14; 
 
 const AXIOS_BASE_URL = axiosInstance.defaults.baseURL;
@@ -38,7 +38,6 @@ export default function HomeSTIFIn() {
   const [infoCards, setInfoCards] = useState<InfoCard[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // State untuk mengontrol Modal Detail Card
   const [selectedCard, setSelectedCard] = useState<InfoCard | null>(null);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
 
@@ -77,9 +76,8 @@ export default function HomeSTIFIn() {
     fetchInformasi();
   }, []);
 
-  // Effect untuk Auto Scroll / Animasi bergeser sendiri
   useEffect(() => {
-    if (infoCards.length <= 1 || modalVisible) return; // Pause auto-scroll jika modal sedang terbuka
+    if (infoCards.length <= 1 || modalVisible) return;
 
     const autoPlayInterval = setInterval(() => {
       let nextIndex = currentIndexRef.current + 1;
@@ -101,7 +99,6 @@ export default function HomeSTIFIn() {
     return () => clearInterval(autoPlayInterval);
   }, [infoCards, modalVisible]);
 
-  // Fungsi saat kartu ditekan
   const handleCardPress = (card: InfoCard) => {
     setSelectedCard(card);
     setModalVisible(true);
@@ -111,79 +108,77 @@ export default function HomeSTIFIn() {
     <SafeAreaView style={styles.container}>
 
       {/* Compact Green Header */}
-<View style={styles.header}>
-  {/* Kontainer kiri: Logo dan Teks ditumpuk */}
-  <View style={styles.headerLeft}>
-    <Image 
-      source={require('../../assets/images/logo_light.png')} 
-      style={styles.headerLogo}
-      resizeMode="contain"
-    />
-    <Text style={styles.brandSub}>Information System</Text>
-  </View>
-  
-  <TouchableOpacity style={styles.profileButton} onPress={() => router.push('/edit-profile')}>
-    <View style={styles.profileAvatar}>
-      <Ionicons name="person-outline" size={20} color="#00AA5B" />
-    </View>
-  </TouchableOpacity>
-</View>
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <Image 
+            source={require('../../assets/images/logo_light.png')} 
+            style={styles.headerLogo}
+            resizeMode="contain"
+          />
+          <Text style={styles.brandSub}>Information System</Text>
+        </View>
+        
+        <TouchableOpacity style={styles.profileButton} onPress={() => router.push('/edit-profile')}>
+          <View style={styles.profileAvatar}>
+            <Ionicons name="person-outline" size={20} color="#00AA5B" />
+          </View>
+        </TouchableOpacity>
+      </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 
-      {/* Hero Banner */}
-      <View style={styles.heroBanner}>
-        <View style={styles.heroBannerContent}>
-    
-          <View style={styles.heroTagContainer}>
-            <Ionicons name="fitness-outline" size={14} color="rgba(255,255,255,0.9)" />
-              <Text style={styles.heroBannerTag}>Genetik Tes</Text>
-          </View>
-    
-          <Text style={styles.heroBannerTitle}>Unlocking Your{'\n'}Genetic Potential</Text>
-    
-          <View style={styles.promotorWrapper}>
-            <Image
-              source={require('../../assets/images/promotor.jpeg')}
-              style={styles.promotorProfile}
-              resizeMode="cover"
-            />
-          </View>
-    
-          <Text style={styles.heroBannerSub}>Bersama Kami, Temukan Jati Diri Anda Lewat Metode STIFIn</Text>
-
-          <View style={styles.advantagesContainer}>
-            <Text style={styles.advantagesHeading}>KEUNGGULAN METODE STIFIn:</Text>
+        {/* Hero Banner */}
+        <View style={styles.heroBanner}>
+          <View style={styles.heroBannerContent}>
       
-            <View style={styles.advantageItem}>
-            <View style={styles.advantageIconWrapper}>
-                <Ionicons name="checkbox-outline" size={18} color="#00AA5B" />
-              </View>
-              <Text style={styles.advantageText}>Simpel</Text>
+            <View style={styles.heroTagContainer}>
+              <Ionicons name="fitness-outline" size={14} color="rgba(255,255,255,0.9)" />
+                <Text style={styles.heroBannerTag}>Genetik Tes</Text>
             </View>
-
-            <View style={styles.advantageItem}>
-              <View style={styles.advantageIconWrapper}>
-                <Ionicons name="create-outline" size={18} color="#00AA5B" />
-              </View>
-              <Text style={styles.advantageText}>Aplikatif</Text>
-            </View>
-
-            <View style={styles.advantageItem}>
-              <View style={styles.advantageIconWrapper}>
-                <Ionicons name="disc-outline" size={18} color="#00AA5B" />
-              </View>
-              <Text style={styles.advantageText}>Akurat</Text>
-            </View>
-          </View>
-          {/* ===================================== */}
       
-        </View>
+            <Text style={styles.heroBannerTitle}>Unlocking Your{'\n'}Genetic Potential</Text>
+      
+            <View style={styles.promotorWrapper}>
+              <Image
+                source={require('../../assets/images/promotor.jpeg')}
+                style={styles.promotorProfile}
+                resizeMode="cover"
+              />
+            </View>
+      
+            <Text style={styles.heroBannerSub}>Bersama Kami, Temukan Jati Diri Anda Lewat Metode STIFIn</Text>
 
-        <View style={styles.heroBannerDeco}>
-          <Ionicons name="analytics" size={80} color="rgba(255,255,255,0.15)" />
+            <View style={styles.advantagesContainer}>
+              <Text style={styles.advantagesHeading}>KEUNGGULAN METODE STIFIn:</Text>
+        
+              <View style={styles.advantageItem}>
+                <View style={styles.advantageIconWrapper}>
+                  <Ionicons name="checkbox-outline" size={18} color="#00AA5B" />
+                </View>
+                <Text style={styles.advantageText}>Simpel</Text>
+              </View>
+
+              <View style={styles.advantageItem}>
+                <View style={styles.advantageIconWrapper}>
+                  <Ionicons name="create-outline" size={18} color="#00AA5B" />
+                </View>
+                <Text style={styles.advantageText}>Aplikatif</Text>
+              </View>
+
+              <View style={styles.advantageItem}>
+                <View style={styles.advantageIconWrapper}>
+                  <Ionicons name="disc-outline" size={18} color="#00AA5B" />
+                </View>
+                <Text style={styles.advantageText}>Akurat</Text>
+              </View>
+            </View>
+      
+          </View>
+
+          <View style={styles.heroBannerDeco}>
+            <Ionicons name="analytics" size={80} color="rgba(255,255,255,0.15)" />
+          </View>
         </View>
-      </View>
 
         {/* Info Cards Slider */}
         <View style={styles.sliderSection}>
@@ -215,33 +210,43 @@ export default function HomeSTIFIn() {
                 }}
               >
                 {infoCards.map((card) => (
-                  <TouchableOpacity 
-                    key={card.id} 
+                  <TouchableOpacity
+                    key={card.id}
                     style={styles.card}
                     activeOpacity={0.9}
                     onPress={() => handleCardPress(card)}
                   >
-                    {card.image && (
-                      <View style={styles.imageContainer}>
-                        <Image 
-                          source={{ uri: `${BACKEND_ROOT}/storage/${card.image}` }} 
-                          style={styles.cardImageBlur} 
-                          blurRadius={15}
-                          resizeMode="cover"
-                        />
-                        <Image 
-                          source={{ uri: `${BACKEND_ROOT}/storage/${card.image}` }} 
-                          style={styles.cardImageMain} 
-                          resizeMode="contain"
-                        />
-                      </View>
-                    )}
+                    {/* Gambar dengan blur background */}
+                    <View style={styles.cardImageWrapper}>
+                      {card.image ? (
+                        <>
+                          {/* Blur layer sebagai background */}
+                          <Image
+                            source={{ uri: `${BACKEND_ROOT}/storage/${card.image}` }}
+                            style={styles.cardImageBlur}
+                            resizeMode="cover"
+                            blurRadius={18}
+                          />
+                          {/* Gambar utama contain di atas blur */}
+                          <Image
+                            source={{ uri: `${BACKEND_ROOT}/storage/${card.image}` }}
+                            style={styles.cardFullImage}
+                            resizeMode="contain"
+                          />
+                        </>
+                      ) : (
+                        <View style={styles.cardNoImage}>
+                          <Ionicons name="image-outline" size={40} color="rgba(0,170,91,0.3)" />
+                        </View>
+                      )}
+                    </View>
 
+                    {/* Teks di bawah gambar */}
                     <View style={styles.cardTextContent}>
                       <Text style={styles.cardTitle} numberOfLines={2}>
                         {card.title}
                       </Text>
-                      <Text style={styles.cardDescription} numberOfLines={4}>
+                      <Text style={styles.cardDescription} numberOfLines={3}>
                         {card.description}
                       </Text>
                     </View>
@@ -281,7 +286,7 @@ export default function HomeSTIFIn() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             
-            {/* Tombol Tutup / Close */}
+            {/* Tombol Tutup */}
             <TouchableOpacity 
               style={styles.modalCloseButton} 
               onPress={() => setModalVisible(false)}
@@ -293,15 +298,17 @@ export default function HomeSTIFIn() {
               {/* Gambar Full Size di Modal */}
               {selectedCard?.image && (
                 <View style={styles.modalImageContainer}>
-                  <Image 
-                    source={{ uri: `${BACKEND_ROOT}/storage/${selectedCard.image}` }} 
-                    style={styles.modalImageBlur} 
-                    blurRadius={15}
+                  {/* Blur background */}
+                  <Image
+                    source={{ uri: `${BACKEND_ROOT}/storage/${selectedCard.image}` }}
+                    style={styles.modalImageBlur}
                     resizeMode="cover"
+                    blurRadius={18}
                   />
-                  <Image 
-                    source={{ uri: `${BACKEND_ROOT}/storage/${selectedCard.image}` }} 
-                    style={styles.modalImageMain} 
+                  {/* Gambar utama contain — tidak terpotong */}
+                  <Image
+                    source={{ uri: `${BACKEND_ROOT}/storage/${selectedCard.image}` }}
+                    style={styles.modalImageFull}
                     resizeMode="contain"
                   />
                 </View>
@@ -314,7 +321,7 @@ export default function HomeSTIFIn() {
               </View>
             </ScrollView>
 
-            {/* Tombol Oke/Mengerti di bawah */}
+            {/* Tombol Tutup di bawah */}
             <TouchableOpacity 
               style={styles.modalActionButon}
               onPress={() => setModalVisible(false)}
@@ -357,7 +364,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingLeft: 20,
   },
-
   headerLogo: {
     width: 130,
     marginLeft: -60,
@@ -386,8 +392,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#e8f5e9',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 0.5,
-    borderColor: '#00AA5B',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 6,
   },
   content: { paddingVertical: 20 },
 
@@ -396,9 +405,9 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     backgroundColor: '#00AA5B',
     borderRadius: 20,
-    padding: 16,            // padding disesuaikan biar seimbang kiri-kanan
-    flexDirection: 'row',   // WAJIB: Membagi layout jadi kiri (teks) dan kanan (gambar)
-    alignItems: 'center',   // Membuat teks dan gambar rata tengah secara vertikal
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
     position: 'relative',
     overflow: 'hidden',
     shadowColor: '#00AA5B',
@@ -407,32 +416,27 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
-
   promotorContainer: {
     flex: 1,             
     alignItems: 'flex-end',
     justifyContent: 'center',
     zIndex: 2,
   },
-
   heroLeftContainer: {
     flex: 1.3,             
     zIndex: 2,
     justifyContent: 'center',
   },
-
   promotorWrapper: {
     alignItems: 'center',      
     marginVertical: 14,        
     width: '100%',
   },
-
   promotorProfile: {
     width: 270,            
     height: 270,           
     borderRadius: 14,      
   },
-
   heroBannerContent: { 
     flex: 1,
     zIndex: 2,
@@ -464,8 +468,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 16, 
   },
-
-  /* STYLES BARU UNTUK LIST KEUNGGULAN BANNER */
   advantagesContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.12)', 
     borderRadius: 14,
@@ -499,7 +501,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
   },
-
   heroBannerDeco: {
     position: 'absolute',
     right: -10,
@@ -552,60 +553,70 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
 
-  /* DESAIN CARD UTAMA */
-  card: { 
-    width: CARD_WIDTH, 
-    borderRadius: 16, 
-    padding: 16, 
-    marginRight: CARD_GAP, 
+  /* ── CARD: gambar penuh di atas, teks di bawah ── */
+  card: {
+    width: CARD_WIDTH,
+    borderRadius: 16,
+    marginRight: CARD_GAP,
     backgroundColor: '#ffffff',
-    shadowColor: '#000000',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  } as ViewStyle,
-  imageContainer: {
-    width: '100%',
-    aspectRatio: 16 / 9,
-    borderRadius: 10,
-    marginBottom: 14,
+    shadowOpacity: 0.10,
+    shadowRadius: 10,
+    elevation: 5,
     overflow: 'hidden',
-    position: 'relative',
+    borderWidth: 1,
+    borderColor: '#e8f0eb',
+  } as ViewStyle,
+
+  cardImageWrapper: {
+    width: '100%',
+    aspectRatio: 4 / 3,
+    backgroundColor: '#f0f7f4',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5faf7',
+    overflow: 'hidden',
   },
+
   cardImageBlur: {
     width: '100%',
     height: '100%',
     position: 'absolute',
-    opacity: 0.35,
+    opacity: 0.6,
   },
-  cardImageMain: {
+
+  cardFullImage: {
     width: '100%',
     height: '100%',
   },
-  cardTextContent: {
-    paddingHorizontal: 2,
-  },
-  cardTitle: { 
-    fontSize: 16, 
-    fontWeight: '800', 
-    color: '#0f172a', 
-    lineHeight: 22,
-    marginBottom: 8,
-  },
-  cardDescription: { 
-    fontSize: 13, 
-    color: '#475569', 
-    lineHeight: 19,
-    textAlign: 'justify',
+
+  cardNoImage: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#e8f5e9',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
-  /* STYLE UNTUK MODAL DETAIL */
+  cardTextContent: {
+    padding: 14,
+  },
+
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0f172a',
+    lineHeight: 21,
+    marginBottom: 6,
+  },
+
+  cardDescription: {
+    fontSize: 13,
+    color: '#475569',
+    lineHeight: 19,
+  },
+
+  /* ── MODAL ── */
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(15, 23, 42, 0.6)', 
@@ -632,31 +643,30 @@ const styles = StyleSheet.create({
     right: 16,
     zIndex: 10,
     backgroundColor: '#f1f5f9',
-    width: 25,
-    height: 25,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalImageContainer: {
     width: '100%',
-    aspectRatio: 16 / 9,
+    aspectRatio: 4 / 3,
     borderRadius: 14,
     marginTop: 24,
     marginBottom: 16,
     overflow: 'hidden',
-    position: 'relative',
+    backgroundColor: '#f0f7f4',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
   },
   modalImageBlur: {
     width: '100%',
     height: '100%',
     position: 'absolute',
-    opacity: 0.35,
+    opacity: 0.6,
   },
-  modalImageMain: {
+  modalImageFull: {
     width: '100%',
     height: '100%',
   },
@@ -703,10 +713,10 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#00AA5B',
     shadowColor: '#00AA5B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 8,
   },
   ctaLeft: { flex: 1 },
   ctaLabel: {
@@ -730,9 +740,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#00AA5B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
+    elevation: 8,
   },
 });

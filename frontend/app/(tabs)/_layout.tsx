@@ -35,7 +35,7 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="edit-profile"
+        name="profile"
         options={{
           title: 'Profil',
         }}
@@ -106,7 +106,7 @@ const getIcon = (name: string) => {
     home: 'create-outline',
 
     // kanan
-    'edit-profile': 'person-outline',
+    'profile': 'person-outline',
   };
 
   return icons[name] || 'ellipse-outline';

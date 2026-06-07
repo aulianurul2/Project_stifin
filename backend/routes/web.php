@@ -83,6 +83,10 @@ Route::middleware(['auth'])->group(function () {
     // 7. Konten Informasi
     Route::resource('kelola-konten', KontenInformasiController::class);
 
+    // 8. Profil Admin
+    Route::get('/profil', [\App\Http\Controllers\ProfilController::class, 'index'])->name('profil.index');
+    Route::put('/profil', [\App\Http\Controllers\ProfilController::class, 'update'])->name('profil.update');
+
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 

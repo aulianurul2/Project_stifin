@@ -118,7 +118,7 @@
             <div class="container">
                 <div class="page-inner">
 
-                    <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
+                    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <div>
                             <h3 class="fw-bold mb-3">Manajemen Slot Jadwal Tes</h3>
                             <ul class="breadcrumbs mb-3">
@@ -133,6 +133,7 @@
                             </span>
                         </div>
                     </div>
+                
 
                     @if(session('success'))
                         <div class="alert alert-success alert-dismissible fade show card-round" role="alert">
@@ -288,13 +289,7 @@
                 </div>
             </div>
 
-            <footer class="footer">
-                <div class="container-fluid d-flex justify-content-between">
-                    <div class="copyright text-center w-100">
-                        2026, made with <i class="fa fa-heart heart text-danger"></i> by STIFIn Project
-                    </div>
-                </div>
-            </footer>
+           @include('partials.footer')
         </div>
     </div>
 

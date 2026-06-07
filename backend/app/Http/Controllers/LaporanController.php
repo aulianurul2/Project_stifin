@@ -54,7 +54,7 @@ class LaporanController extends Controller
         // 10 riwayat terbaru bulan ini
         $riwayatLaporan = DB::table('hasiltes')
             ->join('klien', 'hasiltes.id_klien', '=', 'klien.id_klien')
-            ->select('klien.nama', 'klien.alamat', 'hasiltes.hasil_tes', 'hasiltes.status_tes as hasil', 'hasiltes.tanggal', 'hasiltes.biaya_tes')
+            ->select('klien.nama', 'klien.domisili', 'hasiltes.hasil_tes', 'hasiltes.status_tes as hasil', 'hasiltes.tanggal', 'hasiltes.biaya_tes')
             ->where('hasiltes.status_tes', 'Selesai')
             ->whereMonth('hasiltes.updated_at', $bulan)
             ->whereYear('hasiltes.updated_at', $tahun)
@@ -81,7 +81,7 @@ class LaporanController extends Controller
 
     $riwayatLaporan = DB::table('hasiltes')
         ->join('klien', 'hasiltes.id_klien', '=', 'klien.id_klien')
-        ->select('klien.nama', 'klien.alamat', 'hasiltes.hasil_tes', 'hasiltes.status_tes as hasil', 'hasiltes.tanggal', 'hasiltes.biaya_tes')
+        ->select('klien.nama', 'klien.domisili', 'hasiltes.hasil_tes', 'hasiltes.status_tes as hasil', 'hasiltes.tanggal', 'hasiltes.biaya_tes')
         ->where('hasiltes.status_tes', 'Selesai')
         ->whereMonth('hasiltes.updated_at', $bulan)
         ->whereYear('hasiltes.updated_at', $tahun)

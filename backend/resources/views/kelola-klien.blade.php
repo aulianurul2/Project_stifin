@@ -62,13 +62,15 @@
 
             <div class="container">
                 <div class="page-inner">
-                    <div class="page-header">
+                    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
                         <h3 class="fw-bold mb-3">Kelola Klien</h3>
                         <ul class="breadcrumbs mb-3">
                             <li class="nav-home"><a href="{{ route('dashboard') }}"><i class="icon-home"></i></a></li>
                             <li class="separator"><i class="icon-arrow-right"></i></li>
                             <li class="nav-item"><a href="{{ route('kelola-klien') }}">Data Klien</a></li>
                         </ul>
+                    </div>
                     </div>
 
                     <div class="row">
@@ -192,13 +194,7 @@
                 </div>
             </div>
 
-            <footer class="footer">
-                <div class="container-fluid d-flex justify-content-between">
-                    <div class="copyright text-center w-100">
-                        2026, made with <i class="fa fa-heart heart text-danger"></i> by STIFIn Project
-                    </div>
-                </div>
-            </footer>
+               @include('partials.footer')
         </div>
 
         {{-- MODAL DETAIL PROFIL KLIEN (VIEW MODE - CLEAN & FORMAL) --}}

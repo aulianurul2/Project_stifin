@@ -22,8 +22,8 @@ const { width } = Dimensions.get('window');
 
 interface RiwayatItem {
   id_jadwal: number;
-  tanggal: string; // Format yang diharapkan: 'YYYY-MM-DD'
-  jam?: string;    // Format yang diharapkan: 'HH:MM' atau 'HH:MM:SS'
+  tanggal: string;
+  jam?: string;
   waktu?: string;
   jam_tes?: string;
   jam_pelaksanaan?: string;
@@ -44,7 +44,6 @@ export default function DashboardIndex() {
   const [hasNewNotification, setHasNewNotification] = useState(false);
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
-  // Menyimpan waktu rendering saat ini untuk kalkulasi relatif yang akurat saat dropdown dibuka
   const [now, setNow] = useState<Date>(new Date());
 
   const getFormattedDate = () => {
@@ -122,12 +121,10 @@ export default function DashboardIndex() {
     return statusUtama || "Menunggu";
   };
 
-  // Fungsi utilitas untuk menghitung waktu relatif secara realtime
   const getRelativeTime = (tanggalStr: string, jamStr?: string): string => {
     if (!tanggalStr) return "Baru saja";
     
     try {
-      // Gabungkan komponen tanggal dan jam agar presisi
       const waktuEfektif = jamStr ? jamStr : "00:00";
       const formatIso = `${tanggalStr}T${waktuEfektif}`;
       const timestampNotif = new Date(formatIso);
@@ -140,7 +137,6 @@ export default function DashboardIndex() {
       const selisihJam = Math.floor(selisihMenit / 60);
       const selisihHari = Math.floor(selisihJam / 24);
 
-      // Tangani skenario jika jam server sedikit mendahului device (selisih negatif)
       if (selisihDetik < 45) {
         return "Baru saja";
       } else if (selisihMenit < 60) {
@@ -150,7 +146,6 @@ export default function DashboardIndex() {
       } else if (selisihHari < 7) {
         return `${selisihHari} hari yang lalu`;
       } else {
-        // Jika sudah lebih dari seminggu, tampilkan format tanggal default terformat singkat
         return timestampNotif.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
       }
     } catch (e) {
@@ -159,7 +154,7 @@ export default function DashboardIndex() {
   };
 
   const handleNotificationPress = () => {
-    setNow(new Date()); // Segarkan komponen waktu sesaat sebelum dropdown ditampilkan
+    setNow(new Date());
     setDropdownVisible(!dropdownVisible);
     setHasNewNotification(false);
   };
@@ -269,6 +264,7 @@ export default function DashboardIndex() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
         {/* Welcome Card */}
         <View style={styles.welcomeCard}>
           <View style={styles.welcomeCardBg1} />
@@ -305,7 +301,6 @@ export default function DashboardIndex() {
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statBox}>
-            {/* Perbaikan path file gambar lokal logo_light.png */}
             <Image 
               source={require('../../assets/images/logo_light.png')} 
               style={styles.statIconImg}
@@ -369,9 +364,10 @@ export default function DashboardIndex() {
             <Ionicons name="arrow-forward" size={18} color="#fff" />
           </View>
         </TouchableOpacity>
+
       </ScrollView>
 
-      {/* --- PRO DROPDOWN NOTIFIKASI --- */}
+      {/* DROPDOWN NOTIFIKASI */}
       <Modal
         visible={dropdownVisible}
         transparent={true}
@@ -383,7 +379,6 @@ export default function DashboardIndex() {
             <TouchableWithoutFeedback>
               <View style={styles.dropdownContainer}>
                 
-                {/* Header Dropdown */}
                 <View style={styles.dropdownHeader}>
                   <Text style={styles.dropdownHeaderText}>Notifikasi Terbaru</Text>
                   <View style={styles.activeIndicatorContainer}>
@@ -392,10 +387,8 @@ export default function DashboardIndex() {
                   </View>
                 </View>
 
-                {/* List Notifikasi */}
                 <ScrollView style={styles.dropdownList} bounces={false}>
                   
-                  {/* Item Utama (Dinamis dari Database dengan Waktu Realtime) */}
                   {latestRegistration && (
                     <View style={styles.notifItem}>
                       <View style={styles.notifMainRow}>
@@ -405,7 +398,6 @@ export default function DashboardIndex() {
                         </View>
                         <View style={styles.notifTextWrapper}>
                           <Text style={styles.proMainText}>{notifDetails.text}</Text>
-                          {/* Penanda waktu realtime yang dikalkulasi secara dinamis */}
                           <Text style={styles.proTimeText}>
                             {getRelativeTime(latestRegistration.tanggal, dapatkanJamValid(latestRegistration))}
                           </Text>
@@ -441,7 +433,6 @@ export default function DashboardIndex() {
 
                 </ScrollView>
 
-                {/* Footer Dropdown */}
                 <TouchableOpacity 
                   style={styles.dropdownFooter} 
                   onPress={() => {
@@ -489,10 +480,43 @@ const styles = StyleSheet.create({
   headerLeft: { flex: 1 },
   brandText: { fontSize: 20, fontWeight: '900', color: '#1a1a2e', letterSpacing: 0.5 },
   dateText: { fontSize: 11, color: '#90a4ae', marginTop: 2, textTransform: 'capitalize' },
-  notifBtn: { width: 40, height: 40, backgroundColor: '#e8f5e9', borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginLeft: 10 },
+
+  /* ── Notif button: green glow shadow ── */
+  notifBtn: {
+    width: 40,
+    height: 40,
+    backgroundColor: '#e8f5e9',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 10,
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.55,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+
   notifBadge: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: 4, backgroundColor: '#ef4444', borderWidth: 2, borderColor: '#fff' },
   scrollContent: { padding: 16, paddingBottom: 32 },
-  welcomeCard: { backgroundColor: '#00AA5B', padding: 22, borderRadius: 22, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, overflow: 'hidden' },
+
+  /* ── Welcome card: green glow shadow ── */
+  welcomeCard: {
+    backgroundColor: '#00AA5B',
+    padding: 22,
+    borderRadius: 22,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+    overflow: 'hidden',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.55,
+    shadowRadius: 14,
+    elevation: 8,
+  },
+
   welcomeCardBg1: { position: 'absolute', width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(255,255,255,0.08)', top: -30, right: 60 },
   welcomeCardBg2: { position: 'absolute', width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.06)', bottom: -20, left: 20 },
   welcomeInfo: { flex: 1 },
@@ -509,13 +533,28 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 13, fontWeight: '800', color: '#1a1a2e' },
   statLabel: { fontSize: 10, color: '#90a4ae', fontWeight: '600' },
   statDivider: { width: 1, height: 36, backgroundColor: '#e8f5e9' },
-  statIconImg: { width: 40, height: 22 }, // Menjaga gambar tetap proporsional sejajar Ionicons
+  statIconImg: { width: 40, height: 22 },
   sectionTitle: { fontSize: 16, fontWeight: '800', color: '#1a1a2e', marginBottom: 14, marginLeft: 2 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 16 },
   menuBox: { width: '47%', backgroundColor: '#fff', padding: 18, borderRadius: 20, alignItems: 'center', marginBottom: 14, borderWidth: 1, borderColor: '#e8f5e9', justifyContent: 'center' },
   iconCircle: { padding: 14, borderRadius: 16, marginBottom: 10 },
   menuTitle: { fontSize: 13, fontWeight: '800', color: '#1a1a2e', textAlign: 'center' },
-  promoBanner: { backgroundColor: '#00AA5B', borderRadius: 18, padding: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+
+  /* ── Promo banner: green glow shadow ── */
+  promoBanner: {
+    backgroundColor: '#00AA5B',
+    borderRadius: 18,
+    padding: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#00AA5B',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.55,
+    shadowRadius: 14,
+    elevation: 8,
+  },
+
   promoLeft: { flex: 1 },
   promoTagContainer: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
   promoTag: { fontSize: 11, color: 'rgba(255,255,255,0.9)', fontWeight: '700', textTransform: 'uppercase' },
@@ -523,7 +562,7 @@ const styles = StyleSheet.create({
   promoSub: { fontSize: 11, color: 'rgba(255,255,255,0.75)' },
   promoArrow: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.25)', justifyContent: 'center', alignItems: 'center' },
 
-  /* --- DESIGN DROPDOWN PROFESIONAL & CLEAN --- */
+  /* DROPDOWN */
   dropdownOverlay: {
     flex: 1,
     backgroundColor: 'rgba(26, 26, 46, 0.08)', 

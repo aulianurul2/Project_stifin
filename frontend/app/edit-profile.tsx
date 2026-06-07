@@ -18,6 +18,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // ✅ TAMBAHAN
 import axiosInstance from '@/src/api/axiosConfig';
 
 interface ProfileData {
@@ -62,7 +63,6 @@ export default function EditProfile() {
   });
 
   const [activePicker, setActivePicker] = useState<'jk' | 'golDarah' | null>(null);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const opsiJK = [
     { label: 'Laki-laki', value: 'L' },
@@ -121,6 +121,9 @@ export default function EditProfile() {
     try {
       const response = await axiosInstance.put('/profile/update', formData);
       if (response.status === 200) {
+        // ✅ PERBAIKAN: Simpan nama terbaru ke AsyncStorage agar home.tsx langsung sinkron
+        await AsyncStorage.setItem('user_name', formData.nama);
+
         Toast.show({
           type: 'success',
           text1: 'Sukses',
@@ -154,15 +157,6 @@ export default function EditProfile() {
       </View>
     );
   }
-  const handleLogout = async () => {
-  try {
-    await axiosInstance.post('/logout');
-  } catch (error) {
-    // Tetap lanjut logout meski request gagal
-  } finally {
-    router.replace('/login');
-  }
-};
 
   const labelJenisKelaminAktif = opsiJK.find(o => o.value === formData.jenis_kelamin)?.label || 'Pilih';
 
@@ -171,7 +165,7 @@ export default function EditProfile() {
 
       {/* Green Top Bar */}
       <View style={styles.topBar}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.replace('/home')}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.replace('/profile')}>
           <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
         <View style={styles.topBarCenter}>
@@ -292,61 +286,24 @@ export default function EditProfile() {
         </View>
 
         {/* Save Button */}
-     
-<View style={styles.footer}>
-  <TouchableOpacity
-    style={[styles.btnSubmit, loading && { opacity: 0.7 }]}
-    onPress={handleSimpan}
-    disabled={loading}
-    activeOpacity={0.85}
-  >
-    {loading ? (
-      <ActivityIndicator color="#fff" />
-    ) : (
-      <View style={styles.btnInner}>
-        <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
-        <Text style={styles.btnText}>Simpan Perubahan</Text>
-      </View>
-    )}
-  </TouchableOpacity>
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={[styles.btnSubmit, loading && { opacity: 0.7 }]}
+            onPress={handleSimpan}
+            disabled={loading}
+            activeOpacity={0.85}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <View style={styles.btnInner}>
+                <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+                <Text style={styles.btnText}>Simpan Perubahan</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
 
-  {/* Tombol Logout */}
-  {!showLogoutConfirm ? (
-    <TouchableOpacity
-      style={styles.btnLogout}
-      onPress={() => setShowLogoutConfirm(true)}
-      activeOpacity={0.85}
-    >
-      <View style={styles.btnInner}>
-        <Ionicons name="log-out-outline" size={20} color="#fff" />
-        <Text style={styles.btnText}>Keluar Akun</Text>
-      </View>
-    </TouchableOpacity>
-  ) : (
-    <View style={styles.logoutConfirmBox}>
-      <Text style={styles.logoutConfirmText}>Yakin ingin keluar dari akun?</Text>
-      <View style={styles.logoutConfirmRow}>
-        <TouchableOpacity
-          style={styles.btnBatal}
-          onPress={() => setShowLogoutConfirm(false)}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.btnBatalText}>Batal</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.btnLogoutConfirm}
-          onPress={handleLogout}
-          activeOpacity={0.85}
-        >
-          <View style={styles.btnInner}>
-            <Ionicons name="log-out-outline" size={18} color="#fff" />
-            <Text style={styles.btnText}>Ya</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-    </View>
-  )}
-</View>
       </ScrollView>
 
       {/* Custom Picker Modal */}
@@ -532,64 +489,6 @@ const styles = StyleSheet.create({
   },
   btnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   btnText: { color: '#fff', fontWeight: '800', fontSize: 16 },
-
-  btnLogout: {
-  backgroundColor: '#e53935',
-  padding: 16,
-  borderRadius: 14,
-  alignItems: 'center',
-  marginTop: 10,
-  shadowColor: '#e53935',
-  shadowOffset: { width: 0, height: 6 },
-  shadowOpacity: 0.3,
-  shadowRadius: 10,
-  elevation: 6,
-},
-logoutConfirmBox: {
-  marginTop: 10,
-  backgroundColor: '#fff5f5',
-  borderRadius: 14,
-  padding: 16,
-  borderWidth: 1.5,
-  borderColor: '#ffcdd2',
-},
-logoutConfirmText: {
-  fontSize: 13,
-  fontWeight: '700',
-  color: '#c62828',
-  textAlign: 'center',
-  marginBottom: 12,
-},
-logoutConfirmRow: {
-  flexDirection: 'row',
-  gap: 10,
-},
-btnBatal: {
-  flex: 1,
-  padding: 14,
-  borderRadius: 12,
-  alignItems: 'center',
-  backgroundColor: '#f5faf7',
-  borderWidth: 1.5,
-  borderColor: '#e0f2ec',
-},
-btnBatalText: {
-  fontSize: 14,
-  fontWeight: '700',
-  color: '#546e7a',
-},
-btnLogoutConfirm: {
-  flex: 1,
-  padding: 14,
-  borderRadius: 12,
-  alignItems: 'center',
-  backgroundColor: '#e53935',
-  shadowColor: '#e53935',
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.25,
-  shadowRadius: 6,
-  elevation: 4,
-},
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   modalSheet: {
