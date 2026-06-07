@@ -253,11 +253,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#00AA5B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
+  
   },
   backBtn: {
     width: 38,
@@ -309,11 +305,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingVertical: 9, paddingHorizontal: 20,
     borderRadius: 12,
-    borderWidth: 0.5, borderColor: '#00AA5B',
+    borderWidth: 1, borderColor: '#00AA5B',
     backgroundColor: '#f0faf5',
     shadowColor: '#00AA5B',
   shadowOffset: { width: 0, height: 3 },
-  shadowOpacity: 0.25,
+  shadowOpacity: 0.15,
   shadowRadius: 6,
   elevation: 4,
   },
@@ -354,11 +350,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0fff8',
     borderRadius: 14, padding: 14,
     borderWidth: 1.5, borderColor: '#b9f0d0',
-    shadowColor: '#00AA5B',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.45,
-    shadowRadius: 10,
-    elevation: 6,
+   
   },
 
   waBtnIcon: {

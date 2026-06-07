@@ -20,19 +20,40 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import Toast from 'react-native-toast-message';
 import axiosInstance from '@/src/api/axiosConfig';
 
-// ─── Transport options (sama dengan pendaftaran.tsx) ────────────────────────
+// ─── Types ───────────────────────────────────────────────────────────────────
+
 interface TransportOption {
   label: string;
   biaya: number;
 }
+
+interface SlotJadwal {
+  id_jadwal: number;
+  tanggal: string;
+  waktu: string;
+  lokasi: string;
+  kuota: number;
+}
+
+interface StatusCardConfig {
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  bgColor: string;
+  title: string;
+  sub: string;
+}
+
+// ─── Constants ───────────────────────────────────────────────────────────────
 
 const TRANSPORT_DALAM_SUBANG: TransportOption[] = [
   { label: 'Kota Subang', biaya: 25000 },
   { label: 'Kab. Subang', biaya: 50000 },
 ];
 
-const BIAYA_TES = 550000;
+const BIAYA_TES          = 550000;
 const BIAYA_TRANSPORT_LUAR = 75000;
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatRupiah(nominal: number): string {
   return 'Rp ' + nominal.toLocaleString('id-ID');
@@ -42,8 +63,8 @@ function hariSejakJadwal(tanggalStr: string): number {
   if (!tanggalStr || tanggalStr.trim() === '' || tanggalStr === 'null') return 0;
 
   let jadwalDate: Date | null = null;
-
   const dmyMatch = tanggalStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+
   if (dmyMatch) {
     jadwalDate = new Date(
       parseInt(dmyMatch[3]),
@@ -60,18 +81,10 @@ function hariSejakJadwal(tanggalStr: string): number {
   today.setHours(0, 0, 0, 0);
   jadwalDate.setHours(0, 0, 0, 0);
 
-  const diffMs   = today.getTime() - jadwalDate.getTime();
-  const diffHari = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  return diffHari;
+  return Math.floor((today.getTime() - jadwalDate.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-interface SlotJadwal {
-  id_jadwal: number;
-  tanggal: string;
-  waktu: string;
-  lokasi: string;
-  kuota: number;
-}
+// ─── Component ───────────────────────────────────────────────────────────────
 
 export default function HasilTes() {
   const router = useRouter();
@@ -87,40 +100,51 @@ export default function HasilTes() {
       komentar:    string;
     }>();
 
+  // ── State ──
   const [modalRescheduleVisible, setModalRescheduleVisible] = useState(false);
   const [listJadwal, setListJadwal]       = useState<SlotJadwal[]>([]);
   const [loadingJadwal, setLoadingJadwal] = useState(false);
   const [prosesLoading, setProsesLoading] = useState(false);
 
-  const [adminWa1, setAdminWa1] = useState<string>('6282127747105');
-  const [adminWa2, setAdminWa2] = useState<string>('6281224595556');
+  const [adminWa1, setAdminWa1] = useState('6282127747105');
+  const [adminWa2, setAdminWa2] = useState('6281224595556');
 
-  const [rescheduleTempatTes, setRescheduleTempatTes] = useState<'Kantor Subang' | 'Home Visit'>('Kantor Subang');
-  const [rescheduleWilayah, setRescheduleWilayah]     = useState<'dalam' | 'luar'>('dalam');
+  const [rescheduleTempatTes, setRescheduleTempatTes] =
+    useState<'Kantor Subang' | 'Home Visit'>('Kantor Subang');
+  const [rescheduleWilayah, setRescheduleWilayah] =
+    useState<'dalam' | 'luar'>('dalam');
+  const [rescheduleTransport, setRescheduleTransport] =
+    useState<TransportOption>(TRANSPORT_DALAM_SUBANG[0]);
+  const [rescheduleDropdownOpen, setRescheduleDropdownOpen] = useState(false);
 
-  const [rescheduleTransport, setRescheduleTransport]         = useState<TransportOption>(TRANSPORT_DALAM_SUBANG[0]);
-  const [rescheduleDropdownOpen, setRescheduleDropdownOpen]   = useState(false);
-
+  // ── Derived ──
   const isFileHasilAda  = file_hasil  && file_hasil.trim()  !== '' && file_hasil  !== 'null';
   const isFileDetailAda = file_detail && file_detail.trim() !== '' && file_detail !== 'null';
   const berkasTersedia  = isFileHasilAda || isFileDetailAda;
 
-  const statusLower     = status?.toLowerCase() ?? '';
-  const isDitolak       = statusLower === 'ditolak';
-  const isDibatalkan    = statusLower === 'dibatalkan';
-  const isDiterima      = ['diterima', 'disetujui', 'diproses'].includes(statusLower);
+  const statusLower  = status?.toLowerCase() ?? '';
+  const isDitolak    = statusLower === 'ditolak';
+  const isDibatalkan = statusLower === 'dibatalkan';
+  const isDiterima   = ['diterima', 'disetujui', 'diproses'].includes(statusLower);
+
   const belumMengajukan =
     (!tanggal || tanggal.trim() === '' || tanggal === 'null') &&
-    (!jam || jam.trim() === '' || jam === 'null');
-  const isMenunggu      = !belumMengajukan && !berkasTersedia && !isDitolak && !isDibatalkan && !isDiterima;
-  const isKomentarAda   = komentar && komentar.trim() !== '' && komentar !== 'null';
+    (!jam     || jam.trim()     === '' || jam     === 'null');
+
+  const isMenunggu    = !belumMengajukan && !berkasTersedia && !isDitolak && !isDibatalkan && !isDiterima;
+  const isKomentarAda = komentar && komentar.trim() !== '' && komentar !== 'null';
 
   const selisihHari             = hariSejakJadwal(tanggal ?? '');
   const melewatiBatasReschedule = selisihHari > 14;
   const sisaHariReschedule      = Math.max(0, 14 - selisihHari);
+  const rescheduleIsLuar        = rescheduleTempatTes === 'Home Visit' && rescheduleWilayah === 'luar';
 
-  const rescheduleIsLuar = rescheduleTempatTes === 'Home Visit' && rescheduleWilayah === 'luar';
+  const filteredRescheduleJadwal = listJadwal.filter((item) =>
+    String(item.lokasi || '').toLowerCase().trim() ===
+    rescheduleTempatTes.toLowerCase().trim()
+  );
 
+  // ── Biaya helpers ──
   const getRescheduleBiaya = (): number => {
     if (rescheduleTempatTes !== 'Home Visit') return BIAYA_TES;
     if (rescheduleWilayah === 'luar') return BIAYA_TES + BIAYA_TRANSPORT_LUAR;
@@ -133,12 +157,7 @@ export default function HasilTes() {
     return rescheduleTransport.biaya;
   };
 
-  const filteredRescheduleJadwal = listJadwal.filter((item) => {
-    const lokasiDB      = String(item.lokasi || '').toLowerCase().trim();
-    const lokasiPilihan = rescheduleTempatTes.toLowerCase().trim();
-    return lokasiDB === lokasiPilihan;
-  });
-
+  // ── Effects ──
   useEffect(() => {
     const fetchAdminContact = async () => {
       try {
@@ -154,35 +173,28 @@ export default function HasilTes() {
     fetchAdminContact();
   }, []);
 
+  useEffect(() => {
+    if (!modalRescheduleVisible) return;
+    fetchJadwalTersedia();
+    setRescheduleTempatTes('Kantor Subang');
+    setRescheduleWilayah('dalam');
+    setRescheduleTransport(TRANSPORT_DALAM_SUBANG[0]);
+    setRescheduleDropdownOpen(false);
+  }, [modalRescheduleVisible]);
+
+  // ── Handlers ──
   const fetchJadwalTersedia = async () => {
     setLoadingJadwal(true);
     try {
       const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
       const response = await fetch(`${BASE_URL}/jadwal-tersedia`);
-      const data     = await response.json();
-      setListJadwal(data);
-    } catch (error) {
-      console.log('Error fetch jadwal:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Gagal Memuat',
-        text2: 'Gagal memuat slot jadwal baru.',
-        position: 'top',
-      });
+      setListJadwal(await response.json());
+    } catch {
+      Toast.show({ type: 'error', text1: 'Gagal Memuat', text2: 'Gagal memuat slot jadwal baru.', position: 'top' });
     } finally {
       setLoadingJadwal(false);
     }
   };
-
-  useEffect(() => {
-    if (modalRescheduleVisible) {
-      fetchJadwalTersedia();
-      setRescheduleTempatTes('Kantor Subang');
-      setRescheduleWilayah('dalam');
-      setRescheduleTransport(TRANSPORT_DALAM_SUBANG[0]);
-      setRescheduleDropdownOpen(false);
-    }
-  }, [modalRescheduleVisible]);
 
   const handleOpenReschedule = () => {
     if (melewatiBatasReschedule) {
@@ -198,72 +210,13 @@ export default function HasilTes() {
     setModalRescheduleVisible(true);
   };
 
-  const toLokalFormat = (nomor: string) => {
-    if (nomor.startsWith('62')) return '0' + nomor.slice(2);
-    return nomor;
-  };
-
-  const handleHubungiAdmin1 = () => {
-    const pesan = encodeURIComponent(
-      `Halo Admin, saya ingin menanyakan terkait reschedule untuk jadwal tes STIFIn saya. Mohon bantuannya, terima kasih.`
-    );
-    Linking.openURL(`https://wa.me/${adminWa1}?text=${pesan}`);
-  };
-
-  const handleHubungiAdmin2 = () => {
-    const pesan = encodeURIComponent(
-      `Halo Admin, saya ingin menanyakan terkait reschedule untuk jadwal tes STIFIn saya. Mohon bantuannya, terima kasih.`
-    );
-    Linking.openURL(`https://wa.me/${adminWa2}?text=${pesan}`);
-  };
-
-  const downloadFile = async (fileName: string | undefined, titleText: string) => {
-    try {
-      if (!fileName || fileName.trim() === '' || fileName === 'null') {
-        Toast.show({
-          type: 'error',
-          text1: 'File Tidak Tersedia',
-          text2: `File ${titleText} belum diunggah oleh admin.`,
-          position: 'top',
-        });
-        return;
-      }
-
-      const BASE_URL = process.env.EXPO_PUBLIC_API_URL?.replace('/api', '');
-      const url      = `${BASE_URL}/uploads/hasil/${encodeURIComponent(fileName)}`;
-
-      if (Platform.OS === 'web') {
-        window.open(url, '_blank');
-        return;
-      }
-
-      const fileUri  = FileSystem.cacheDirectory + fileName;
-      const downloadResumable = FileSystem.createDownloadResumable(url, fileUri);
-      const result   = await downloadResumable.downloadAsync();
-
-      if (!result) {
-        Toast.show({ type: 'error', text1: 'Unduh Gagal', text2: 'Gagal mendownload berkas.', position: 'top' });
-        return;
-      }
-      await Sharing.shareAsync(result.uri);
-    } catch (error) {
-      Toast.show({ type: 'error', text1: 'Terjadi Kesalahan', text2: `Tidak dapat mengunduh berkas ${titleText}.`, position: 'top' });
-    }
-  };
-
   const handleConfirmReschedule = async (idJadwalBaru: number) => {
     if (!id_jadwal || id_jadwal === 'undefined' || id_jadwal === 'null') {
       Toast.show({ type: 'error', text1: 'Data Tidak Valid', text2: 'ID Jadwal asal tidak valid.', position: 'top' });
       return;
     }
-
     if (melewatiBatasReschedule) {
-      Toast.show({
-        type: 'error',
-        text1: 'Batas Reschedule Terlewat',
-        text2: 'Tidak dapat mengajukan reschedule lebih dari 14 hari setelah jadwal.',
-        position: 'top',
-      });
+      Toast.show({ type: 'error', text1: 'Batas Reschedule Terlewat', text2: 'Tidak dapat mengajukan reschedule lebih dari 14 hari setelah jadwal.', position: 'top' });
       return;
     }
 
@@ -275,13 +228,12 @@ export default function HasilTes() {
         id_jadwal_baru: idJadwalBaru,
         is_luar_subang: rescheduleIsLuar ? 1 : 0,
         nama_kota: !rescheduleIsLuar && rescheduleTempatTes === 'Home Visit'
-                     ? rescheduleTransport.label
-                     : null,
+          ? rescheduleTransport.label
+          : null,
         biaya: getRescheduleBiaya(),
       };
 
       const response = await axiosInstance.put(`/pendaftaran/${id_jadwal}/reschedule`, payload);
-
       if (response.status === 200) {
         Toast.show({
           type: 'success',
@@ -290,10 +242,9 @@ export default function HasilTes() {
           position: 'top',
           visibilityTime: 2500,
         });
-        setTimeout(() => { router.replace('/riwayat'); }, 1000);
+        setTimeout(() => router.replace('/riwayat'), 1000);
       }
     } catch (error: any) {
-      console.log('Detail Error Reschedule:', error?.response?.data);
       const pesanError = error?.response?.data?.message || 'Gagal memproses pengubahan jadwal.';
       Toast.show({ type: 'error', text1: 'Reschedule Gagal', text2: pesanError, position: 'top' });
     } finally {
@@ -301,39 +252,60 @@ export default function HasilTes() {
     }
   };
 
-  interface StatusCardConfig {
-    icon: keyof typeof Ionicons.glyphMap;
-    color: string;
-    bgColor: string;
-    title: string;
-    sub: string;
-  }
+  const downloadFile = async (fileName: string | undefined, titleText: string) => {
+    try {
+      if (!fileName || fileName.trim() === '' || fileName === 'null') {
+        Toast.show({ type: 'error', text1: 'File Tidak Tersedia', text2: `File ${titleText} belum diunggah oleh admin.`, position: 'top' });
+        return;
+      }
 
-  const renderStatusCardInfo = (): StatusCardConfig => {
-    if (belumMengajukan) {
-      return { icon: 'alert-circle-outline', color: '#546e7a', bgColor: '#f5f5f5', title: 'Belum Ada Pendaftaran', sub: 'Anda belum mengajukan atau memilih jadwal pendaftaran tes pemeriksaan genetik STIFIn saat ini.' };
+      const BASE_URL = process.env.EXPO_PUBLIC_API_URL?.replace('/api', '');
+      const url      = `${BASE_URL}/uploads/hasil/${encodeURIComponent(fileName)}`;
+
+      if (Platform.OS === 'web') { window.open(url, '_blank'); return; }
+
+      const fileUri  = FileSystem.cacheDirectory + fileName;
+      const result   = await FileSystem.createDownloadResumable(url, fileUri).downloadAsync();
+
+      if (!result) {
+        Toast.show({ type: 'error', text1: 'Unduh Gagal', text2: 'Gagal mendownload berkas.', position: 'top' });
+        return;
+      }
+      await Sharing.shareAsync(result.uri);
+    } catch {
+      Toast.show({ type: 'error', text1: 'Terjadi Kesalahan', text2: `Tidak dapat mengunduh berkas ${titleText}.`, position: 'top' });
     }
-    if (berkasTersedia) {
-      return { icon: 'checkmark-circle', color: '#00AA5B', bgColor: '#e8f5e9', title: 'Selamat! Tes Anda Selesai', sub: 'Silakan unduh dokumen berkas resmi hasil tes pemeriksaan genetik STIFIn Anda.' };
-    }
-    if (isDitolak) {
-      return { icon: 'close-circle', color: '#e53935', bgColor: '#ffebee', title: 'Maaf, Tes Anda Ditolak', sub: 'Pendaftaran jadwal tes Anda ditolak oleh pihak admin. Silakan periksa Catatan Promotor di bawah.' };
-    }
-    if (isDibatalkan) {
-      return { icon: 'close-circle-outline', color: '#78909c', bgColor: '#f5f5f5', title: 'Pendaftaran Dibatalkan', sub: 'Jadwal pendaftaran ini telah Anda batalkan.' };
-    }
-    if (isDiterima) {
-      return { icon: 'checkmark-circle-outline', color: '#0288d1', bgColor: '#e1f5fe', title: 'Bukti Transfer Terverifikasi', sub: 'Bukti transfer Anda telah diverifikasi oleh admin. Harap menunggu proses tes dan pengerjaan dokumen berkas sertifikat genetik Anda selesai di-upload.' };
-    }
-    return { icon: 'time-outline', color: '#f57c00', bgColor: '#fff3e0', title: 'Menunggu Verifikasi', sub: 'Bukti transfer Anda sedang menunggu verifikasi oleh admin.' };
   };
 
-  const cardInfo = renderStatusCardInfo();
+  const toLokalFormat = (nomor: string) =>
+    nomor.startsWith('62') ? '0' + nomor.slice(2) : nomor;
+
+  const buildWaPesan = (topik: string) =>
+    encodeURIComponent(`Halo Admin, saya ingin menanyakan terkait ${topik} tes STIFIn saya. Mohon bantuannya, terima kasih.`);
+
+  const hubungiAdmin = (nomor: string, topik: string) =>
+    Linking.openURL(`https://wa.me/${nomor}?text=${buildWaPesan(topik)}`);
+
+  // ── Status card config ──
+  const getStatusCardConfig = (): StatusCardConfig => {
+    if (belumMengajukan)  return { icon: 'alert-circle-outline', color: '#546e7a', bgColor: '#f5f5f5',  title: 'Belum Ada Pendaftaran',        sub: 'Anda belum mengajukan atau memilih jadwal pendaftaran tes pemeriksaan genetik STIFIn saat ini.' };
+    if (berkasTersedia)   return { icon: 'checkmark-circle',      color: '#00AA5B', bgColor: '#e8f5e9',  title: 'Selamat! Tes Anda Selesai',     sub: 'Silakan unduh dokumen berkas resmi hasil tes pemeriksaan genetik STIFIn Anda.' };
+    if (isDitolak)        return { icon: 'close-circle',           color: '#e53935', bgColor: '#ffebee',  title: 'Maaf, Tes Anda Ditolak',        sub: 'Pendaftaran jadwal tes Anda ditolak oleh pihak admin. Silakan periksa Catatan Promotor di bawah.' };
+    if (isDibatalkan)     return { icon: 'close-circle-outline',   color: '#78909c', bgColor: '#f5f5f5',  title: 'Pendaftaran Dibatalkan',        sub: 'Jadwal pendaftaran ini telah Anda batalkan.' };
+    if (isDiterima)       return { icon: 'checkmark-circle-outline', color: '#0288d1', bgColor: '#e1f5fe', title: 'Bukti Transfer Terverifikasi', sub: 'Bukti transfer Anda telah diverifikasi oleh admin. Harap menunggu proses tes dan pengerjaan dokumen selesai.' };
+    return                       { icon: 'time-outline',            color: '#f57c00', bgColor: '#fff3e0',  title: 'Menunggu Verifikasi',           sub: 'Bukti transfer Anda sedang menunggu verifikasi oleh admin.' };
+  };
+
+  const cardInfo = getStatusCardConfig();
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Render
+  // ─────────────────────────────────────────────────────────────────────────
 
   return (
     <SafeAreaView style={styles.container}>
 
-      {/* Green Top Bar */}
+      {/* Top Bar */}
       <View style={styles.topBar}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-back-outline" size={22} color="#fff" />
@@ -345,6 +317,7 @@ export default function HasilTes() {
         <View style={{ width: 38 }} />
       </View>
 
+      {/* Loading Overlay */}
       {prosesLoading && (
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingBox}>
@@ -356,7 +329,7 @@ export default function HasilTes() {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-        {/* Status Card */}
+        {/* ── Status Card ── */}
         <View style={[styles.statusCard, { borderLeftColor: cardInfo.color }]}>
           <View style={[styles.statusIconWrap, { backgroundColor: cardInfo.bgColor }]}>
             <Ionicons name={cardInfo.icon} size={36} color={cardInfo.color} />
@@ -367,41 +340,51 @@ export default function HasilTes() {
           </View>
         </View>
 
-        {/* Catatan Waktu Verifikasi */}
+        {/* ── Estimasi Verifikasi ── */}
         {isMenunggu && (
           <View style={styles.verifikasiNote}>
-            <View style={styles.verifikasiNoteHeader}>
+            <View style={styles.rowGap6}>
               <Ionicons name="information-circle-outline" size={16} color="#f57c00" />
               <Text style={styles.verifikasiNoteTitle}>Estimasi Waktu Verifikasi</Text>
             </View>
-            <View style={styles.verifikasiNoteRow}>
+            <View style={styles.rowGap6}>
               <Ionicons name="time-outline" size={13} color="#f57c00" />
               <Text style={styles.verifikasiNoteText}>
                 Bukti transfer Anda akan diverifikasi maksimal{' '}
-                <Text style={styles.verifikasiNoteBold}>1×24 jam</Text> setelah pengiriman.
+                <Text style={styles.bold546}>1×24 jam</Text> setelah pengiriman.
               </Text>
             </View>
           </View>
         )}
 
-        {/* Meta Info */}
+        {/* ── Meta Info ── */}
         <View style={styles.metaCard}>
           <View style={styles.metaRow}>
-            <View style={styles.metaIconWrap}><Ionicons name="calendar-outline" size={14} color="#00AA5B" /></View>
+            <View style={styles.metaIconWrap}>
+              <Ionicons name="calendar-outline" size={14} color="#00AA5B" />
+            </View>
             <Text style={styles.metaLabel}>Tanggal Pelaksanaan</Text>
             <Text style={styles.metaValue}>{belumMengajukan ? '—' : (tanggal || '—')}</Text>
           </View>
+
           <View style={styles.metaDivider} />
+
           <View style={styles.metaRow}>
-            <View style={styles.metaIconWrap}><Ionicons name="time-outline" size={14} color="#00AA5B" /></View>
+            <View style={styles.metaIconWrap}>
+              <Ionicons name="time-outline" size={14} color="#00AA5B" />
+            </View>
             <Text style={styles.metaLabel}>Waktu Pemeriksaan</Text>
             <Text style={styles.metaValue}>
               {belumMengajukan ? '—' : (jam && jam.trim() !== '' && jam !== 'null' ? `${jam} WIB` : '—')}
             </Text>
           </View>
+
           <View style={styles.metaDivider} />
+
           <View style={styles.metaRow}>
-            <View style={styles.metaIconWrap}><Ionicons name="pulse-outline" size={14} color="#00AA5B" /></View>
+            <View style={styles.metaIconWrap}>
+              <Ionicons name="pulse-outline" size={14} color="#00AA5B" />
+            </View>
             <Text style={styles.metaLabel}>Status Tes</Text>
             <View style={[styles.statusPill, { backgroundColor: cardInfo.bgColor }]}>
               <Text style={[styles.statusPillText, { color: cardInfo.color }]}>
@@ -411,10 +394,10 @@ export default function HasilTes() {
           </View>
         </View>
 
-        {/* Komentar */}
+        {/* ── Komentar / Catatan ── */}
         {isKomentarAda && !belumMengajukan && (
           <View style={[styles.commentCard, isDitolak && styles.commentCardDitolak]}>
-            <View style={styles.commentHeader}>
+            <View style={styles.rowGap6}>
               <Ionicons
                 name="chatbubble-ellipses-outline"
                 size={16}
@@ -428,111 +411,8 @@ export default function HasilTes() {
           </View>
         )}
 
-        {/* Action Buttons */}
-        {!belumMengajukan && !berkasTersedia && !isDibatalkan && !isDitolak && (
-          <View style={styles.actionSection}>
-            <Text style={styles.sectionLabel}>Kelola Jadwal</Text>
-
-            {!melewatiBatasReschedule && selisihHari >= 0 && selisihHari <= 14 && (
-              <View style={styles.rescheduleWarning}>
-                <Ionicons name="hourglass-outline" size={14} color="#f57c00" />
-                <Text style={styles.rescheduleWarningText}>
-                  Sisa waktu reschedule:{' '}
-                  <Text style={styles.rescheduleWarningBold}>
-                    {sisaHariReschedule} hari lagi
-                  </Text>
-                  {' '}(maks. 14 hari setelah jadwal)
-                </Text>
-              </View>
-            )}
-
-            {melewatiBatasReschedule ? (
-              <View style={styles.rescheduleBatasInfo}>
-                <View style={styles.rescheduleBatasHeader}>
-                  <Ionicons name="lock-closed-outline" size={15} color="#e53935" />
-                  <Text style={styles.rescheduleBatasTitle}>Reschedule Hangus</Text>
-                </View>
-                <Text style={styles.rescheduleBatasSub}>
-                  Batas pengajuan reschedule adalah <Text style={{ fontWeight: '800' }}>14 hari</Text> setelah tanggal jadwal.
-                  Jadwal Anda telah lewat <Text style={{ fontWeight: '800' }}>{selisihHari} hari</Text>, sehingga hak reschedule sudah tidak berlaku.
-                </Text>
-              </View>
-            ) : (
-              <View style={{ gap: 10 }}>
-                <TouchableOpacity
-                  style={styles.btnReschedule}
-                  onPress={handleOpenReschedule}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="calendar-outline" size={17} color="#fff" />
-                  <Text style={styles.btnRescheduleText}>Ajukan Reschedule</Text>
-                </TouchableOpacity>
-                <View style={styles.rescheduleNote}>
-                  <Ionicons name="alert-circle-outline" size={13} color="#78909c" />
-                  <Text style={styles.rescheduleNoteText}>
-                    Reschedule hanya dapat diajukan maksimal{' '}
-                    <Text style={styles.rescheduleNoteBold}>14 hari</Text> setelah tanggal jadwal. Jika melebihi batas tersebut, hak reschedule akan{' '}
-                    <Text style={styles.rescheduleNoteBold}>hangus</Text>.
-                  </Text>
-                </View>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* ═══ KONTAK ADMIN ═══ */}
-        {!belumMengajukan && (
-          <View style={styles.kontakAdminCard}>
-            <View style={styles.kontakAdminHeader}>
-              <View style={styles.kontakAdminIconWrap}>
-                <Ionicons name="headset-outline" size={18} color="#00AA5B" />
-              </View>
-              <View>
-                <Text style={styles.kontakAdminTitle}>Butuh Bantuan?</Text>
-                <Text style={styles.kontakAdminSub}>
-                  Hubungi Admin untuk pertanyaan seputar jadwal dan hasil tes.
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.kontakAdminBtnRow}>
-              {/* Admin 1 */}
-              <TouchableOpacity
-                style={styles.kontakAdminBtn}
-                onPress={handleHubungiAdmin1}
-                activeOpacity={0.75}
-              >
-                <View style={styles.kontakAdminBtnIcon}>
-                  <Ionicons name="logo-whatsapp" size={20} color="#25D366" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.kontakAdminBtnLabel}>Chat dengan promotor</Text>
-                  <Text style={styles.kontakAdminBtnNomor}>{toLokalFormat(adminWa1)}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={14} color="#25D366" />
-              </TouchableOpacity>
-
-              {/* Admin 2 */}
-              <TouchableOpacity
-                style={styles.kontakAdminBtn}
-                onPress={handleHubungiAdmin2}
-                activeOpacity={0.75}
-              >
-                <View style={styles.kontakAdminBtnIcon}>
-                  <Ionicons name="logo-whatsapp" size={20} color="#25D366" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.kontakAdminBtnLabel}>Chat dengan admin</Text>
-                  <Text style={styles.kontakAdminBtnNomor}>{toLokalFormat(adminWa2)}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={14} color="#25D366" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {/* Document Section */}
-        <Text style={[styles.sectionLabel, { marginTop: 4 }]}>Berkas Dokumen STIFIn</Text>
+        {/* ── Berkas Dokumen ── */}
+        <Text style={styles.sectionLabel}>Berkas Dokumen STIFIn</Text>
 
         {belumMengajukan ? (
           <View style={styles.emptyDoc}>
@@ -603,11 +483,110 @@ export default function HasilTes() {
           </View>
         )}
 
+        {/* ── Kelola Jadwal / Reschedule ── */}
+        {!belumMengajukan && !berkasTersedia && !isDibatalkan && !isDitolak && (
+          <View style={styles.actionSection}>
+            <Text style={styles.sectionLabel}>Kelola Jadwal</Text>
+
+            {!melewatiBatasReschedule && selisihHari >= 0 && selisihHari <= 14 && (
+              <View style={styles.rescheduleWarning}>
+                <Ionicons name="hourglass-outline" size={14} color="#f57c00" />
+                <Text style={styles.rescheduleWarningText}>
+                  Sisa waktu reschedule:{' '}
+                  <Text style={styles.rescheduleWarningBold}>{sisaHariReschedule} hari lagi</Text>
+                  {' '}(maks. 14 hari setelah jadwal)
+                </Text>
+              </View>
+            )}
+
+            {melewatiBatasReschedule ? (
+              <View style={styles.rescheduleBatasInfo}>
+                <View style={styles.rowGap6}>
+                  <Ionicons name="lock-closed-outline" size={15} color="#e53935" />
+                  <Text style={styles.rescheduleBatasTitle}>Reschedule Hangus</Text>
+                </View>
+                <Text style={styles.rescheduleBatasSub}>
+                  Batas pengajuan reschedule adalah <Text style={styles.boldText}>14 hari</Text> setelah tanggal jadwal.
+                  Jadwal Anda telah lewat <Text style={styles.boldText}>{selisihHari} hari</Text>, sehingga hak reschedule sudah tidak berlaku.
+                </Text>
+              </View>
+            ) : (
+              <View style={{ gap: 10 }}>
+                <TouchableOpacity
+                  style={styles.btnReschedule}
+                  onPress={handleOpenReschedule}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="calendar-outline" size={17} color="#fff" />
+                  <Text style={styles.btnRescheduleText}>Ajukan Reschedule</Text>
+                </TouchableOpacity>
+
+                <View style={styles.rescheduleNote}>
+                  <Ionicons name="alert-circle-outline" size={13} color="#78909c" />
+                  <Text style={styles.rescheduleNoteText}>
+                    Reschedule hanya dapat diajukan maksimal{' '}
+                    <Text style={styles.rescheduleNoteBold}>14 hari</Text> setelah tanggal jadwal.
+                    Jika melebihi batas tersebut, hak reschedule akan{' '}
+                    <Text style={styles.rescheduleNoteBold}>hangus</Text>.
+                  </Text>
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* ── Kontak Admin ── */}
+        {!belumMengajukan && (
+          <View style={styles.kontakAdminCard}>
+            <View style={styles.kontakAdminHeader}>
+              <View style={styles.kontakAdminIconWrap}>
+                <Ionicons name="headset-outline" size={18} color="#00AA5B" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.kontakAdminTitle}>Butuh Bantuan?</Text>
+                <Text style={styles.kontakAdminSub}>
+                  Hubungi Admin untuk pertanyaan seputar jadwal dan hasil tes.
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.waBtn}
+              onPress={() => hubungiAdmin(adminWa1, 'reschedule untuk jadwal')}
+              activeOpacity={0.75}
+            >
+              <View style={styles.waBtnIcon}>
+                <Ionicons name="logo-whatsapp" size={20} color="#25D366" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.waBtnLabel}>Chat dengan promotor</Text>
+                <Text style={styles.waBtnNomor}>{toLokalFormat(adminWa1)}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={14} color="#25D366" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.waBtn}
+              onPress={() => hubungiAdmin(adminWa2, 'reschedule untuk jadwal')}
+              activeOpacity={0.75}
+            >
+              <View style={styles.waBtnIcon}>
+                <Ionicons name="logo-whatsapp" size={20} color="#25D366" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.waBtnLabel}>Chat dengan admin</Text>
+                <Text style={styles.waBtnNomor}>{toLokalFormat(adminWa2)}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={14} color="#25D366" />
+            </TouchableOpacity>
+          </View>
+        )}
+
       </ScrollView>
 
-      {/* ═══════════════════════════════════════════════════
-          RESCHEDULE MODAL
-      ═══════════════════════════════════════════════════ */}
+      {/* ══════════════════════════════════════════
+          Modal Reschedule
+      ══════════════════════════════════════════ */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -636,10 +615,8 @@ export default function HasilTes() {
                     <Ionicons name="hourglass-outline" size={13} color="#f57c00" />
                     <Text style={styles.modalBatasText}>
                       Sisa waktu:{' '}
-                      <Text style={{ fontWeight: '800', color: '#e65100' }}>
-                        {sisaHariReschedule} hari
-                      </Text>{' '}
-                      untuk mengajukan reschedule
+                      <Text style={{ fontWeight: '800', color: '#e65100' }}>{sisaHariReschedule} hari</Text>
+                      {' '}untuk mengajukan reschedule
                     </Text>
                   </View>
                 )}
@@ -648,9 +625,7 @@ export default function HasilTes() {
 
                   {/* Pilihan Lokasi */}
                   <View style={styles.modalSection}>
-                    <Text style={styles.modalSectionLabel}>
-                      <Ionicons name="location-outline" size={12} color="#546e7a" /> Lokasi Tes
-                    </Text>
+                    <Text style={styles.modalSectionLabel}>Lokasi Tes</Text>
                     <View style={styles.chipRow}>
                       {(['Kantor Subang', 'Home Visit'] as const).map((val) => (
                         <TouchableOpacity
@@ -676,12 +651,11 @@ export default function HasilTes() {
                     </View>
                   </View>
 
-                  {/* Pilihan Wilayah */}
+                  {/* Pilihan Wilayah Home Visit */}
                   {rescheduleTempatTes === 'Home Visit' && (
                     <View style={styles.modalSection}>
-                      <Text style={styles.modalSectionLabel}>
-                        <Ionicons name="map-outline" size={12} color="#546e7a" /> Wilayah Home Visit
-                      </Text>
+                      <Text style={styles.modalSectionLabel}>Wilayah Home Visit</Text>
+
                       <View style={styles.chipRow}>
                         <TouchableOpacity
                           style={[styles.wilayahChip, rescheduleWilayah === 'dalam' && styles.chipActive]}
@@ -712,9 +686,8 @@ export default function HasilTes() {
 
                       {rescheduleWilayah === 'dalam' && (
                         <View style={styles.kotaBox}>
-                          <Text style={styles.kotaLabel}>
-                            <Ionicons name="car-outline" size={12} color="#546e7a" /> Pilih Area Transport
-                          </Text>
+                          <Text style={styles.kotaLabel}>Pilih Area Transport</Text>
+
                           <TouchableOpacity
                             style={styles.dropdownTrigger}
                             onPress={() => setRescheduleDropdownOpen(!rescheduleDropdownOpen)}
@@ -748,10 +721,7 @@ export default function HasilTes() {
                                       isActive && styles.dropdownItemActive,
                                       index < TRANSPORT_DALAM_SUBANG.length - 1 && styles.dropdownItemBorder,
                                     ]}
-                                    onPress={() => {
-                                      setRescheduleTransport(item);
-                                      setRescheduleDropdownOpen(false);
-                                    }}
+                                    onPress={() => { setRescheduleTransport(item); setRescheduleDropdownOpen(false); }}
                                     activeOpacity={0.7}
                                   >
                                     <View style={styles.dropdownItemLeft}>
@@ -795,26 +765,15 @@ export default function HasilTes() {
                       {rescheduleTempatTes === 'Home Visit' ? (
                         <>
                           <Text style={styles.biayaInfoText}>
-                            Biaya Tes:{' '}
-                            <Text style={{ color: '#546e7a', fontWeight: '700' }}>
-                              {formatRupiah(BIAYA_TES)}
-                            </Text>
+                            Biaya Tes: <Text style={styles.bold546}>{formatRupiah(BIAYA_TES)}</Text>
                             {'  +  '}
-                            Transport:{' '}
-                            <Text style={{ color: '#546e7a', fontWeight: '700' }}>
-                              {formatRupiah(getRescheduleTransportBiaya())}
-                            </Text>
+                            Transport: <Text style={styles.bold546}>{formatRupiah(getRescheduleTransportBiaya())}</Text>
                           </Text>
-                          <Text style={styles.biayaInfoTotal}>
-                            Total: {formatRupiah(getRescheduleBiaya())}
-                          </Text>
+                          <Text style={styles.biayaInfoTotal}>Total: {formatRupiah(getRescheduleBiaya())}</Text>
                         </>
                       ) : (
                         <Text style={styles.biayaInfoText}>
-                          Biaya:{' '}
-                          <Text style={styles.biayaInfoNominal}>
-                            {formatRupiah(getRescheduleBiaya())}
-                          </Text>
+                          Biaya: <Text style={styles.biayaInfoNominal}>{formatRupiah(getRescheduleBiaya())}</Text>
                         </Text>
                       )}
                       <Text style={styles.biayaInfoNote}>* Belum termasuk biaya admin antar bank</Text>
@@ -823,9 +782,7 @@ export default function HasilTes() {
 
                   <View style={styles.modalDivider} />
 
-                  <Text style={[styles.modalSectionLabel, { marginBottom: 10 }]}>
-                    <Ionicons name="calendar-outline" size={12} color="#546e7a" /> Pilih Slot Jadwal
-                  </Text>
+                  <Text style={[styles.modalSectionLabel, { marginBottom: 10 }]}>Pilih Slot Jadwal</Text>
 
                   {loadingJadwal ? (
                     <View style={styles.modalLoading}>
@@ -834,13 +791,11 @@ export default function HasilTes() {
                     </View>
                   ) : filteredRescheduleJadwal.length === 0 ? (
                     <View style={styles.modalEmpty}>
-                      <View style={styles.modalEmptyIcon}>
+                      <View style={styles.emptyDocIcon}>
                         <Ionicons name="calendar-outline" size={32} color="#90a4ae" />
                       </View>
-                      <Text style={styles.modalEmptyTitle}>Tidak Ada Jadwal</Text>
-                      <Text style={styles.emptyModal}>
-                        Tidak ada slot tersedia untuk lokasi ini saat ini.
-                      </Text>
+                      <Text style={styles.emptyDocTitle}>Tidak Ada Jadwal</Text>
+                      <Text style={styles.emptyDocSub}>Tidak ada slot tersedia untuk lokasi ini saat ini.</Text>
                     </View>
                   ) : (
                     filteredRescheduleJadwal.map((item) => (
@@ -889,21 +844,22 @@ export default function HasilTes() {
   );
 }
 
+// ─── Styles ──────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5faf7' },
 
+  // ── Top Bar ──
   topBar: {
     backgroundColor: '#00AA5B',
-    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight ? StatusBar.currentHeight + 12 : 30) : 16,
+    paddingTop: Platform.OS === 'android'
+      ? (StatusBar.currentHeight ? StatusBar.currentHeight + 12 : 30)
+      : 16,
     paddingBottom: 18,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#00AA5B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
+    elevation: 4,
   },
   backBtn: {
     width: 38, height: 38, borderRadius: 19,
@@ -911,11 +867,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   topBarCenter: { flex: 1, alignItems: 'center' },
-  topBarTitle: { fontSize: 18, fontWeight: '800', color: '#fff' },
-  topBarSub: { fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+  topBarTitle:  { fontSize: 18, fontWeight: '800', color: '#fff' },
+  topBarSub:    { fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
 
   content: { padding: 16, paddingBottom: 48 },
 
+  // ── Loading Overlay ──
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.4)',
@@ -927,54 +884,92 @@ const styles = StyleSheet.create({
   },
   loadingText: { fontSize: 14, fontWeight: '600', color: '#546e7a' },
 
+  // ── Status Card ──
   statusCard: {
     backgroundColor: '#fff', borderRadius: 16,
     padding: 16, flexDirection: 'row', gap: 14,
     marginBottom: 14, borderWidth: 1, borderColor: '#e8f5e9',
     borderLeftWidth: 4,
-    shadowColor: '#00AA5B', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
   },
-  statusIconWrap: { width: 64, height: 64, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  statusIconWrap:  { width: 64, height: 64, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   statusCardRight: { flex: 1 },
-  statusTitle: { fontSize: 15, fontWeight: '800', marginBottom: 4 },
-  statusSub: { fontSize: 12, color: '#78909c', lineHeight: 17 },
+  statusTitle:     { fontSize: 15, fontWeight: '800', marginBottom: 4 },
+  statusSub:       { fontSize: 12, color: '#78909c', lineHeight: 17 },
 
+  // ── Verifikasi Note ──
   verifikasiNote: {
     backgroundColor: '#fff8f0', borderRadius: 14,
     padding: 14, marginBottom: 14,
     borderWidth: 1, borderColor: '#ffe0b2',
     borderLeftWidth: 3, borderLeftColor: '#f57c00', gap: 8,
   },
-  verifikasiNoteHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
   verifikasiNoteTitle: { fontSize: 13, fontWeight: '800', color: '#e65100' },
-  verifikasiNoteRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
-  verifikasiNoteText: { fontSize: 12, color: '#78909c', lineHeight: 18, flex: 1 },
-  verifikasiNoteBold: { fontWeight: '700', color: '#546e7a' },
+  verifikasiNoteText:  { fontSize: 12, color: '#78909c', lineHeight: 18, flex: 1 },
 
+  // ── Meta Card ──
   metaCard: {
     backgroundColor: '#fff', borderRadius: 16,
     padding: 16, marginBottom: 14,
     borderWidth: 1, borderColor: '#e8f5e9',
-    shadowColor: '#00AA5B', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
   },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  metaIconWrap: { width: 26, height: 26, borderRadius: 8, backgroundColor: '#e8f5e9', justifyContent: 'center', alignItems: 'center' },
-  metaLabel: { flex: 1, fontSize: 13, color: '#78909c', fontWeight: '600' },
-  metaValue: { fontSize: 13, fontWeight: '700', color: '#1a1a2e' },
+  metaIconWrap: {
+    width: 26, height: 26, borderRadius: 8,
+    backgroundColor: '#e8f5e9',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  metaLabel:   { flex: 1, fontSize: 13, color: '#78909c', fontWeight: '600' },
+  metaValue:   { fontSize: 13, fontWeight: '700', color: '#1a1a2e' },
   metaDivider: { height: 1, backgroundColor: '#f5faf7', marginVertical: 12 },
-  statusPill: { borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3 },
+  statusPill:     { borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3 },
   statusPillText: { fontSize: 12, fontWeight: '800' },
 
-  commentCard: { backgroundColor: '#e8f5e9', borderRadius: 14, padding: 14, borderLeftWidth: 3, borderLeftColor: '#00AA5B', marginBottom: 14 },
+  // ── Comment Card ──
+  commentCard: {
+    backgroundColor: '#e8f5e9', borderRadius: 14, padding: 14,
+    borderLeftWidth: 3, borderLeftColor: '#00AA5B',
+    marginBottom: 14, gap: 8,
+  },
   commentCardDitolak: { backgroundColor: '#ffebee', borderLeftColor: '#e53935' },
-  commentHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
   commentTitle: { fontSize: 13, fontWeight: '800', color: '#00AA5B' },
-  commentText: { fontSize: 13, color: '#37474f', lineHeight: 19, fontStyle: 'italic' },
+  commentText:  { fontSize: 13, color: '#37474f', lineHeight: 19, fontStyle: 'italic' },
 
+  // ── Section Label ──
   sectionLabel: { fontSize: 13, fontWeight: '800', color: '#546e7a', marginBottom: 10, paddingLeft: 2 },
 
+  // ── Document Buttons ──
+  docButtons: { gap: 10, marginBottom: 14 },
+  btnDownloadGreen: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#fff', borderRadius: 14, padding: 14,
+    borderWidth: 1.5, borderColor: '#a5d6a7',
+  },
+  btnDownloadBlue: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#fff', borderRadius: 14, padding: 14,
+    borderWidth: 1.5, borderColor: '#81d4fa',
+  },
+  btnDownloadIcon:     { width: 44, height: 44, borderRadius: 12, backgroundColor: '#e8f5e9', justifyContent: 'center', alignItems: 'center' },
+  btnDownloadIconBlue: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#e1f5fe', justifyContent: 'center', alignItems: 'center' },
+  btnDownloadInfo:     { flex: 1 },
+  btnDownloadTitle:    { fontSize: 14, fontWeight: '800', color: '#1a1a2e', marginBottom: 2 },
+  btnDownloadSub:      { fontSize: 11, color: '#90a4ae' },
+
+  // ── Empty Doc ──
+  emptyDoc: {
+    backgroundColor: '#fff', borderRadius: 16, padding: 28, alignItems: 'center',
+    borderWidth: 1.5, borderColor: '#e0f2ec', borderStyle: 'dashed', marginBottom: 14,
+  },
+  emptyDocIcon:  { width: 72, height: 72, borderRadius: 36, backgroundColor: '#f5faf7', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  emptyDocTitle: { fontSize: 15, fontWeight: '800', color: '#546e7a', marginBottom: 6 },
+  emptyDocSub:   { fontSize: 12, color: '#90a4ae', textAlign: 'center', lineHeight: 17, marginBottom: 16 },
+  btnDaftar: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: '#00AA5B', paddingVertical: 10, paddingHorizontal: 18, borderRadius: 10,
+  },
+  btnDaftarText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+
+  // ── Action Section / Reschedule ──
   actionSection: { marginBottom: 16 },
 
   rescheduleWarning: {
@@ -985,6 +980,21 @@ const styles = StyleSheet.create({
   rescheduleWarningText: { fontSize: 12, color: '#78909c', flex: 1 },
   rescheduleWarningBold: { fontWeight: '800', color: '#e65100' },
 
+  rescheduleBatasInfo: {
+    backgroundColor: '#ffebee', borderRadius: 12, padding: 14,
+    borderWidth: 1, borderColor: '#ffcdd2',
+    borderLeftWidth: 3, borderLeftColor: '#e53935',
+    marginBottom: 12, gap: 6,
+  },
+  rescheduleBatasTitle: { fontSize: 13, fontWeight: '800', color: '#c62828' },
+  rescheduleBatasSub:   { fontSize: 12, color: '#78909c', lineHeight: 17 },
+
+  btnReschedule: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: 13, borderRadius: 12, backgroundColor: '#f57c00',
+  },
+  btnRescheduleText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+
   rescheduleNote: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 6,
     backgroundColor: '#f5f5f5', borderRadius: 10, padding: 10,
@@ -993,35 +1003,14 @@ const styles = StyleSheet.create({
   rescheduleNoteText: { fontSize: 11, color: '#78909c', flex: 1, lineHeight: 16 },
   rescheduleNoteBold: { fontWeight: '800', color: '#546e7a' },
 
-  rescheduleBatasInfo: {
-    backgroundColor: '#ffebee', borderRadius: 12, padding: 14,
-    borderWidth: 1, borderColor: '#ffcdd2',
-    borderLeftWidth: 3, borderLeftColor: '#e53935',
-    marginBottom: 12, gap: 6,
-  },
-  rescheduleBatasHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  rescheduleBatasTitle: { fontSize: 13, fontWeight: '800', color: '#c62828' },
-  rescheduleBatasSub: { fontSize: 12, color: '#78909c', lineHeight: 17 },
-
-  // ═══ KONTAK ADMIN — shadow glowing sama seperti profile.tsx ═══
+  // ── Kontak Admin ──
   kontakAdminCard: {
-    backgroundColor: '#fff',
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#e8f5e9',
-    shadowColor: '#00AA5B',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-    gap: 14,
+    backgroundColor: '#fff', borderRadius: 18,
+    padding: 16, marginBottom: 16,
+    borderWidth: 1, borderColor: '#e8f5e9', gap: 10,
   },
   kontakAdminHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
+    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
   },
   kontakAdminIconWrap: {
     width: 36, height: 36, borderRadius: 10,
@@ -1029,80 +1018,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   kontakAdminTitle: { fontSize: 14, fontWeight: '800', color: '#1a1a2e', marginBottom: 2 },
-  kontakAdminSub: { fontSize: 9, color: '#90a4ae', lineHeight: 15 },
-  kontakAdminBtnRow: { gap: 10 },
+  kontakAdminSub:   { fontSize: 11, color: '#90a4ae', lineHeight: 15 },
 
-  // ── Tombol WA — shadow glowing hijau persis seperti waBtn di profile.tsx ──
-  kontakAdminBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: '#f0fff8',
-    borderRadius: 14,
-    padding: 13,
-    borderWidth: 1.5,
-    borderColor: '#b9f0d0',
-    shadowColor: '#00AA5B',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.45,
-    shadowRadius: 10,
-    elevation: 6,
+  waBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#f0fff8', borderRadius: 14, padding: 13,
+    borderWidth: 1.5, borderColor: '#b9f0d0',
   },
-  kontakAdminBtnIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
+  waBtnIcon: {
+    width: 42, height: 42, borderRadius: 12,
     backgroundColor: '#e8ffe8',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
   },
-  kontakAdminBtnLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#78909c',
-    letterSpacing: 0.5,
-  },
-  kontakAdminBtnNomor: { fontSize: 14, fontWeight: '800', color: '#1a1a2e', marginTop: 1 },
+  waBtnLabel: { fontSize: 10, fontWeight: '700', color: '#78909c', letterSpacing: 0.5 },
+  waBtnNomor: { fontSize: 14, fontWeight: '800', color: '#1a1a2e', marginTop: 1 },
 
-  btnReschedule: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    paddingVertical: 13, borderRadius: 12, backgroundColor: '#f57c00',
-    shadowColor: '#f57c00', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 6, elevation: 3,
-  },
-  btnRescheduleText: { color: '#fff', fontWeight: '700', fontSize: 13 },
-
-  emptyDoc: {
-    backgroundColor: '#fff', borderRadius: 16, padding: 28, alignItems: 'center',
-    borderWidth: 1.5, borderColor: '#e0f2ec', borderStyle: 'dashed',
-  },
-  emptyDocIcon: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#f5faf7', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
-  emptyDocTitle: { fontSize: 15, fontWeight: '800', color: '#546e7a', marginBottom: 6 },
-  emptyDocSub: { fontSize: 12, color: '#90a4ae', textAlign: 'center', lineHeight: 17, marginBottom: 16 },
-  btnDaftar: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#00AA5B', paddingVertical: 10, paddingHorizontal: 18, borderRadius: 10,
-    shadowColor: '#00AA5B', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 6, elevation: 3,
-  },
-  btnDaftarText: { color: '#fff', fontWeight: '700', fontSize: 13 },
-
-  docButtons: { gap: 10 },
-  btnDownloadGreen: {
-    flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 14, padding: 14,
-    borderWidth: 1.5, borderColor: '#a5d6a7',
-    shadowColor: '#00AA5B', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6, elevation: 2,
-  },
-  btnDownloadBlue: {
-    flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 14, padding: 14,
-    borderWidth: 1.5, borderColor: '#81d4fa',
-    shadowColor: '#0288d1', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6, elevation: 2,
-  },
-  btnDownloadIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#e8f5e9', justifyContent: 'center', alignItems: 'center' },
-  btnDownloadIconBlue: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#e1f5fe', justifyContent: 'center', alignItems: 'center' },
-  btnDownloadInfo: { flex: 1 },
-  btnDownloadTitle: { fontSize: 14, fontWeight: '800', color: '#1a1a2e', marginBottom: 2 },
-  btnDownloadSub: { fontSize: 11, color: '#90a4ae' },
-
-  // Modal
+  // ── Modal ──
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalSheet: {
     backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28,
@@ -1110,9 +1041,9 @@ const styles = StyleSheet.create({
   },
   modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#e0f2ec', alignSelf: 'center', marginBottom: 16 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 },
-  modalTitle: { fontSize: 16, fontWeight: '800', color: '#1a1a2e' },
-  modalSub: { fontSize: 11, color: '#90a4ae', marginTop: 3 },
-  modalClose: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#f5faf7', justifyContent: 'center', alignItems: 'center' },
+  modalTitle:  { fontSize: 16, fontWeight: '800', color: '#1a1a2e' },
+  modalSub:    { fontSize: 11, color: '#90a4ae', marginTop: 3 },
+  modalClose:  { width: 32, height: 32, borderRadius: 16, backgroundColor: '#f5faf7', justifyContent: 'center', alignItems: 'center' },
 
   modalBatasInfo: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
@@ -1121,51 +1052,56 @@ const styles = StyleSheet.create({
   },
   modalBatasText: { fontSize: 12, color: '#78909c', flex: 1 },
 
-  modalSection: { marginBottom: 14 },
+  modalSection:      { marginBottom: 14 },
   modalSectionLabel: { fontSize: 11, fontWeight: '700', color: '#546e7a', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 },
+
   chipRow: { flexDirection: 'row', gap: 10 },
   chip: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    paddingVertical: 10, borderRadius: 12, backgroundColor: '#f5faf7', borderWidth: 1.5, borderColor: '#e0f2ec',
+    paddingVertical: 10, borderRadius: 12,
+    backgroundColor: '#f5faf7', borderWidth: 1.5, borderColor: '#e0f2ec',
   },
-  chipActive: { backgroundColor: '#00AA5B', borderColor: '#00AA5B' },
-  chipText: { fontSize: 13, fontWeight: '700', color: '#546e7a' },
+  chipActive:     { backgroundColor: '#00AA5B', borderColor: '#00AA5B' },
+  chipText:       { fontSize: 13, fontWeight: '700', color: '#546e7a' },
   chipTextActive: { color: '#fff' },
 
   wilayahChip: {
     flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 12,
     backgroundColor: '#f5faf7', borderWidth: 1.5, borderColor: '#e0f2ec',
   },
-  wilayahChipText: { fontSize: 12, fontWeight: '700', color: '#546e7a', marginBottom: 2 },
-  wilayahHarga: { fontSize: 11, fontWeight: '600', color: '#90a4ae' },
+  wilayahChipText:    { fontSize: 12, fontWeight: '700', color: '#546e7a', marginBottom: 2 },
+  wilayahHarga:       { fontSize: 11, fontWeight: '600', color: '#90a4ae' },
   wilayahHargaActive: { color: 'rgba(255,255,255,0.85)' },
 
-  kotaBox: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#e8f5e9' },
+  kotaBox:   { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#e8f5e9' },
   kotaLabel: { fontSize: 11, fontWeight: '700', color: '#546e7a', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 },
+
   dropdownTrigger: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#f5faf7', borderRadius: 12, borderWidth: 1.5, borderColor: '#a5d6a7',
+    backgroundColor: '#f5faf7', borderRadius: 12,
+    borderWidth: 1.5, borderColor: '#a5d6a7',
     paddingHorizontal: 14, paddingVertical: 12,
   },
-  dropdownTriggerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  dropdownTriggerText: { fontSize: 14, fontWeight: '700', color: '#1a1a2e' },
+  dropdownTriggerLeft:  { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  dropdownTriggerText:  { fontSize: 14, fontWeight: '700', color: '#1a1a2e' },
   dropdownTriggerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   dropdownTriggerHarga: { fontSize: 13, fontWeight: '800', color: '#00AA5B' },
+
   dropdownList: {
-    marginTop: 6, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1.5, borderColor: '#e0f2ec', overflow: 'hidden',
-    shadowColor: '#00AA5B', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3,
+    marginTop: 6, backgroundColor: '#fff',
+    borderRadius: 12, borderWidth: 1.5, borderColor: '#e0f2ec', overflow: 'hidden',
   },
   dropdownItem: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 14, paddingVertical: 13, backgroundColor: '#fff',
   },
-  dropdownItemActive: { backgroundColor: '#f0faf5' },
-  dropdownItemBorder: { borderBottomWidth: 1, borderBottomColor: '#f0f4f0' },
-  dropdownItemLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  dropdownItemText: { fontSize: 13, fontWeight: '600', color: '#37474f' },
-  dropdownItemTextActive: { color: '#00AA5B', fontWeight: '800' },
-  dropdownItemHarga: { fontSize: 12, fontWeight: '700', color: '#90a4ae' },
-  dropdownItemHargaActive: { color: '#00AA5B' },
+  dropdownItemActive:       { backgroundColor: '#f0faf5' },
+  dropdownItemBorder:       { borderBottomWidth: 1, borderBottomColor: '#f0f4f0' },
+  dropdownItemLeft:         { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  dropdownItemText:         { fontSize: 13, fontWeight: '600', color: '#37474f' },
+  dropdownItemTextActive:   { color: '#00AA5B', fontWeight: '800' },
+  dropdownItemHarga:        { fontSize: 12, fontWeight: '700', color: '#90a4ae' },
+  dropdownItemHargaActive:  { color: '#00AA5B' },
 
   luarSubangInfo: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 8,
@@ -1178,20 +1114,19 @@ const styles = StyleSheet.create({
   biayaInfoRow: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 6,
     paddingVertical: 10, paddingHorizontal: 12,
-    backgroundColor: '#f5faf7', borderRadius: 10, borderWidth: 1, borderColor: '#e8f5e9', marginBottom: 14,
+    backgroundColor: '#f5faf7', borderRadius: 10,
+    borderWidth: 1, borderColor: '#e8f5e9', marginBottom: 14,
   },
-  biayaInfoText: { fontSize: 13, color: '#546e7a', fontWeight: '600' },
+  biayaInfoText:    { fontSize: 13, color: '#546e7a', fontWeight: '600' },
   biayaInfoNominal: { color: '#00AA5B', fontWeight: '800' },
-  biayaInfoTotal: { fontSize: 14, fontWeight: '800', color: '#00AA5B', marginTop: 4 },
-  biayaInfoNote: { fontSize: 10, color: '#90a4ae', fontStyle: 'italic', marginTop: 2 },
+  biayaInfoTotal:   { fontSize: 14, fontWeight: '800', color: '#00AA5B', marginTop: 4 },
+  biayaInfoNote:    { fontSize: 10, color: '#90a4ae', fontStyle: 'italic', marginTop: 2 },
 
   modalDivider: { height: 1, backgroundColor: '#e8f5e9', marginBottom: 14 },
 
-  modalLoading: { paddingVertical: 40, alignItems: 'center', gap: 12 },
+  modalLoading:     { paddingVertical: 40, alignItems: 'center', gap: 12 },
   modalLoadingText: { color: '#90a4ae', fontSize: 13 },
-  modalEmpty: { alignItems: 'center', paddingVertical: 32, gap: 8 },
-  modalEmptyIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#f5faf7', justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
-  modalEmptyTitle: { fontSize: 15, fontWeight: '700', color: '#546e7a' },
+  modalEmpty:       { alignItems: 'center', paddingVertical: 32, gap: 8 },
 
   jadwalItem: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
@@ -1199,17 +1134,21 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#e8f5e9',
   },
   jadwalItemLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  jadwalRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  jadwalRight:    { flexDirection: 'row', alignItems: 'center', gap: 6 },
   jadwalIconWrap: { width: 38, height: 38, borderRadius: 10, backgroundColor: '#e8f5e9', justifyContent: 'center', alignItems: 'center' },
-  jadwalTanggal: { fontSize: 14, fontWeight: '700', color: '#1a1a2e' },
-  jadwalDetail: { fontSize: 11, color: '#90a4ae', marginTop: 2 },
-  kuotaBadge: { backgroundColor: '#e8f5e9', paddingVertical: 4, paddingHorizontal: 10, borderRadius: 10 },
-  kuotaText: { fontSize: 11, color: '#00AA5B', fontWeight: '800' },
-  emptyModal: { textAlign: 'center', color: '#90a4ae', fontSize: 13, fontStyle: 'italic' },
+  jadwalTanggal:  { fontSize: 14, fontWeight: '700', color: '#1a1a2e' },
+  jadwalDetail:   { fontSize: 11, color: '#90a4ae', marginTop: 2 },
+  kuotaBadge:     { backgroundColor: '#e8f5e9', paddingVertical: 4, paddingHorizontal: 10, borderRadius: 10 },
+  kuotaText:      { fontSize: 11, color: '#00AA5B', fontWeight: '800' },
 
   modalBtnBatal: {
     marginTop: 12, paddingVertical: 14, borderRadius: 14, alignItems: 'center',
     backgroundColor: '#f5faf7', borderWidth: 1.5, borderColor: '#e0f2ec',
   },
   modalBtnBatalText: { fontSize: 14, fontWeight: '700', color: '#546e7a' },
+
+  // ── Utility ──
+  rowGap6:  { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  bold546:  { fontWeight: '700', color: '#546e7a' },
+  boldText: { fontWeight: '800' },
 });
