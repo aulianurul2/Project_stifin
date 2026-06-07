@@ -103,6 +103,9 @@
         }
         .wilayah-dalam { background: #e8f5e9; color: #2e7d32; }
         .wilayah-luar  { background: #e3f2fd; color: #1565c0; }
+
+        /* Row kedaluwarsa */
+        tr.row-kedaluwarsa td { opacity: 0.6; }
     </style>
 </head>
 <body>
@@ -133,7 +136,6 @@
                             </span>
                         </div>
                     </div>
-                
 
                     @if(session('success'))
                         <div class="alert alert-success alert-dismissible fade show card-round" role="alert">
@@ -207,9 +209,21 @@
                                             </thead>
                                             <tbody>
                                                 @forelse($jadwal as $item)
-                                                <tr>
+                                                
+                                                   
+@php
+    $jadwalDateTime = \Carbon\Carbon::parse($item->tanggal . ' ' . $item->waktu);
+    $sudahLewat = $jadwalDateTime->isPast() && empty($item->nama_klien);
+@endphp
+                                                
+                                                <tr class="{{ $sudahLewat ? 'row-kedaluwarsa' : '' }}">
                                                     <td class="px-4 py-3">
-                                                        <div class="fw-bold text-dark fs-6">{{ \Carbon\Carbon::parse($item->tanggal)->translatedFormat('d M Y') }}</div>
+                                                        <div class="fw-bold text-dark fs-6">
+                                                            {{ \Carbon\Carbon::parse($item->tanggal)->translatedFormat('d M Y') }}
+                                                            @if($sudahLewat)
+                                                                <i class="fas fa-history text-muted ms-1 fs-8" title="Jadwal sudah lewat"></i>
+                                                            @endif
+                                                        </div>
                                                         <small class="text-muted"><i class="far fa-clock me-1"></i>{{ \Carbon\Carbon::parse($item->waktu)->format('H:i') }} WIB</small>
                                                     </td>
                                                     <td class="px-4 py-3">
@@ -224,7 +238,11 @@
                                                         @endif
                                                     </td>
                                                     <td class="px-4 py-3">
-                                                        @if(!empty($item->nama_klien))
+                                                        @if($sudahLewat)
+                                                            <span class="badge badge-secondary px-3 py-1 btn-round text-capitalize fs-8 fw-normal">
+                                                                <i class="fas fa-clock me-1"></i> Kedaluwarsa
+                                                            </span>
+                                                        @elseif(!empty($item->nama_klien))
                                                             @php
                                                                 $statusRaw = strtolower($item->status);
                                                                 $badgeClass = 'badge-warning';
@@ -257,6 +275,10 @@
                                                                 <i class="fas fa-user mb-1" style="color: #0f5132;"></i>
                                                                 <span style="font-size: 9px; color: #0f5132; font-weight: 600;">Detail Klien</span>
                                                             </button>
+                                                        @elseif($sudahLewat)
+                                                            <span class="text-muted italic fs-8">
+                                                                <i class="fas fa-minus-circle me-1"></i>Tidak ada pendaftar
+                                                            </span>
                                                         @else
                                                             <span class="text-muted italic fs-8">Belum ada pemesan</span>
                                                         @endif
@@ -559,15 +581,16 @@
                                 : displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1).toLowerCase();
 
                             var cleanPhone = '';
-if (item.no_hp) {
-    cleanPhone = item.no_hp.replace(/[^0-9]/g, '');
-    if (cleanPhone.startsWith('0')) {
-        cleanPhone = '62' + cleanPhone.substring(1);
-    } else if (!cleanPhone.startsWith('62')) {
-        cleanPhone = '62' + cleanPhone;
-    }
-}
-                            var waButton   = item.no_hp
+                            if (item.no_hp) {
+                                cleanPhone = item.no_hp.replace(/[^0-9]/g, '');
+                                if (cleanPhone.startsWith('0')) {
+                                    cleanPhone = '62' + cleanPhone.substring(1);
+                                } else if (!cleanPhone.startsWith('62')) {
+                                    cleanPhone = '62' + cleanPhone;
+                                }
+                            }
+
+                            var waButton = item.no_hp
                                 ? '<a href="https://wa.me/' + cleanPhone + '" target="_blank" class="btn btn-sm btn-success btn-round px-3"><i class="fab fa-whatsapp me-2"></i>Hubungi Klien</a>'
                                 : '<span class="text-muted fs-8">-</span>';
 

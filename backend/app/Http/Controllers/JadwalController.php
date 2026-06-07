@@ -22,17 +22,17 @@ class JadwalController extends Controller
     {
         $request->validate([
             'tanggal' => 'required|date',
-            'waktu' => 'required',
-            'kuota' => 'required|integer',
-            'lokasi' => 'required' 
+            'waktu'   => 'required',
+            'kuota'   => 'required|integer',
+            'lokasi'  => 'required',
         ]);
 
         DB::table('jadwal')->insert([
-            'tanggal' => $request->tanggal,
-            'waktu' => $request->waktu,
-            'kuota' => $request->kuota,
-            'lokasi' => $request->lokasi, 
-            'status' => 'Tersedia',
+            'tanggal'    => $request->tanggal,
+            'waktu'      => $request->waktu,
+            'kuota'      => $request->kuota,
+            'lokasi'     => $request->lokasi,
+            'status'     => 'Tersedia',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -45,75 +45,87 @@ class JadwalController extends Controller
         DB::table('jadwal')->where('id_jadwal', $id)->delete();
         // Ikut menghapus data tes berkaitan jika slot dihapus paksa oleh admin
         DB::table('hasiltes')->where('id_jadwal', $id)->delete();
-        
+
         return redirect()->back()->with('success', 'Slot jadwal berhasil dihapus');
     }
 
-    
-   /**
+    /**
      * API Internal untuk mengambil daftar pendaftar berdasarkan ID Jadwal (Untuk Popup Modal)
      */
- public function getKlienByJadwal($id)
-{
-    // Mengambil baris jadwal tersebut jika nama_klien tidak null dan tidak kosong
-    $jadwal = DB::table('jadwal')
-        ->where('id_jadwal', $id)
-        ->select(
-            'id_jadwal', // <-- WAJIB TAMBAHKAN INI
-            'nama_klien', 
-            'no_hp', 
-            'status as status_jadwal', 
-            'komentar'
-        )
-        ->get();
+    public function getKlienByJadwal($id)
+    {
+        $jadwal = DB::table('jadwal')
+            ->where('id_jadwal', $id)
+            ->select(
+                'id_jadwal',
+                'nama_klien',
+                'no_hp',
+                'status as status_jadwal',
+                'komentar'
+            )
+            ->get();
 
-    return response()->json($jadwal);
-}
+        return response()->json($jadwal);
+    }
 
-    // Fungsi tambahan untuk API React Native agar bisa mengambil jadwal yang kuotanya masih tersedia (> 0)
-   public function getJadwalApi()
+    /**
+     * API React Native — jadwal tersedia mulai hari ini ke depan
+     */
+public function getJadwalApi()
 {
+    $sekarang = now(); // pakai timezone dari config/app.php
+
     $data = DB::table('jadwal')
         ->where('status', 'Tersedia')
+        ->whereDate('tanggal', '>=', $sekarang->toDateString())
         ->orderBy('tanggal', 'asc')
         ->orderBy('waktu', 'asc')
         ->get()
+        ->filter(function ($item) use ($sekarang) {
+            $jadwalDateTime = \Carbon\Carbon::parse($item->tanggal . ' ' . $item->waktu);
+            return $jadwalDateTime->isFuture(); // saring yang jamnya sudah lewat
+        })
         ->map(function ($item) {
             $item->waktu = \Carbon\Carbon::parse($item->waktu)->format('H:i');
             return $item;
-        });
-        
+        })
+        ->values(); // reset index supaya JSON tidak jadi object
+
     return response()->json($data);
 }
-public function updateStatus(Request $request, $id)
-{
-    if ($request->status == 'Ditolak') {
-        DB::table('jadwal')->where('id_jadwal', $id)->update([
-            'status' => 'Ditolak',
-        ]);
-    } else if ($request->status == 'Tersedia') {
-    // Logika untuk MEMBUKA KEMBALI slot secara bersih
-    DB::table('jadwal')
-        ->where('id_jadwal', $id) // Pastikan ID Jadwal benar
-        ->update([
-            'status'        => 'Tersedia',
-            'nama_klien'    => null, 
-            'no_hp'         => null,
-            'email'         => null,
-            'alamat'        => null,
-            'komentar'      => null,
-            'id_klien'      => null,
-            'tanggal_lahir' => null, // <-- TAMBAHKAN INI
-            'jenis_kelamin' => null, // <-- TAMBAHKAN INI
-            'golongan_darah'=> null, // <-- TAMBAHKAN INI
-            'domisili'      => null, // <-- TAMBAHKAN INI
-            'institusi'     => null, // <-- TAMBAHKAN INI
-            'sosmed'        => null, // <-- TAMBAHKAN INI
-            'kuota'         => 1     // Kembalikan kuota menjadi 1 secara eksplisit, jangan pakai DB::raw jika nilainya absolut
-        ]);
-}
 
-    // <-- TAMBAHKAN RESPONS INI AGAR AJAX JAVASCRIPT MENGETAHUI PROSES BERHASIL
-    return response()->json(['success' => true, 'message' => 'Status berhasil diperbarui!']);
-}
+    public function updateStatus(Request $request, $id)
+    {
+        if ($request->status == 'Ditolak') {
+            DB::table('jadwal')->where('id_jadwal', $id)->update([
+                'status'     => 'Ditolak',
+                'updated_at' => now(),
+            ]);
+        } elseif ($request->status == 'Tersedia') {
+            // Logika untuk MEMBUKA KEMBALI slot secara bersih
+            DB::table('jadwal')->where('id_jadwal', $id)->update([
+                'status'         => 'Tersedia',
+                'nama_klien'     => null,
+                'no_hp'          => null,
+                'email'          => null,
+                'alamat'         => null,
+                'komentar'       => null,
+                'id_klien'       => null,
+                'tanggal_lahir'  => null,
+                'jenis_kelamin'  => null,
+                'golongan_darah' => null,
+                'domisili'       => null,
+                'institusi'      => null,
+                'sosmed'         => null,
+                'bukti_transfer' => null,
+                'is_luar_subang' => false,
+                'nama_kota'      => null,
+                'biaya'          => null,
+                'kuota'          => 1,
+                'updated_at'     => now(),
+            ]);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Status berhasil diperbarui!']);
+    }
 }
