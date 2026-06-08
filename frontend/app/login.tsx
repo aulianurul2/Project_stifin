@@ -56,7 +56,7 @@ export default function LoginScreen() {
         Toast.show({
           type: 'success',
           text1: 'Berhasil Masuk',
-          text2: `Selamat datang kembali, ${username}! `,
+          text2: `Selamat datang, ${username}! `,
           position: 'top',
           visibilityTime: 2000
         });
@@ -123,7 +123,7 @@ export default function LoginScreen() {
           {/* Card Form Putih */}
           <View style={styles.formCard}>
             <Text style={styles.cardTitle}>Masuk ke Akun</Text>
-            <Text style={styles.cardSubtitle}>Selamat datang kembali!</Text>
+            <Text style={styles.cardSubtitle}>Selamat datang!</Text>
 
             {/* Username Field */}
             <View style={styles.fieldGroup}>

@@ -98,14 +98,7 @@
                     <span class="error-message" id="passwordError"></span>
                 </div>
 
-                <div class="form-options">
-                    <div class="remember-wrapper">
-                        <input type="checkbox" id="remember" name="remember">
-                        <label for="remember" class="checkbox-label">
-                            <span class="custom-checkbox"></span>
-                            Ingat saya di perangkat ini
-                        </label>
-                    </div>
+                <div class="form-options" style="justify-content: flex-end;">
                     <a href="{{ route('password.request') }}" class="forgot-password">Lupa password?</a>
                 </div>
 

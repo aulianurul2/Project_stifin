@@ -629,9 +629,9 @@ const styles = StyleSheet.create({
   colHeader: { color: '#90a4ae', fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
   rowData: {
     flexDirection: 'row', paddingHorizontal: 14, paddingVertical: 14,
-    borderBottomWidth: 1, borderColor: '#f5faf7', alignItems: 'center', position: 'relative',
-  },
-  selectedRow: { backgroundColor: '#e8f5e9', borderColor: '#00AA5B' },
+    borderBottomWidth: 1, borderBottomColor: '#f5faf7', alignItems: 'center', position: 'relative',
+},
+selectedRow: { backgroundColor: '#e8f5e9' },
   selectedIndicator: {
     position: 'absolute', left: 0, top: 0, bottom: 0,
     width: 3, backgroundColor: '#00AA5B', borderRadius: 2,
