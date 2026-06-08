@@ -26,6 +26,14 @@ import axiosInstance from '@/src/api/axiosConfig';
 function formatRupiah(nominal: number): string {
   return 'Rp ' + nominal.toLocaleString('id-ID');
 }
+function formatTanggalIndo(tanggal: string): string {
+  if (!tanggal) return '—';
+  const bulan = ['Januari','Februari','Maret','April','Mei','Juni',
+                 'Juli','Agustus','September','Oktober','November','Desember'];
+  const [tahun, bln, tgl] = String(tanggal).split('-');
+  if (!tahun || !bln || !tgl) return String(tanggal);
+  return `${parseInt(tgl)} ${bulan[parseInt(bln) - 1]} ${tahun}`;
+}
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface KlienFormData {
@@ -320,7 +328,7 @@ export default function FormPendaftaran() {
           </View>
           <View style={styles.schedInfo}>
             <Text style={styles.schedLabel}>Jadwal Tes Terpilih</Text>
-            <Text style={styles.schedValue}>{tanggal} • {waktu} WIB</Text>
+           <Text style={styles.schedValue}>{formatTanggalIndo(String(tanggal))} • {waktu} WIB</Text>
           </View>
           <View style={styles.schedCheck}>
             <Ionicons name="checkmark-circle" size={20} color="rgba(255,255,255,0.8)" />

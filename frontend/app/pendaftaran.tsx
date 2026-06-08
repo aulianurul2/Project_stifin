@@ -41,6 +41,15 @@ export function formatRupiah(nominal: number): string {
   return 'Rp ' + nominal.toLocaleString('id-ID');
 }
 
+export function formatTanggalIndo(tanggal: string): string {
+  if (!tanggal) return '—';
+  const bulan = ['Januari','Februari','Maret','April','Mei','Juni',
+                 'Juli','Agustus','September','Oktober','November','Desember'];
+  const [tahun, bln, tgl] = tanggal.split('-');
+  if (!tahun || !bln || !tgl) return tanggal;
+  return `${parseInt(tgl)} ${bulan[parseInt(bln) - 1]} ${tahun}`;
+}
+
 export default function PendaftaranTes() {
   const router = useRouter();
   const [userName, setUserName] = useState('User');
@@ -383,7 +392,7 @@ export default function PendaftaranTes() {
                 >
                   {isSelected && <View style={styles.selectedIndicator} />}
                   <Text style={[styles.col, isSelected && styles.selectedText]}>
-                    {item.tanggal}
+                    {formatTanggalIndo(item.tanggal)}
                   </Text>
                   <Text style={[styles.colMid, isSelected && styles.selectedText]}>
                     {item.waktu} WIB
@@ -416,7 +425,7 @@ export default function PendaftaranTes() {
             <Ionicons name="checkmark-circle" size={18} color="#00AA5B" />
             <Text style={styles.selectedInfoText}>
               Dipilih:{' '}
-              <Text style={{ fontWeight: '800' }}>{selectedJadwal.tanggal}</Text> pukul{' '}
+              <Text style={{ fontWeight: '800' }}>{formatTanggalIndo(selectedJadwal.tanggal)}</Text> pukul{' '}
               {selectedJadwal.waktu} WIB
             </Text>
           </View>

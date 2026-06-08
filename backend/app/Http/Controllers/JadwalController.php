@@ -94,16 +94,21 @@ public function getJadwalApi()
     return response()->json($data);
 }
 
-    public function updateStatus(Request $request, $id)
-    {
+  public function updateStatus(Request $request, $id)
+{
+    try {
         if ($request->status == 'Ditolak') {
             DB::table('jadwal')->where('id_jadwal', $id)->update([
                 'status'     => 'Ditolak',
                 'updated_at' => now(),
             ]);
+
         } elseif ($request->status == 'Tersedia') {
-            // Logika untuk MEMBUKA KEMBALI slot secara bersih
-            DB::table('jadwal')->where('id_jadwal', $id)->update([
+
+            // Ambil kolom yang benar-benar ada di tabel jadwal
+            $columns = DB::getSchemaBuilder()->getColumnListing('jadwal');
+
+            $resetData = [
                 'status'         => 'Tersedia',
                 'nama_klien'     => null,
                 'no_hp'          => null,
@@ -118,14 +123,30 @@ public function getJadwalApi()
                 'institusi'      => null,
                 'sosmed'         => null,
                 'bukti_transfer' => null,
-                'is_luar_subang' => false,
+                'is_luar_subang' => 0,   // ← pakai 0 bukan false
                 'nama_kota'      => null,
-                'biaya'          => null,
+                'biaya'          => 0,
                 'kuota'          => 1,
                 'updated_at'     => now(),
-            ]);
+            ];
+
+            // Filter: hanya update kolom yang ada di tabel
+            $filteredData = array_filter(
+                $resetData,
+                fn($key) => in_array($key, $columns),
+                ARRAY_FILTER_USE_KEY
+            );
+
+            DB::table('jadwal')->where('id_jadwal', $id)->update($filteredData);
         }
 
         return response()->json(['success' => true, 'message' => 'Status berhasil diperbarui!']);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal memperbarui status: ' . $e->getMessage()
+        ], 500);
     }
+}
 }

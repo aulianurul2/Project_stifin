@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('jadwal', function (Blueprint $table) {
             $table->integer('id_jadwal')->autoIncrement()->unsigned();
             $table->integer('id_klien')->nullable()->unsigned();
-            $table->integer('id_admin')->nullable()->unsigned();
+           
 
             // Kolom data pendaftar (nullable karena Admin buat slot kosong dulu)
             $table->string('nama_klien', 100)->nullable();
@@ -36,7 +36,7 @@ return new class extends Migration
 
             // Foreign Keys
             $table->foreign('id_klien')->references('id_klien')->on('klien')->onDelete('set null');
-            $table->foreign('id_admin')->references('id_admin')->on('admin')->onDelete('set null');
+            
         });
     }
 

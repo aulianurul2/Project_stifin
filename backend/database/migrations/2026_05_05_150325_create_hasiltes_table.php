@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('hasiltes', function (Blueprint $table) {
             $table->integer('id_tes')->autoIncrement()->unsigned();
             $table->integer('id_klien')->nullable()->unsigned();
-            $table->integer('id_admin')->nullable()->unsigned();
+
             $table->integer('id_jadwal')->nullable()->unsigned();
 
             $table->date('tanggal')->nullable();
@@ -30,7 +30,6 @@ return new class extends Migration
 
             // Foreign Key Constraints
             $table->foreign('id_klien')->references('id_klien')->on('klien')->onDelete('cascade');
-            $table->foreign('id_admin')->references('id_admin')->on('admin')->onDelete('set null');
             $table->foreign('id_jadwal')->references('id_jadwal')->on('jadwal')->onDelete('cascade');
         });
     }

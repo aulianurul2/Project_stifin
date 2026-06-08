@@ -58,6 +58,14 @@ const BIAYA_TRANSPORT_LUAR = 75000;
 function formatRupiah(nominal: number): string {
   return 'Rp ' + nominal.toLocaleString('id-ID');
 }
+function formatTanggalIndo(tanggal: string): string {
+  if (!tanggal) return '—';
+  const bulan = ['Januari','Februari','Maret','April','Mei','Juni',
+                 'Juli','Agustus','September','Oktober','November','Desember'];
+  const [tahun, bln, tgl] = String(tanggal).split('-');
+  if (!tahun || !bln || !tgl) return String(tanggal);
+  return `${parseInt(tgl)} ${bulan[parseInt(bln) - 1]} ${tahun}`;
+}
 
 function hariSejakJadwal(tanggalStr: string): number {
   if (!tanggalStr || tanggalStr.trim() === '' || tanggalStr === 'null') return 0;
@@ -364,7 +372,7 @@ export default function HasilTes() {
               <Ionicons name="calendar-outline" size={14} color="#00AA5B" />
             </View>
             <Text style={styles.metaLabel}>Tanggal Pelaksanaan</Text>
-            <Text style={styles.metaValue}>{belumMengajukan ? '—' : (tanggal || '—')}</Text>
+          <Text style={styles.metaValue}>{belumMengajukan ? '—' : (tanggal ? formatTanggalIndo(tanggal) : '—')}</Text>
           </View>
 
           <View style={styles.metaDivider} />
