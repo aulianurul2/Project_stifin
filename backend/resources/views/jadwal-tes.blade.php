@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="{{ asset('assets/css/kaiadmin.min.css') }}" />
 
     <style>
+        /* ── Utilities ── */
         .bg-info-light    { background-color: rgba(72, 171, 247, 0.1) !important; }
         .bg-primary-light { background-color: rgba(29, 124, 244, 0.1) !important; }
         @media (min-width: 768px) {
@@ -38,74 +39,267 @@
         }
         .avatar-lg    { width: 48px !important; height: 48px !important; }
         .avatar-title { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+        tr.row-kedaluwarsa td { opacity: 0.6; }
 
-        /* Bukti transfer */
-        .bukti-section {
-            border-top: 1px solid #ebedf2;
-            margin-top: 14px;
-            padding-top: 14px;
-        }
-        .bukti-thumb-wrap {
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
+        /* ── Modal Hapus (konsisten dengan kelola-konten) ── */
+        #modalHapusJadwal .modal-content {
+            border: none;
+            border-radius: 16px;
             overflow: hidden;
-            background: #f8f9fa;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
         }
-        .bukti-thumb {
-            width: 100%;
-            max-height: 220px;
-            object-fit: contain;
-            cursor: pointer;
-            transition: opacity 0.2s;
-            display: block;
+        #modalHapusJadwal .modal-hapus-header {
+            background: linear-gradient(135deg, #ff4d4d 0%, #c0392b 100%);
+            padding: 28px 28px 20px;
+            text-align: center;
         }
-        .bukti-thumb:hover { opacity: 0.85; }
-        .bukti-empty-sm {
+        #modalHapusJadwal .modal-hapus-icon {
+            width: 64px; height: 64px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 14px;
+            backdrop-filter: blur(4px);
+        }
+        #modalHapusJadwal .modal-hapus-icon i { font-size: 1.8rem; color: #fff; }
+        #modalHapusJadwal .modal-hapus-title  { color: #fff; font-size: 1.2rem; font-weight: 700; margin: 0; }
+        #modalHapusJadwal .modal-hapus-body   { padding: 24px 28px 8px; text-align: center; }
+        #modalHapusJadwal .hapus-slot-name {
+            display: inline-block;
+            background: #fff4f4; border: 1px solid #ffd5d5; border-radius: 8px;
+            padding: 6px 14px; font-weight: 600; color: #c0392b; font-size: 0.875rem;
+            max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            margin-bottom: 12px;
+        }
+        #modalHapusJadwal .hapus-warning-text { font-size: 0.875rem; color: #6c757d; line-height: 1.6; margin: 0; }
+        #modalHapusJadwal .modal-hapus-footer {
+            padding: 16px 28px 24px;
+            display: flex; gap: 10px; justify-content: center;
+        }
+        #modalHapusJadwal .btn-hapus-batal {
+            flex: 1; max-width: 140px; padding: 10px 20px; border-radius: 10px;
+            font-weight: 600; font-size: 0.875rem; border: 1.5px solid #dee2e6;
+            background: #fff; color: #495057; transition: all 0.2s;
+        }
+        #modalHapusJadwal .btn-hapus-batal:hover { background: #f8f9fa; border-color: #adb5bd; }
+        #modalHapusJadwal .btn-hapus-konfirmasi {
+            flex: 1; max-width: 160px; padding: 10px 20px; border-radius: 10px;
+            font-weight: 600; font-size: 0.875rem; border: none;
+            background: linear-gradient(135deg, #ff4d4d 0%, #c0392b 100%);
+            color: #fff; transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(192,57,43,0.3);
+        }
+        #modalHapusJadwal .btn-hapus-konfirmasi:hover  { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(192,57,43,0.4); }
+        #modalHapusJadwal .btn-hapus-konfirmasi:active { transform: translateY(0); }
+
+        /* ── Modal Detail Klien ── */
+        #modalKlien .modal-content {
+            border: none;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.18);
+        }
+
+        /* Header gradient biru elegan */
+        #modalKlien .modal-klien-header {
+            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+            padding: 28px 32px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        #modalKlien .modal-klien-header::before {
+            content: '';
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 180px; height: 180px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 50%;
+        }
+        #modalKlien .modal-klien-header::after {
+            content: '';
+            position: absolute;
+            bottom: -60px; left: -20px;
+            width: 140px; height: 140px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 50%;
+        }
+        #modalKlien .modal-klien-header-inner {
+            position: relative; z-index: 2;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        #modalKlien .modal-klien-title-wrap {}
+        #modalKlien .modal-klien-eyebrow {
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px;
+            text-transform: uppercase; color: rgba(255,255,255,0.65); margin-bottom: 4px;
+        }
+        #modalKlien .modal-klien-title {
+            font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0;
+        }
+        #modalKlien .modal-klien-meta {
+            display: flex; gap: 20px; margin-top: 18px;
+            position: relative; z-index: 2;
+        }
+        #modalKlien .modal-klien-meta-chip {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 24px;
+            padding: 6px 14px;
+            backdrop-filter: blur(6px);
+        }
+        #modalKlien .modal-klien-meta-chip i { color: rgba(255,255,255,0.8); font-size: 0.8rem; }
+        #modalKlien .modal-klien-meta-chip span { color: #fff; font-size: 0.82rem; font-weight: 600; }
+
+        /* Body */
+        #modalKlien .modal-klien-body {
+            padding: 0;
+            max-height: 72vh;
+            overflow-y: auto;
+            background: #f4f6fb;
+        }
+        #modalKlien .modal-klien-body::-webkit-scrollbar { width: 5px; }
+        #modalKlien .modal-klien-body::-webkit-scrollbar-track { background: #f4f6fb; }
+        #modalKlien .modal-klien-body::-webkit-scrollbar-thumb { background: #c5cae9; border-radius: 10px; }
+
+        #modalKlien .klien-section-label {
+            font-size: 0.68rem; font-weight: 800; letter-spacing: 1.4px;
+            text-transform: uppercase; color: #90a4ae;
+            padding: 16px 24px 8px;
+        }
+
+        /* Kartu klien */
+        .klien-card {
+            margin: 0 16px 12px;
+            background: #fff;
+            border-radius: 14px;
+            border: 1px solid #e8eaf6;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+            transition: box-shadow 0.2s;
+        }
+        .klien-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.09); }
+
+        .klien-card-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid #f0f2f8;
+        }
+        .klien-avatar {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: linear-gradient(135deg, #2e7d32, #1b5e20);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; font-weight: 800; color: #fff;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(30,87,32,0.3);
+        }
+        .klien-name-wrap { margin-left: 14px; }
+        .klien-name { font-size: 0.95rem; font-weight: 700; color: #1b5e20; margin: 0 0 3px; }
+
+        .klien-card-body { padding: 14px 20px; }
+        .klien-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .klien-info-item label {
+            font-size: 0.67rem; font-weight: 800; letter-spacing: 1px;
+            text-transform: uppercase; color: #90a4ae; display: block; margin-bottom: 3px;
+        }
+        .klien-info-item span { font-size: 0.84rem; font-weight: 600; color: #37474f; }
+        .klien-info-item.full-width { grid-column: 1 / -1; }
+        .klien-catatan {
+            background: #f8f9ff; border-left: 3px solid #c5cae9;
+            border-radius: 0 6px 6px 0; padding: 8px 12px;
+            font-size: 0.82rem; color: #546e7a; line-height: 1.5; font-style: italic;
+        }
+
+        .klien-card-footer {
+            padding: 12px 20px;
+            background: #fafbff;
+            border-top: 1px solid #f0f2f8;
+            display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap;
+        }
+
+        /* Seksi bukti & biaya */
+        .bukti-biaya-section {
+            margin: 0 16px 16px;
+            background: #fff;
+            border-radius: 14px;
+            border: 1px solid #e8eaf6;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        .bukti-biaya-tabs {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            padding: 20px;
-            color: #adb5bd;
-            font-size: 0.8rem;
+            border-bottom: 1px solid #e8eaf6;
         }
+        .bukti-biaya-tab {
+            flex: 1; padding: 12px 16px; text-align: center;
+            font-size: 0.78rem; font-weight: 700; letter-spacing: 0.5px;
+            text-transform: uppercase; color: #90a4ae; cursor: default;
+            border-bottom: 3px solid transparent;
+        }
+        .bukti-biaya-tab.active { color: #2e7d32; border-bottom-color: #2e7d32; }
+        .bukti-biaya-content { padding: 16px 20px; }
 
         /* Biaya breakdown */
-        .biaya-breakdown {
-            background: #f8faf8;
-            border: 1px solid #e8f5e9;
-            border-radius: 8px;
-            padding: 10px 14px;
+        .biaya-breakdown-v2 { width: 100%; }
+        .biaya-row-v2 {
+            display: flex; justify-content: space-between;
+            padding: 7px 0; font-size: 0.84rem; color: #2e7d32;
+            border-bottom: 1px dashed #eceff1;
         }
-        .biaya-breakdown .biaya-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.82rem;
-            color: #546e7a;
-            margin-bottom: 4px;
+        .biaya-row-v2:last-child { border-bottom: none; }
+        .biaya-total-v2 {
+            display: flex; justify-content: space-between;
+            padding: 10px 0 0; font-size: 0.95rem; font-weight: 800;
+            color: #2e7d32; border-top: 2px solid #e8f5e9; margin-top: 4px;
         }
-        .biaya-breakdown .biaya-total {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: #00AA5B;
-            border-top: 1px solid #e0e0e0;
-            padding-top: 7px;
-            margin-top: 5px;
-        }
-        .wilayah-badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 0.78rem;
-            font-weight: 600;
+        .wilayah-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 700;
+            margin-bottom: 14px;
         }
         .wilayah-dalam { background: #e8f5e9; color: #2e7d32; }
-        .wilayah-luar  { background: #e3f2fd; color: #1565c0; }
+        .wilayah-luar  { background: #e8f5e9; color: #2e7d32; }
 
-        /* Row kedaluwarsa */
-        tr.row-kedaluwarsa td { opacity: 0.6; }
+        /* Bukti transfer */
+        .bukti-thumb-v2 {
+            border-radius: 10px; overflow: hidden;
+            background: #f4f6f9; border: 1px solid #e0e0e0;
+            display: flex; align-items: center; justify-content: center;
+            min-height: 160px;
+        }
+        .bukti-thumb-v2 img {
+            max-width: 100%; max-height: 200px; object-fit: contain;
+            display: block; cursor: zoom-in;
+            transition: transform 0.2s;
+        }
+        .bukti-thumb-v2 img:hover { transform: scale(1.02); }
+        .bukti-empty-v2 {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; padding: 28px; color: #b0bec5;
+        }
+        .bukti-empty-v2 i { font-size: 2rem; margin-bottom: 8px; }
+        .bukti-empty-v2 span { font-size: 0.8rem; text-align: center; }
+
+        /* Footer modal */
+        #modalKlien .modal-klien-footer {
+            padding: 16px 24px;
+            background: #fff;
+            border-top: 1px solid #e8eaf6;
+            display: flex; justify-content: flex-end;
+        }
+        #modalKlien .btn-tutup {
+            padding: 10px 28px; border-radius: 10px;
+            font-weight: 700; font-size: 0.875rem;
+            border: 1.5px solid #dee2e6; background: #fff; color: #495057;
+            transition: all 0.2s;
+        }
+        #modalKlien .btn-tutup:hover { background: #f8f9fa; border-color: #adb5bd; }
+
+        /* Spinner */
+        .klien-loading {
+            padding: 40px; text-align: center; color: #90a4ae;
+        }
+        .klien-loading i { font-size: 1.8rem; display: block; margin-bottom: 10px; }
+        .klien-loading span { font-size: 0.85rem; }
     </style>
 </head>
 <body>
@@ -209,13 +403,10 @@
                                             </thead>
                                             <tbody>
                                                 @forelse($jadwal as $item)
-                                                
-                                                   
-@php
-    $jadwalDateTime = \Carbon\Carbon::parse($item->tanggal . ' ' . $item->waktu);
-    $sudahLewat = $jadwalDateTime->isPast() && empty($item->nama_klien);
-@endphp
-                                                
+                                                @php
+                                                    $jadwalDateTime = \Carbon\Carbon::parse($item->tanggal . ' ' . $item->waktu);
+                                                    $sudahLewat = $jadwalDateTime->isPast() && empty($item->nama_klien);
+                                                @endphp
                                                 <tr class="{{ $sudahLewat ? 'row-kedaluwarsa' : '' }}">
                                                     <td class="px-4 py-3">
                                                         <div class="fw-bold text-dark fs-6">
@@ -246,11 +437,8 @@
                                                             @php
                                                                 $statusRaw = strtolower($item->status);
                                                                 $badgeClass = 'badge-warning';
-                                                                if(in_array($statusRaw, ['selesai', 'disetujui', 'diterima', 'sukses'])) {
-                                                                    $badgeClass = 'badge-success';
-                                                                } elseif(in_array($statusRaw, ['batal', 'ditolak'])) {
-                                                                    $badgeClass = 'badge-danger';
-                                                                }
+                                                                if(in_array($statusRaw, ['selesai', 'disetujui', 'diterima', 'sukses'])) $badgeClass = 'badge-success';
+                                                                elseif(in_array($statusRaw, ['batal', 'ditolak'])) $badgeClass = 'badge-danger';
                                                             @endphp
                                                             <span class="badge {{ $badgeClass }} px-3 py-1 btn-round text-capitalize fs-8 fw-normal">
                                                                 {{ in_array($statusRaw, ['menunggu','konfirmasi']) ? 'Menunggu' : ucfirst($item->status) }}
@@ -284,18 +472,22 @@
                                                         @endif
                                                     </td>
                                                     <td class="px-4 py-3 text-center">
-                                                        <form action="{{ route('jadwal.destroy', $item->id_jadwal) }}" method="POST" id="form-hapus-{{ $item->id_jadwal }}">
+                                                        {{-- Form hapus tersembunyi — di-submit oleh modal konfirmasi --}}
+                                                        <form id="form-hapus-{{ $item->id_jadwal }}" action="{{ route('jadwal.destroy', $item->id_jadwal) }}" method="POST" style="display:none;">
                                                             @csrf
                                                             @method('DELETE')
-                                                            <button type="button"
-                                                                    class="btn btn-sm p-2 card-round shadow-sm d-flex flex-column align-items-center mx-auto btn-hapus-jadwal"
-                                                                    style="background-color: #f8d7da; border-color: #f5c2c7; min-width: 56px;"
-                                                                    data-id="{{ $item->id_jadwal }}"
-                                                                    title="Hapus Slot">
-                                                                <i class="fas fa-trash-alt mb-1" style="color: #842029;"></i>
-                                                                <span style="font-size: 9px; color: #842029; font-weight: 600;">Hapus</span>
-                                                            </button>
                                                         </form>
+
+                                                        {{-- Tombol Hapus → trigger modal, bukan submit langsung --}}
+                                                        <button type="button"
+                                                                class="btn btn-sm p-2 card-round shadow-sm d-flex flex-column align-items-center mx-auto btn-hapus-jadwal"
+                                                                style="background-color: #f8d7da; border-color: #f5c2c7; min-width: 56px;"
+                                                                data-id="{{ $item->id_jadwal }}"
+                                                                data-waktu="{{ \Carbon\Carbon::parse($item->tanggal)->translatedFormat('d M Y') }}, {{ \Carbon\Carbon::parse($item->waktu)->format('H:i') }} WIB"
+                                                                title="Hapus Slot">
+                                                            <i class="fas fa-trash-alt mb-1" style="color: #842029;"></i>
+                                                            <span style="font-size: 9px; color: #842029; font-weight: 600;">Hapus</span>
+                                                        </button>
                                                     </td>
                                                 </tr>
                                                 @empty
@@ -311,105 +503,137 @@
                 </div>
             </div>
 
-           @include('partials.footer')
+            @include('partials.footer')
         </div>
     </div>
 
-    {{-- MODAL DETAIL KLIEN --}}
-    <div class="modal fade" id="modalKlien" tabindex="-1" aria-labelledby="modalKlienLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content card-round border-0 shadow-lg">
-                <div class="modal-header bg-info text-white py-3">
-                    <h5 class="modal-title fw-bold" id="modalKlienLabel">
-                        <i class="fas fa-user me-2"></i> Detail Informasi Klien
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
 
-                <div class="modal-body p-4" style="max-height: 75vh; overflow-y: auto;">
-
-                    {{-- Info jadwal (waktu & lokasi) --}}
-                    <div class="row g-3 mb-4 p-3 bg-white rounded card-round shadow-sm border mx-0">
-                        <div class="col-sm-6 border-end-md">
-                            <div class="d-flex align-items-center">
-                                <div class="p-2 bg-info-light text-info rounded-circle me-3 text-center" style="width: 40px; height: 40px;">
-                                    <i class="fas fa-calendar-alt fs-5 mt-1"></i>
-                                </div>
-                                <div>
-                                    <small class="text-uppercase fw-bold text-muted fs-8 d-block">Waktu Pelaksanaan</small>
-                                    <span class="fw-bold text-dark fs-6" id="modal-waktu-jadwal">-</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="d-flex align-items-center ps-0 ps-md-3">
-                                <div class="p-2 bg-primary-light text-primary rounded-circle me-3 text-center" style="width: 40px; height: 40px;">
-                                    <i class="fas fa-map-marker-alt fs-5 mt-1"></i>
-                                </div>
-                                <div>
-                                    <small class="text-uppercase fw-bold text-muted fs-8 d-block">Lokasi Tes</small>
-                                    <span class="badge badge-info px-3 py-1 btn-round text-capitalize fs-8 fw-semibold" id="modal-lokasi-jadwal">-</span>
-                                </div>
-                            </div>
-                        </div>
+    {{-- ══════════════════════════════════════
+         MODAL KONFIRMASI HAPUS SLOT
+    ══════════════════════════════════════ --}}
+    <div class="modal fade" id="modalHapusJadwal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 380px;">
+            <div class="modal-content">
+                <div class="modal-hapus-header">
+                    <div class="modal-hapus-icon">
+                        <i class="fas fa-calendar-times"></i>
                     </div>
-
-                    {{-- Container list klien (diisi AJAX) --}}
-                    <div id="container-list-klien"></div>
-
-                    {{-- Seksi bukti transfer + rincian biaya --}}
-                    <div id="seksi-bukti" class="mt-3 p-3 bg-white rounded card-round shadow-sm border">
-
-                        {{-- Baris atas: wilayah & rincian biaya --}}
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-5">
-                                <small class="text-uppercase fw-bold text-muted fs-8 d-block mb-2">
-                                    <i class="fas fa-map-pin me-1"></i> Wilayah & Biaya
-                                </small>
-                                <div class="mb-2" id="bukti-wilayah-wrap"></div>
-                                <div id="bukti-biaya-breakdown" class="biaya-breakdown"></div>
-                            </div>
-                            <div class="col-md-7">
-                                <small class="text-uppercase fw-bold text-muted fs-8 d-block mb-2">
-                                    <i class="fas fa-receipt me-1"></i> Bukti Transfer
-                                </small>
-                                <div id="bukti-img-wrap" class="bukti-thumb-wrap"></div>
-                                <div id="bukti-link-wrap" class="mt-2 d-none">
-                                    <a id="bukti-full-link" href="#" target="_blank" class="btn btn-sm btn-outline-primary btn-round">
-                                        <i class="fas fa-external-link-alt me-1"></i> Buka di Tab Baru
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
+                    <p class="modal-hapus-title">Hapus Slot Jadwal?</p>
                 </div>
-
-                <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
-                    <button type="button" class="btn btn-outline-secondary btn-round w-100 fw-bold text-dark" data-bs-dismiss="modal">Tutup</button>
-                    <form id="formUpdateStatus" method="POST" style="display:none;">
-                        @csrf
-                        @method('PUT')
-                        <input type="hidden" name="status" id="inputStatus">
-                        <button type="submit" id="btnSubmitStatus" class="btn btn-round fw-bold"></button>
-                    </form>
+                <div class="modal-hapus-body">
+                    <span class="hapus-slot-name" id="hapus_slot_waktu">—</span>
+                    <p class="hapus-warning-text">
+                        Slot jadwal ini akan dihapus secara permanen dan <strong>tidak dapat dikembalikan</strong>.
+                        Apakah Anda yakin ingin melanjutkan?
+                    </p>
+                </div>
+                <div class="modal-hapus-footer">
+                    <button type="button" class="btn-hapus-batal" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn-hapus-konfirmasi" id="btn-konfirmasi-hapus-jadwal">
+                        <i class="fas fa-trash-alt me-1"></i> Ya, Hapus
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+
+
+    {{-- ══════════════════════════════════════
+         MODAL DETAIL KLIEN (dipercantik)
+    ══════════════════════════════════════ --}}
+    <div class="modal fade" id="modalKlien" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+
+                {{-- Header biru bergradient --}}
+                <div class="modal-klien-header">
+                    <div class="modal-klien-header-inner">
+                        <div class="modal-klien-title-wrap">
+                            <p class="modal-klien-eyebrow"><i class="fas fa-id-badge me-1"></i> Informasi Pendaftar</p>
+                            <h5 class="modal-klien-title">Detail Klien</h5>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="opacity: 0.8;"></button>
+                    </div>
+                    <div class="modal-klien-meta">
+                        <div class="modal-klien-meta-chip">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span id="modal-waktu-jadwal">-</span>
+                        </div>
+                        <div class="modal-klien-meta-chip">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span id="modal-lokasi-jadwal">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Body --}}
+                <div class="modal-klien-body">
+
+                    {{-- List klien (diisi via AJAX) --}}
+                    <p class="klien-section-label"><i class="fas fa-users me-1"></i> Data Pendaftar</p>
+                    <div id="container-list-klien">
+                        <div class="klien-loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Memuat data pendaftar...</span>
+                        </div>
+                    </div>
+
+                    {{-- Seksi Bukti Transfer & Rincian Biaya --}}
+                    <p class="klien-section-label"><i class="fas fa-file-invoice-dollar me-1"></i> Pembayaran & Bukti Transfer</p>
+                    <div class="bukti-biaya-section">
+                        <div class="bukti-biaya-tabs">
+                            <div class="bukti-biaya-tab active"><i class="fas fa-coins me-1"></i> Rincian Biaya</div>
+                            <div class="bukti-biaya-tab active" style="border-left: 1px solid #e8eaf6;"><i class="fas fa-receipt me-1"></i> Bukti Transfer</div>
+                        </div>
+                        <div class="bukti-biaya-content">
+                            <div class="row g-3">
+                                <div class="col-md-5">
+                                    <div id="bukti-wilayah-wrap" class="mb-2"></div>
+                                    <div id="bukti-biaya-breakdown"></div>
+                                </div>
+                                <div class="col-md-7">
+                                    <div id="bukti-img-wrap" class="bukti-thumb-v2"></div>
+                                    <div id="bukti-link-wrap" class="mt-2 d-none">
+                                        <a id="bukti-full-link" href="#" target="_blank" class="btn btn-sm btn-outline-primary btn-round">
+                                            <i class="fas fa-external-link-alt me-1"></i> Buka di Tab Baru
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="height: 16px;"></div>
+                </div>
+
+                {{-- Footer --}}
+                <div class="modal-klien-footer">
+                    {{-- Form update status tersembunyi (dipakai AJAX, bukan submit biasa) --}}
+                    <form id="formUpdateStatus" method="POST" style="display:none;">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" name="status" id="inputStatus">
+                    </form>
+                    <button type="button" class="btn-tutup" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Tutup
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
 
     <script src="{{ asset('assets/js/core/jquery-3.7.1.min.js') }}"></script>
     <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
     <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
     <script src="{{ asset('assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js') }}"></script>
     <script src="{{ asset('assets/js/plugin/datatables/datatables.min.js') }}"></script>
-    <script src="{{ asset('assets/js/plugin/sweetalert/sweetalert.min.js') }}"></script>
     <script src="{{ asset('assets/js/kaiadmin.min.js') }}"></script>
 
     <script>
-        // ── Konstanta biaya (sinkron dengan backend & frontend) ──
-        const BIAYA_TES = 550000;
+        // ── Konstanta biaya ──
+        const BIAYA_TES            = 550000;
         const BIAYA_TRANSPORT_LUAR = 75000;
         const TRANSPORT_DALAM = {
             'Kota Subang': 25000,
@@ -428,87 +652,60 @@
 
             if (isLuar == '1') {
                 transport   = BIAYA_TRANSPORT_LUAR;
-                wilayahHTML = '<span class="wilayah-badge wilayah-luar"><i class="fas fa-road me-1"></i>Luar Subang</span>';
+                wilayahHTML = '<span class="wilayah-pill wilayah-luar"><i class="fas fa-road"></i>Luar Subang</span>';
             } else {
-                transport  = TRANSPORT_DALAM[kotaBersih] !== undefined ? TRANSPORT_DALAM[kotaBersih] : 0;
-                wilayahHTML = '<span class="wilayah-badge wilayah-dalam"><i class="fas fa-map-marker-alt me-1"></i>Dalam Subang</span>';
-                if (kotaBersih !== '' && TRANSPORT_DALAM[kotaBersih] !== undefined) {
-                    areaLabel = kotaBersih;
-                }
+                transport   = TRANSPORT_DALAM[kotaBersih] !== undefined ? TRANSPORT_DALAM[kotaBersih] : 0;
+                wilayahHTML = '<span class="wilayah-pill wilayah-dalam"><i class="fas fa-map-marker-alt"></i>Dalam Subang</span>';
+                if (kotaBersih !== '' && TRANSPORT_DALAM[kotaBersih] !== undefined) areaLabel = kotaBersih;
             }
 
             var total = BIAYA_TES + transport;
 
             $('#bukti-wilayah-wrap').html(wilayahHTML);
             $('#bukti-biaya-breakdown').html(
-                '<div class="biaya-row"><span>Biaya Tes</span><span>' + formatRupiah(BIAYA_TES) + '</span></div>' +
-                '<div class="biaya-row"><span>Biaya Transport' + (areaLabel ? ' (' + areaLabel + ')' : '') + '</span><span>' + formatRupiah(transport) + '</span></div>' +
-                '<div class="biaya-total"><span>Total</span><span>' + formatRupiah(total) + '</span></div>'
+                '<table class="biaya-breakdown-v2">' +
+                '<tr class="biaya-row-v2"><td>Biaya Tes</td><td class="text-end fw-semibold">' + formatRupiah(BIAYA_TES) + '</td></tr>' +
+                '<tr class="biaya-row-v2"><td>Biaya Transport' + (areaLabel ? ' <small class="text-muted">(' + areaLabel + ')</small>' : '') + '</td><td class="text-end fw-semibold">' + formatRupiah(transport) + '</td></tr>' +
+                '</table>' +
+                '<div class="biaya-total-v2"><span>Total Pembayaran</span><span>' + formatRupiah(total) + '</span></div>'
             );
         }
 
-        $(document).ready(function(){
+        $(document).ready(function () {
             $('[data-bs-toggle="tooltip"]').tooltip();
 
             $('#tabel-jadwal').DataTable({
-                "pageLength": 10,
-                "order": [],
-                "language": {
-                    "search": "Cari Slot:",
-                    "lengthMenu": "Tampilkan _MENU_ data",
-                    "zeroRecords": "Tidak ada data slot jadwal yang cocok",
-                    "info": "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-                    "infoEmpty": "Data tidak tersedia",
-                    "infoFiltered": "(difilter dari _MAX_ total data)",
+                pageLength: 10,
+                order: [],
+                language: {
+                    search: "Cari Slot:",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    zeroRecords: "Tidak ada data slot jadwal yang cocok",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    infoEmpty: "Data tidak tersedia",
+                    infoFiltered: "(difilter dari _MAX_ total data)",
                 }
             });
 
-            // Hapus jadwal dengan SweetAlert
-            $('#tabel-jadwal').on('click', '.btn-hapus-jadwal', function(e) {
-                e.preventDefault();
-                var idJadwal = $(this).data('id');
-                swal({
-                    title: 'Apakah Anda yakin?',
-                    text: "Slot jadwal ini akan dihapus secara permanen!",
-                    type: 'warning',
-                    buttons: {
-                        cancel:  { visible: true, text: 'Batal', className: 'btn btn-secondary btn-round fw-bold' },
-                        confirm: { text: 'Ya, Hapus!', className: 'btn btn-danger btn-round fw-bold' }
-                    }
-                }).then((willDelete) => {
-                    if (willDelete) $('#form-hapus-' + idJadwal).submit();
-                });
+            // ── Buka modal hapus jadwal ──
+            var targetHapusId = null;
+            $('#tabel-jadwal').on('click', '.btn-hapus-jadwal', function () {
+                targetHapusId = $(this).data('id');
+                var waktu     = $(this).data('waktu');
+                $('#hapus_slot_waktu').text(waktu);
+                $('#modalHapusJadwal').modal('show');
             });
 
-            // Aksi Tolak / Buka Kembali dari dalam modal AJAX
-            $('#container-list-klien').on('click', '.btn-aksi-status', function(e) {
-                e.preventDefault();
-                var idJadwal     = $(this).data('id');
-                var statusTarget = $(this).data('status');
-
-                var cfg = {
-                    title:        'Konfirmasi Tindakan',
-                    text:         'Apakah Anda yakin ingin memproses data ini?',
-                    confirmClass: 'btn btn-primary btn-round fw-bold',
-                    confirmText:  'Ya, Proses!'
-                };
-                if (statusTarget === 'Ditolak') {
-                    cfg = { title: 'Tolak Permohonan?', text: 'Permohonan booking slot dari klien ini akan ditolak.', confirmClass: 'btn btn-danger btn-round fw-bold', confirmText: 'Ya, Tolak!' };
-                } else if (statusTarget === 'Tersedia') {
-                    cfg = { title: 'Buka Kembali Slot?', text: 'Slot ini akan dikosongkan dan dapat dipesan kembali.', confirmClass: 'btn btn-success btn-round fw-bold', confirmText: 'Ya, Buka!' };
+            // ── Konfirmasi hapus → submit form ──
+            $('#btn-konfirmasi-hapus-jadwal').on('click', function () {
+                if (targetHapusId) {
+                    $('#modalHapusJadwal').modal('hide');
+                    $('#form-hapus-' + targetHapusId).submit();
                 }
-
-                swal({
-                    title: cfg.title, text: cfg.text, type: 'warning',
-                    buttons: {
-                        cancel:  { visible: true, text: 'Batal', className: 'btn btn-secondary btn-round fw-bold' },
-                        confirm: { text: cfg.confirmText, className: cfg.confirmClass }
-                    }
-                }).then((ok) => { if (ok) executeUpdateStatus(idJadwal, statusTarget); });
             });
 
-            // Buka modal detail klien
-            $('#tabel-jadwal').on('click', '.btn-lihat-klien', function() {
+            // ── Buka modal detail klien ──
+            $('#tabel-jadwal').on('click', '.btn-lihat-klien', function () {
                 var idJadwal   = $(this).data('id');
                 var infoWaktu  = $(this).data('waktu');
                 var infoLokasi = $(this).data('lokasi');
@@ -517,39 +714,37 @@
                 var namaKota   = $(this).data('nama-kota') || '';
 
                 $('#modal-waktu-jadwal').text(infoWaktu);
-                $('#modal-lokasi-jadwal').html('<i class="fas fa-map-marker-alt me-1"></i> ' + infoLokasi);
+                $('#modal-lokasi-jadwal').text(infoLokasi);
 
-                // -- Render rincian biaya breakdown --
                 renderBiayaBreakdown(isLuar, namaKota);
 
-                // -- Render Bukti Transfer --
+                // Render bukti transfer
                 var imgWrap  = $('#bukti-img-wrap');
                 var linkWrap = $('#bukti-link-wrap');
-                var fullLink = $('#bukti-full-link');
 
                 if (bukti && bukti.trim() !== '') {
                     var imgUrl = '/uploads/bukti/' + bukti;
                     imgWrap.html(
-                        '<img src="' + imgUrl + '" alt="Bukti Transfer" class="bukti-thumb"' +
+                        '<img src="' + imgUrl + '" alt="Bukti Transfer"' +
                         ' onclick="window.open(\'' + imgUrl + '\', \'_blank\')"' +
-                        ' onerror="this.parentElement.innerHTML=\'<div class=\\\'bukti-empty-sm\\\'><i class=\\\'fas fa-image fa-2x mb-1\\\'></i><span>Gambar tidak dapat dimuat</span></div>\'">'
+                        ' onerror="this.parentElement.innerHTML=\'<div class=\\\'bukti-empty-v2\\\'><i class=\\\'fas fa-image\\\'></i><span>Gambar tidak dapat dimuat</span></div>\'">'
                     );
-                    fullLink.attr('href', imgUrl);
+                    $('#bukti-full-link').attr('href', imgUrl);
                     linkWrap.removeClass('d-none');
                 } else {
                     imgWrap.html(
-                        '<div class="bukti-empty-sm">' +
-                        '<i class="fas fa-file-image fa-2x mb-1"></i>' +
+                        '<div class="bukti-empty-v2">' +
+                        '<i class="fas fa-file-image"></i>' +
                         '<span>Belum ada bukti transfer yang diupload</span>' +
                         '</div>'
                     );
                     linkWrap.addClass('d-none');
                 }
 
-                // -- Muat data klien via AJAX --
+                // Muat data klien via AJAX
                 $('#container-list-klien').html(
-                    '<div class="text-center py-4 text-muted bg-white border card-round shadow-sm">' +
-                    '<i class="fas fa-spinner fa-spin me-2 fs-5"></i>Memuat data pendaftar...</div>'
+                    '<div class="klien-loading">' +
+                    '<i class="fas fa-spinner fa-spin"></i><span>Memuat data pendaftar...</span></div>'
                 );
                 $('#modalKlien').modal('show');
 
@@ -557,18 +752,19 @@
                     url: '/jadwal-tes/' + idJadwal + '/klien',
                     type: 'GET',
                     dataType: 'json',
-                    success: function(data) {
+                    success: function (data) {
                         $('#container-list-klien').empty();
 
                         if (data.length === 0) {
                             $('#container-list-klien').html(
-                                '<div class="text-center py-5 bg-white rounded card-round border shadow-sm">' +
-                                '<p class="text-muted mb-0 fw-medium italic">Belum ada klien yang memesan slot ini.</p></div>'
+                                '<div class="klien-loading text-muted">' +
+                                '<i class="fas fa-user-slash mb-2" style="font-size:1.8rem;"></i>' +
+                                '<span>Belum ada klien yang memesan slot ini.</span></div>'
                             );
                             return;
                         }
 
-                        $.each(data, function(index, item) {
+                        $.each(data, function (index, item) {
                             var statusLower   = item.status_jadwal.toLowerCase();
                             var badgeClass    = 'badge-warning';
                             var displayStatus = item.status_jadwal;
@@ -580,97 +776,97 @@
                                 ? 'Menunggu Konfirmasi'
                                 : displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1).toLowerCase();
 
+                            // Format nomor WA
                             var cleanPhone = '';
                             if (item.no_hp) {
                                 cleanPhone = item.no_hp.replace(/[^0-9]/g, '');
-                                if (cleanPhone.startsWith('0')) {
-                                    cleanPhone = '62' + cleanPhone.substring(1);
-                                } else if (!cleanPhone.startsWith('62')) {
-                                    cleanPhone = '62' + cleanPhone;
-                                }
+                                if (cleanPhone.startsWith('0')) cleanPhone = '62' + cleanPhone.substring(1);
+                                else if (!cleanPhone.startsWith('62')) cleanPhone = '62' + cleanPhone;
                             }
 
                             var waButton = item.no_hp
-                                ? '<a href="https://wa.me/' + cleanPhone + '" target="_blank" class="btn btn-sm btn-success btn-round px-3"><i class="fab fa-whatsapp me-2"></i>Hubungi Klien</a>'
-                                : '<span class="text-muted fs-8">-</span>';
+                                ? '<a href="https://wa.me/' + cleanPhone + '" target="_blank" class="btn btn-sm btn-success btn-round px-3 fw-semibold"><i class="fab fa-whatsapp me-1"></i>WhatsApp</a>'
+                                : '<span class="text-muted fs-8">No. HP tidak tersedia</span>';
 
                             var aksiHtml = '';
                             if (statusLower === 'menunggu') {
-                                aksiHtml = '<button data-id="' + item.id_jadwal + '" data-status="Ditolak" class="btn btn-sm btn-outline-danger btn-round px-3 btn-aksi-status"><i class="fas fa-times-circle me-1"></i> Tolak Permohonan</button>';
+                                aksiHtml = '<button data-id="' + item.id_jadwal + '" data-status="Ditolak" class="btn btn-sm btn-outline-danger btn-round px-3 fw-semibold btn-aksi-status"><i class="fas fa-times-circle me-1"></i>Tolak</button>';
                             } else if (statusLower === 'ditolak') {
-                                aksiHtml = '<button data-id="' + item.id_jadwal + '" data-status="Tersedia" class="btn btn-sm btn-outline-success btn-round px-3 btn-aksi-status"><i class="fas fa-sync-alt me-1"></i> Buka Kembali Slot</button>';
+                                aksiHtml = '<button data-id="' + item.id_jadwal + '" data-status="Tersedia" class="btn btn-sm btn-outline-success btn-round px-3 fw-semibold btn-aksi-status"><i class="fas fa-sync-alt me-1"></i>Buka Slot</button>';
                             } else {
-                                aksiHtml = '<span class="badge bg-light text-muted border px-3 py-1 btn-round fs-8 fw-normal"><i class="fas fa-lock me-1"></i> Terkunci</span>';
+                                aksiHtml = '<span class="badge bg-light text-muted border px-3 py-1 btn-round fs-8 fw-normal"><i class="fas fa-lock me-1"></i>Terkunci</span>';
                             }
 
+                            var initials = item.nama_klien.charAt(0).toUpperCase();
+
                             var card = `
-                                <div class="card card-round border shadow-sm mb-2">
-                                    <div class="card-body p-4">
-                                        <div class="row align-items-center">
-                                            <div class="col-md-5 mb-3 mb-md-0">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar avatar-lg me-3">
-                                                        <span class="avatar-title rounded-circle bg-info-light text-info fw-bold fs-5">
-                                                            ${item.nama_klien.charAt(0).toUpperCase()}
-                                                        </span>
-                                                    </div>
-                                                    <div>
-                                                        <h5 class="fw-bold text-dark mb-1 fs-6">${item.nama_klien}</h5>
-                                                        <span class="badge ${badgeClass} px-2 py-1 btn-round fs-8 fw-semibold">${displayStatus}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4 mb-3 mb-md-0 border-start-md px-md-4">
-                                                <div class="mb-2">
-                                                    <small class="text-muted d-block fs-8 fw-bold text-uppercase">Nomor Handphone</small>
-                                                    <span class="text-dark fw-medium fs-7">${item.no_hp ? item.no_hp : '-'}</span>
-                                                </div>
-                                                <div>
-                                                    <small class="text-muted d-block fs-8 fw-bold text-uppercase">Catatan Tambahan</small>
-                                                    <p class="text-muted mb-0 fs-7 italic" style="line-height:1.4;">"${item.komentar ? item.komentar : 'Tidak ada catatan khusus.'}"</p>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3 text-md-end border-start-md">
-                                                <div class="d-grid gap-2 d-md-block text-nowrap">
-                                                    <div class="mb-2">${waButton}</div>
-                                                    <div>${aksiHtml}</div>
-                                                </div>
+                                <div class="klien-card">
+                                    <div class="klien-card-header">
+                                        <div class="d-flex align-items-center">
+                                            <div class="klien-avatar">${initials}</div>
+                                            <div class="klien-name-wrap">
+                                                <p class="klien-name">${item.nama_klien}</p>
+                                                <span class="badge ${badgeClass} px-2 py-1 btn-round fs-8 fw-semibold">${displayStatus}</span>
                                             </div>
                                         </div>
+                                    </div>
+                                    <div class="klien-card-body">
+                                        <div class="klien-info-grid">
+                                            <div class="klien-info-item">
+                                                <label>Nomor HP</label>
+                                                <span>${item.no_hp ? item.no_hp : '—'}</span>
+                                            </div>
+                                            <div class="klien-info-item">
+                                                <label>Status Booking</label>
+                                                <span>${displayStatus}</span>
+                                            </div>
+                                            <div class="klien-info-item full-width">
+                                                <label>Catatan Tambahan</label>
+                                                <div class="klien-catatan">${item.komentar ? item.komentar : 'Tidak ada catatan khusus.'}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="klien-card-footer">
+                                        ${waButton}
+                                        ${aksiHtml}
                                     </div>
                                 </div>`;
                             $('#container-list-klien').append(card);
                         });
                     },
-                    error: function() {
+                    error: function () {
                         $('#container-list-klien').html(
-                            '<div class="text-center py-4 text-danger bg-white border card-round shadow-sm">' +
-                            '<i class="fas fa-exclamation-triangle me-2"></i>Gagal mengambil data pendaftar klien.</div>'
+                            '<div class="klien-loading text-danger">' +
+                            '<i class="fas fa-exclamation-triangle mb-2" style="font-size:1.8rem;"></i>' +
+                            '<span>Gagal mengambil data pendaftar. Coba refresh halaman.</span></div>'
                         );
                     }
                 });
             });
+
+            // ── Tolak / Buka Kembali dari dalam modal klien ──
+            $('#container-list-klien').on('click', '.btn-aksi-status', function () {
+                var idJadwal     = $(this).data('id');
+                var statusTarget = $(this).data('status');
+                executeUpdateStatus(idJadwal, statusTarget);
+            });
         });
 
         function executeUpdateStatus(id, status) {
+            if (!confirm(status === 'Ditolak' ? 'Tolak permohonan klien ini?' : 'Buka kembali slot ini?')) return;
             $.ajax({
                 url: '/jadwal-tes/' + id + '/update-status',
                 type: 'POST',
                 data: { _token: '{{ csrf_token() }}', _method: 'PUT', status: status },
-                success: function() {
-                    swal({ title: 'Berhasil!', text: 'Status jadwal telah diperbarui.', type: 'success',
-                        buttons: { confirm: { className: 'btn btn-success btn-round' } }
-                    }).then(() => location.reload());
-                },
-                error: function(xhr) {
-                    swal({ title: 'Gagal!', text: 'Terjadi kesalahan saat memperbarui status.', type: 'error',
-                        buttons: { confirm: { className: 'btn btn-danger btn-round' } }
-                    });
+                success: function () { location.reload(); },
+                error: function (xhr) {
+                    alert('Terjadi kesalahan saat memperbarui status.');
                     console.log(xhr.responseText);
                 }
             });
         }
     </script>
+
     <script>
         // Set tanggal minimum = hari ini
         const inputTanggal = document.querySelector('input[name="tanggal"]');

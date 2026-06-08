@@ -30,94 +30,228 @@
     <link rel="stylesheet" href="{{ asset('assets/css/kaiadmin.min.css') }}" />
 
     <style>
-        .modal-content .form-control,
-        .modal-content .form-select {
-            border: 1px solid #ced4da !important;
-            color: #495057 !important;
-        }
-        .modal-content .form-control:focus,
-        .modal-content .form-select:focus {
-            border-color: #6c757d !important;
-            box-shadow: none !important;
-        }
+    .modal-content .form-control,
+    .modal-content .form-select {
+        border: 1px solid #ced4da !important;
+        color: #495057 !important;
+    }
+    .modal-content .form-control:focus,
+    .modal-content .form-select:focus {
+        border-color: #6c757d !important;
+        box-shadow: none !important;
+    }
 
-        /* Bukti transfer image styling */
-        .bukti-wrapper {
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            overflow: hidden;
-            background: #f8f9fa;
-        }
-        .bukti-img {
-            width: 100%;
-            max-height: 300px;
-            object-fit: contain;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        .bukti-img:hover { opacity: 0.85; }
-        .bukti-empty {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 28px;
-            color: #adb5bd;
-        }
+    /* ── Modal Detail (konsisten dengan jadwal-tes) ── */
+    #modalView .modal-content {
+        border: none;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 24px 80px rgba(0,0,0,0.18);
+    }
+    #modalView .modal-klien-header {
+        background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+        padding: 28px 32px 24px;
+        position: relative;
+        overflow: hidden;
+    }
+    #modalView .modal-klien-header::before {
+        content: '';
+        position: absolute;
+        top: -40px; right: -40px;
+        width: 180px; height: 180px;
+        background: rgba(255,255,255,0.06);
+        border-radius: 50%;
+    }
+    #modalView .modal-klien-header::after {
+        content: '';
+        position: absolute;
+        bottom: -60px; left: -20px;
+        width: 140px; height: 140px;
+        background: rgba(255,255,255,0.04);
+        border-radius: 50%;
+    }
+    #modalView .modal-klien-header-inner {
+        position: relative; z-index: 2;
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    #modalView .modal-klien-eyebrow {
+        font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px;
+        text-transform: uppercase; color: rgb(255, 255, 255); margin-bottom: 4px;
+    }
+    #modalView .modal-klien-title {
+        font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0;
+    }
+    #modalView .modal-klien-body {
+        padding: 0;
+        max-height: 72vh;
+        overflow-y: auto;
+        background: #f4f6fb;
+    }
+    #modalView .modal-klien-body::-webkit-scrollbar { width: 5px; }
+    #modalView .modal-klien-body::-webkit-scrollbar-track { background: #f4f6fb; }
+    #modalView .modal-klien-body::-webkit-scrollbar-thumb { background: #c5cae9; border-radius: 10px; }
+    #modalView .klien-section-label {
+        font-size: 0.68rem; font-weight: 800; letter-spacing: 1.4px;
+        text-transform: uppercase; color: #90a4ae;
+        padding: 16px 24px 8px;
+    }
 
-        /* Biaya breakdown */
-        .biaya-breakdown {
-            background: #f8faf8;
-            border: 1px solid #e8f5e9;
-            border-radius: 8px;
-            padding: 12px 14px;
-        }
-        .biaya-breakdown .biaya-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
-            color: #546e7a;
-            margin-bottom: 4px;
-        }
-        .biaya-breakdown .biaya-total {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: #00AA5B;
-            border-top: 1px solid #e0e0e0;
-            padding-top: 8px;
-            margin-top: 6px;
-        }
-        .wilayah-badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 0.78rem;
-            font-weight: 600;
-        }
-        .wilayah-dalam { background: #e8f5e9; color: #2e7d32; }
-        .wilayah-luar  { background: #e3f2fd; color: #1565c0; }
+    /* Info section cards */
+    .detail-section-card {
+        margin: 0 16px 12px;
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #e8eaf6;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+    .detail-section-card .dsc-body {
+        padding: 16px 20px;
+    }
+    .detail-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .detail-info-item label {
+        font-size: 0.67rem; font-weight: 800; letter-spacing: 1px;
+        text-transform: uppercase; color: #90a4ae; display: block; margin-bottom: 3px;
+    }
+    .detail-info-item span { font-size: 0.84rem; font-weight: 600; color: #37474f; }
+    .detail-info-item.full-width { grid-column: 1 / -1; }
+    .detail-alamat-box {
+        background: #f8f9ff; border-left: 3px solid #c5cae9;
+        border-radius: 0 6px 6px 0; padding: 8px 12px;
+        font-size: 0.82rem; color: #546e7a; line-height: 1.6;
+        white-space: pre-line;
+    }
+    .komentar-detail-box {
+        background: #f8f9ff; border-left: 3px solid #c5cae9;
+        border-radius: 0 6px 6px 0; padding: 8px 12px;
+        font-size: 0.82rem; color: #546e7a; line-height: 1.6; font-style: italic;
+    }
+    .komentar-detail-box.empty { color: #b0bec5; }
 
-        /* Komentar box di modal detail */
-        .komentar-box {
-            background: #fffde7;
-            border: 1px solid #fff176;
-            border-radius: 6px;
-            padding: 10px 14px;
-            font-size: 0.875rem;
-            color: #5d4037;
-            line-height: 1.6;
-            white-space: pre-line;
-            min-height: 42px;
-        }
-        .komentar-box.empty {
-            background: #f5f5f5;
-            border-color: #e0e0e0;
-            color: #adb5bd;
-            font-style: italic;
-        }
-    </style>
+    /* Pembayaran section */
+    .bukti-biaya-section {
+        margin: 0 16px 16px;
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #e8eaf6;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+    .bukti-biaya-tabs {
+        display: flex;
+        border-bottom: 1px solid #e8eaf6;
+    }
+    .bukti-biaya-tab {
+        flex: 1; padding: 12px 16px; text-align: center;
+        font-size: 0.78rem; font-weight: 700; letter-spacing: 0.5px;
+        text-transform: uppercase; color: #90a4ae;
+        border-bottom: 3px solid transparent;
+    }
+    .bukti-biaya-tab.active { color: #2e7d32; border-bottom-color: #2e7d32; }
+    .bukti-biaya-content { padding: 16px 20px; }
+    .biaya-breakdown-v2 { width: 100%; }
+    .biaya-row-v2 {
+        display: flex; justify-content: space-between;
+        padding: 7px 0; font-size: 0.84rem; color: #2e7d32;
+        border-bottom: 1px dashed #eceff1;
+    }
+    .biaya-row-v2:last-child { border-bottom: none; }
+    .biaya-total-v2 {
+        display: flex; justify-content: space-between;
+        padding: 10px 0 0; font-size: 0.95rem; font-weight: 800;
+        color: #2e7d32; border-top: 2px solid #e8f5e9; margin-top: 4px;
+    }
+    .wilayah-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 5px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 700;
+        margin-bottom: 14px;
+    }
+    .wilayah-dalam { background: #e8f5e9; color: #2e7d32; }
+    .wilayah-luar  { background: #e8f5e9; color: #2e7d32; }
+    .bukti-thumb-v2 {
+        border-radius: 10px; overflow: hidden;
+        background: #f4f6f9; border: 1px solid #e0e0e0;
+        display: flex; align-items: center; justify-content: center;
+        min-height: 160px;
+    }
+    .bukti-thumb-v2 img {
+        max-width: 100%; max-height: 200px; object-fit: contain;
+        display: block; cursor: zoom-in;
+        transition: transform 0.2s;
+    }
+    .bukti-thumb-v2 img:hover { transform: scale(1.02); }
+    .bukti-empty-v2 {
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: center; padding: 28px; color: #b0bec5;
+    }
+    .bukti-empty-v2 i { font-size: 2rem; margin-bottom: 8px; }
+    .bukti-empty-v2 span { font-size: 0.8rem; text-align: center; }
+
+    #modalView .modal-klien-footer {
+        padding: 16px 24px;
+        background: #fff;
+        border-top: 1px solid #e8eaf6;
+        display: flex; justify-content: flex-end;
+    }
+    #modalView .btn-tutup {
+        padding: 10px 28px; border-radius: 10px;
+        font-weight: 700; font-size: 0.875rem;
+        border: 1.5px solid #dee2e6; background: #fff; color: #495057;
+        transition: all 0.2s;
+    }
+    #modalView .btn-tutup:hover { background: #f8f9fa; border-color: #adb5bd; }
+
+    /* ── Modal Status (konsisten dengan modalHapusJadwal style) ── */
+    #modalStatus .modal-content {
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+    #modalStatus .modal-status-header {
+        background: linear-gradient(135deg, #2e7d32 0%, #1b5e1b 100%);
+        padding: 28px 28px 20px;
+        text-align: center;
+    }
+    #modalStatus .modal-status-icon {
+        width: 64px; height: 64px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 14px;
+        backdrop-filter: blur(4px);
+    }
+    #modalStatus .modal-status-icon i { font-size: 1.8rem; color: #fff; }
+    #modalStatus .modal-status-title { color: #fff; font-size: 1.2rem; font-weight: 700; margin: 0 0 4px; }
+    #modalStatus .modal-status-subtitle { color: rgb(255, 255, 255); font-size: 0.82rem; margin: 0; }
+    #modalStatus .modal-status-body { padding: 24px 28px 8px; }
+    #modalStatus .modal-status-footer {
+        padding: 16px 28px 24px;
+        display: flex; gap: 10px; justify-content: center;
+    }
+    #modalStatus .btn-status-batal {
+        flex: 1; max-width: 140px; padding: 10px 20px; border-radius: 10px;
+        font-weight: 600; font-size: 0.875rem; border: 1.5px solid #dee2e6;
+        background: #fff; color: #495057; transition: all 0.2s;
+    }
+    #modalStatus .btn-status-batal:hover { background: #f8f9fa; border-color: #adb5bd; }
+    #modalStatus .btn-status-simpan {
+        flex: 1; max-width: 180px; padding: 10px 20px; border-radius: 10px;
+        font-weight: 600; font-size: 0.875rem; border: none;
+        background: linear-gradient(135deg, #2e7d32 0%, #1b5e1b  100%);
+        color: #fff; transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+    }
+    #modalStatus .btn-status-simpan:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(46, 125, 50, 0.4); }
+    #modalStatus .btn-status-simpan:active { transform: translateY(0); }
+    #modalStatus .status-klien-name {
+        display: inline-block;
+        background: #fff; border: 1px solid #1b5e1b; border-radius: 8px;
+        padding: 6px 14px; font-weight: 600; color: #1b5e1b; font-size: 0.875rem;
+        max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        margin-bottom: 16px;
+    }
+</style>
 </head>
 <body>
     <div class="wrapper">
@@ -262,190 +396,197 @@
         </div>
     </div>
 
-    {{-- ══════════════════════════════════════════════════
-         MODAL DETAIL PROFIL KLIEN
-    ══════════════════════════════════════════════════ --}}
-    <div class="modal fade" id="modalView" tabindex="-1" aria-labelledby="modalViewLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content shadow-lg" style="border-radius: 4px; border: 1px solid #dcdcdc;">
+   {{-- ══════════════════════════════════════════════════
+     MODAL DETAIL PROFIL KLIEN (konsisten jadwal-tes)
+══════════════════════════════════════════════════ --}}
+<div class="modal fade" id="modalView" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
 
-                <div class="modal-header d-flex justify-content-between align-items-center py-3 border-bottom bg-white">
-                    <h5 class="modal-title fw-bold text-dark mb-0" id="modalViewLabel" style="font-size: 1.1rem; letter-spacing: 0.5px;">
-                        DETAIL PENDAFTARAN KLIEN
-                    </h5>
-                    <button type="button" class="btn-close text-muted" data-bs-dismiss="modal" aria-label="Close"
-                        style="background: none; border: none; font-size: 1.5rem; line-height: 1;">
-                        <span>&times;</span>
+            {{-- Header gradient hijau --}}
+            <div class="modal-klien-header">
+                <div class="modal-klien-header-inner">
+                    <div>
+                        <p class="modal-klien-eyebrow"><i class="fas fa-id-badge me-1"></i> Informasi Pendaftar</p>
+                        <h5 class="modal-klien-title">Detail Klien</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="opacity:0.8;"></button>
+                </div>
+            </div>
+
+            {{-- Body --}}
+            <div class="modal-klien-body">
+
+                {{-- I. Identitas Utama --}}
+                <p class="klien-section-label"><i class="fas fa-user me-1"></i> Identitas Utama</p>
+                <div class="detail-section-card">
+                    <div class="dsc-body">
+                        <div class="detail-info-grid">
+                            <div class="detail-info-item">
+                                <label>Nama Lengkap</label>
+                                <span id="viewNama">—</span>
+                            </div>
+                            <div class="detail-info-item">
+                                <label>No. HP / WhatsApp</label>
+                                <span id="viewNoHp">—</span>
+                            </div>
+                            <div class="detail-info-item full-width">
+                                <label>Alamat Email</label>
+                                <span id="viewEmail">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- II. Informasi Personal --}}
+                <p class="klien-section-label"><i class="fas fa-info-circle me-1"></i> Informasi Personal</p>
+                <div class="detail-section-card">
+                    <div class="dsc-body">
+                        <div class="detail-info-grid">
+                            <div class="detail-info-item">
+                                <label>Tanggal Lahir</label>
+                                <span id="viewTglLahir">—</span>
+                            </div>
+                            <div class="detail-info-item">
+                                <label>Gol. Darah / Jenis Kelamin</label>
+                                <span id="viewGoldarJK">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- III. Institusi & Sosmed --}}
+                <p class="klien-section-label"><i class="fas fa-building me-1"></i> Institusi & Media Sosial</p>
+                <div class="detail-section-card">
+                    <div class="dsc-body">
+                        <div class="detail-info-grid">
+                            <div class="detail-info-item">
+                                <label>Institusi / Perusahaan</label>
+                                <span id="viewInstitusi">—</span>
+                            </div>
+                            <div class="detail-info-item">
+                                <label>Media Sosial</label>
+                                <span id="viewSosmed">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- IV. Lokasi --}}
+                <p class="klien-section-label"><i class="fas fa-map-marker-alt me-1"></i> Lokasi Tempat Tinggal</p>
+                <div class="detail-section-card">
+                    <div class="dsc-body">
+                        <div class="detail-info-grid">
+                            <div class="detail-info-item">
+                                <label>Domisili</label>
+                                <span id="viewDomisili">—</span>
+                            </div>
+                            <div class="detail-info-item full-width">
+                                <label>Alamat Lengkap</label>
+                                <div id="viewAlamat" class="detail-alamat-box"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- V. Pembayaran & Bukti --}}
+                <p class="klien-section-label"><i class="fas fa-file-invoice-dollar me-1"></i> Pembayaran & Bukti Transfer</p>
+                <div class="bukti-biaya-section">
+                    <div class="bukti-biaya-tabs">
+                        <div class="bukti-biaya-tab active"><i class="fas fa-coins me-1"></i> Rincian Biaya</div>
+                        <div class="bukti-biaya-tab active" style="border-left: 1px solid #e8eaf6;"><i class="fas fa-receipt me-1"></i> Bukti Transfer</div>
+                    </div>
+                    <div class="bukti-biaya-content">
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <div id="viewWilayahWrap" class="mb-2"></div>
+                                <div id="viewBiayaBreakdown"></div>
+                            </div>
+                            <div class="col-md-7">
+                                <div id="viewBuktiWrapper" class="bukti-thumb-v2"></div>
+                                <div id="viewBuktiBtnWrap" class="mt-2 d-none">
+                                    <a id="viewBuktiLink" href="#" target="_blank" class="btn btn-sm btn-outline-primary btn-round">
+                                        <i class="fas fa-external-link-alt me-1"></i> Buka di Tab Baru
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- VI. Komentar --}}
+                <p class="klien-section-label"><i class="fas fa-comment-alt me-1"></i> Komentar / Catatan Admin</p>
+                <div class="detail-section-card" style="margin-bottom: 16px;">
+                    <div class="dsc-body">
+                        <div id="viewKomentar" class="komentar-detail-box"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            {{-- Footer --}}
+            <div class="modal-klien-footer">
+                <button type="button" class="btn-tutup" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Tutup
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+{{-- ══════════════════════════════════════════════════
+     MODAL EDIT STATUS (konsisten dengan modalHapus)
+══════════════════════════════════════════════════ --}}
+<div class="modal fade" id="modalStatus" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+        <div class="modal-content">
+
+            <div class="modal-status-header">
+                <div class="modal-status-icon">
+                    <i class="fas fa-edit"></i>
+                </div>
+                <p class="modal-status-title">Perbarui Status Pendaftaran</p>
+                <p class="modal-status-subtitle">Ubah status dan tambahkan catatan untuk klien</p>
+            </div>
+
+            <form id="formStatus" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-status-body">
+                    <div class="text-center mb-1">
+                        <span class="status-klien-name" id="modalNama">—</span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="text-muted small fw-semibold mb-1 text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Pilih Status</label>
+                        <select name="status" id="inputStatus" class="form-control form-select" required>
+                            <option value="Menunggu">Menunggu</option>
+                            <option value="Diterima">Diterima</option>
+                            <option value="Ditolak">Ditolak</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group mb-2">
+                        <label class="text-muted small fw-semibold mb-1 text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Komentar / Catatan</label>
+                        <textarea name="komentar" id="inputKomentar" class="form-control" rows="4"
+                            style="resize: none; line-height: 1.5; border-radius: 10px;"
+                            placeholder="Alasan ditolak atau informasi tambahan jadwal..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-status-footer">
+                    <button type="button" class="btn-status-batal" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn-status-simpan">
+                        <i class="fas fa-save me-1"></i> Simpan Perubahan
                     </button>
                 </div>
+            </form>
 
-                <div class="modal-body p-4 bg-white" style="max-height: 75vh; overflow-y: auto;">
-                    <div class="row">
-
-                        {{-- I. IDENTITAS UTAMA --}}
-                        <div class="col-12 mb-3">
-                            <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">I. IDENTITAS UTAMA</span>
-                            <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="text-muted small d-block mb-1">Nama Lengkap</label>
-                            <span id="viewNama" class="text-dark fw-bold"></span>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="text-muted small d-block mb-1">No. HP / WhatsApp</label>
-                            <span id="viewNoHp" class="text-dark fw-bold"></span>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="text-muted small d-block mb-1">Alamat Email</label>
-                            <span id="viewEmail" class="text-dark"></span>
-                        </div>
-
-                        {{-- II. INFORMASI PERSONAL --}}
-                        <div class="col-12 mt-2 mb-3">
-                            <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">II. INFORMASI PERSONAL</span>
-                            <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="text-muted small d-block mb-1">Tanggal Lahir</label>
-                            <span id="viewTglLahir" class="text-dark"></span>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="text-muted small d-block mb-1">Golongan Darah / Jenis Kelamin</label>
-                            <span id="viewGoldarJK" class="text-dark text-uppercase"></span>
-                        </div>
-
-                        {{-- III. AFILIASI & MEDIA SOSIAL --}}
-                        <div class="col-12 mt-2 mb-3">
-                            <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">III. AFILIASI & MEDIA SOSIAL</span>
-                            <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="text-muted small d-block mb-1">Institusi / Perusahaan</label>
-                            <span id="viewInstitusi" class="text-dark"></span>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="text-muted small d-block mb-1">Media Sosial</label>
-                            <span id="viewSosmed" class="text-dark"></span>
-                        </div>
-
-                        {{-- IV. LOKASI TEMPAT TINGGAL --}}
-                        <div class="col-12 mt-2 mb-3">
-                            <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">IV. LOKASI TEMPAT TINGGAL</span>
-                            <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
-                        </div>
-                        <div class="col-md-12 mb-3">
-                            <label class="text-muted small d-block mb-1">Domisili (Kota / Kabupaten)</label>
-                            <span id="viewDomisili" class="text-dark"></span>
-                        </div>
-                        <div class="col-md-12 mb-4">
-                            <label class="text-muted small d-block mb-1">Alamat Lengkap</label>
-                            <div id="viewAlamat" class="text-dark" style="line-height: 1.6; white-space: pre-line; font-size: 0.9rem;"></div>
-                        </div>
-
-                        {{-- V. PEMBAYARAN & BUKTI TRANSFER --}}
-                        <div class="col-12 mt-2 mb-3">
-                            <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">V. PEMBAYARAN & BUKTI TRANSFER</span>
-                            <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
-                        </div>
-
-                        {{-- Wilayah & Transport --}}
-                        <div class="col-md-4 mb-3">
-                            <label class="text-muted small d-block mb-1">Wilayah</label>
-                            <span id="viewWilayah"></span>
-                        </div>
-                        <div class="col-md-4 mb-3" id="viewAreaTransportWrap" style="display:none;">
-                            <label class="text-muted small d-block mb-1">Area Transport</label>
-                            <span id="viewAreaTransport" class="text-dark fw-semibold"></span>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="text-muted small d-block mb-1">Rincian Biaya</label>
-                            <div id="viewBiayaBreakdown" class="biaya-breakdown"></div>
-                        </div>
-
-                        {{-- Bukti Transfer --}}
-                        <div class="col-12 mb-3">
-                            <label class="text-muted small d-block mb-2">Foto Bukti Transfer</label>
-                            <div id="viewBuktiWrapper" class="bukti-wrapper"></div>
-                            <div id="viewBuktiBtnWrap" class="mt-2 d-none">
-                                <a id="viewBuktiLink" href="#" target="_blank" class="btn btn-sm btn-outline-primary btn-round">
-                                    <i class="fas fa-external-link-alt me-1"></i> Buka di Tab Baru
-                                </a>
-                            </div>
-                        </div>
-
-                        {{-- VI. KOMENTAR / CATATAN ADMIN --}}
-                        <div class="col-12 mt-2 mb-3">
-                            <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">VI. KOMENTAR / CATATAN ADMIN</span>
-                            <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
-                        </div>
-                        <div class="col-12 mb-2">
-                            <label class="text-muted small d-block mb-2">Komentar</label>
-                            <div id="viewKomentar" class="komentar-box"></div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <div class="modal-footer bg-white d-flex justify-content-end py-3 border-top">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal"
-                        style="border-radius: 3px; font-weight: 600;">TUTUP</button>
-                </div>
-            </div>
         </div>
     </div>
-
-    {{-- ══════════════════════════════════════════════════
-         MODAL EDIT STATUS
-    ══════════════════════════════════════════════════ --}}
-    <div class="modal fade" id="modalStatus" tabindex="-1" aria-labelledby="modalStatusLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow-lg" style="border-radius: 4px; border: 1px solid #dcdcdc;">
-
-                <div class="modal-header d-flex justify-content-between align-items-center py-3 border-bottom bg-white">
-                    <h5 class="modal-title fw-bold text-dark mb-0" id="modalStatusLabel"
-                        style="font-size: 1.1rem; letter-spacing: 0.5px;">PERBARUI STATUS PENDAFTARAN</h5>
-                    <button type="button" class="btn-close text-muted" data-bs-dismiss="modal" aria-label="Close"
-                        style="background: none; border: none; font-size: 1.5rem; line-height: 1;"><span>&times;</span></button>
-                </div>
-
-                <form id="formStatus" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="modal-body p-4 bg-white">
-                        <div class="row">
-                            <div class="col-12 mb-3">
-                                <span class="fw-bold small text-secondary d-block mb-1" style="letter-spacing: 0.5px;">
-                                    IDENTITAS KLIEN: <span id="modalNama" class="text-dark"></span>
-                                </span>
-                                <div style="height: 1px; background-color: #e0e0e0; width: 100%;"></div>
-                            </div>
-                            <div class="form-group col-md-12 mb-3 p-0">
-                                <label class="text-muted small mb-1 fw-semibold">Pilih Status</label>
-                                <select name="status" id="inputStatus" class="form-control form-select"
-                                    style="border-radius: 3px;" required>
-                                    <option value="Menunggu">Menunggu</option>
-                                    <option value="Diterima">Diterima</option>
-                                    <option value="Ditolak">Ditolak</option>
-                                </select>
-                            </div>
-                            <div class="form-group col-md-12 mb-2 p-0">
-                                <label class="text-muted small mb-1 fw-semibold">Komentar / Catatan</label>
-                                <textarea name="komentar" id="inputKomentar" class="form-control" rows="4"
-                                    style="border-radius: 3px; resize: none; line-height: 1.5;"
-                                    placeholder="Alasan ditolak atau informasi tambahan jadwal..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer d-flex justify-content-end py-3 bg-white border-top" style="padding-right: 1.5rem;">
-                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-bs-dismiss="modal"
-                            style="border-radius: 3px; font-weight: 600;">BATAL</button>
-                        <button type="submit" class="btn btn-dark btn-sm"
-                            style="border-radius: 3px; font-weight: 600; letter-spacing: 0.3px;">SIMPAN PERUBAHAN</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+</div>
 
     <script src="{{ asset('assets/js/core/jquery-3.7.1.min.js') }}"></script>
     <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
@@ -455,145 +596,117 @@
     <script src="{{ asset('assets/js/kaiadmin.min.js') }}"></script>
 
     <script>
-        // ── DataTable ────────────────────────────────────────────
-        $(document).ready(function () {
-            $('#add-row').DataTable({
-                pageLength: 10,
-                language: {
-                    search: "Cari:",
-                    lengthMenu: "Tampilkan _MENU_ data per halaman",
-                    zeroRecords: "Tidak ada data yang cocok ditemukan",
-                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-                    infoEmpty: "Data tidak tersedia",
-                    infoFiltered: "(difilter dari _MAX_ total data)"
-                }
-            });
+    $(document).ready(function () {
+        $('#add-row').DataTable({
+            pageLength: 10,
+            language: {
+                search: "Cari:",
+                lengthMenu: "Tampilkan _MENU_ data per halaman",
+                zeroRecords: "Tidak ada data yang cocok ditemukan",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                infoEmpty: "Data tidak tersedia",
+                infoFiltered: "(difilter dari _MAX_ total data)"
+            }
         });
+    });
 
-        // ── Bootstrap modal instances ────────────────────────────
-        const modalViewBS   = new bootstrap.Modal(document.getElementById('modalView'));
-        const modalStatusBS = new bootstrap.Modal(document.getElementById('modalStatus'));
+    // ── Konstanta biaya ──
+    const BIAYA_TES            = 550000;
+    const BIAYA_TRANSPORT_LUAR = 75000;
+    const TRANSPORT_DALAM = {
+        'Kota Subang': 25000,
+        'Kab. Subang':  50000,
+    };
 
-        // ── Konstanta biaya (sinkron dengan backend & frontend) ──
-        const BIAYA_TES = 550000;
-        const BIAYA_TRANSPORT_LUAR = 75000;
-        const TRANSPORT_DALAM = {
-            'Kota Subang': 25000,
-            'Kab. Subang':  50000,
-        };
+    function formatRupiah(nominal) {
+        return 'Rp ' + parseInt(nominal).toLocaleString('id-ID');
+    }
 
-        function formatRupiah(nominal) {
-            return 'Rp ' + nominal.toLocaleString('id-ID');
+    function openModalView(
+        nama, noHp, email, tglLahir, jk, goldar,
+        institusi, sosmed, domisili, alamat,
+        buktiTransfer, isLuarSubang, namaKota, komentar
+    ) {
+        const jkText = jk === 'L' ? 'Laki-laki' : (jk === 'P' ? 'Perempuan' : jk);
+
+        document.getElementById('viewNama').innerText      = nama;
+        document.getElementById('viewNoHp').innerText      = noHp;
+        document.getElementById('viewEmail').innerText     = email;
+        document.getElementById('viewTglLahir').innerText  = tglLahir || '-';
+        document.getElementById('viewGoldarJK').innerText  = goldar + ' / ' + jkText;
+        document.getElementById('viewInstitusi').innerText = institusi;
+        document.getElementById('viewSosmed').innerText    = sosmed;
+        document.getElementById('viewDomisili').innerText  = domisili;
+        document.getElementById('viewAlamat').innerText    = alamat;
+
+        // Komentar
+        const komentarEl = document.getElementById('viewKomentar');
+        if (komentar && komentar.trim() !== '') {
+            komentarEl.innerText = komentar;
+            komentarEl.classList.remove('empty');
+        } else {
+            komentarEl.innerText = 'Belum ada komentar dari admin.';
+            komentarEl.classList.add('empty');
         }
 
-        // ── openModalView ────────────────────────────────────────
-        function openModalView(
-            nama, noHp, email, tglLahir, jk, goldar,
-            institusi, sosmed, domisili, alamat,
-            buktiTransfer, isLuarSubang, namaKota, komentar
-        ) {
-            const jkText = jk === 'L' ? 'Laki-laki' : (jk === 'P' ? 'Perempuan' : jk);
+        // Biaya
+        const kotaBersih = (namaKota || '').trim();
+        let transport = 0;
+        let wilayahHTML = '';
+        let areaLabel = '';
 
-            document.getElementById('viewNama').innerText      = nama;
-            document.getElementById('viewNoHp').innerText      = noHp;
-            document.getElementById('viewEmail').innerText     = email;
-            document.getElementById('viewTglLahir').innerText  = tglLahir || '-';
-            document.getElementById('viewGoldarJK').innerText  = goldar + ' / ' + jkText;
-            document.getElementById('viewInstitusi').innerText = institusi;
-            document.getElementById('viewSosmed').innerText    = sosmed;
-            document.getElementById('viewDomisili').innerText  = domisili;
-            document.getElementById('viewAlamat').innerText    = alamat;
-
-            // Komentar admin
-            const komentarEl = document.getElementById('viewKomentar');
-            if (komentar && komentar.trim() !== '') {
-                komentarEl.innerText = komentar;
-                komentarEl.classList.remove('empty');
-            } else {
-                komentarEl.innerText = 'Belum ada komentar dari admin.';
-                komentarEl.classList.add('empty');
-            }
-
-            const kotaBersih = (namaKota || '').trim();
-            let transport    = 0;
-            let wilayahHTML  = '';
-            let areaLabel    = '';
-
-            if (!isLuarSubang) {
-                // Dalam Subang — cek nama_kota untuk biaya transport
-                transport  = TRANSPORT_DALAM[kotaBersih] ?? 0;
-                wilayahHTML = '<span class="wilayah-badge wilayah-dalam"><i class="fas fa-map-marker-alt me-1"></i>Dalam Subang</span>';
-
-                if (kotaBersih !== '' && TRANSPORT_DALAM[kotaBersih] !== undefined) {
-                    areaLabel = kotaBersih;
-                    document.getElementById('viewAreaTransport').innerText           = kotaBersih;
-                    document.getElementById('viewAreaTransportWrap').style.display   = '';
-                } else {
-                    document.getElementById('viewAreaTransportWrap').style.display   = 'none';
-                }
-            } else {
-                // Luar Subang
-                transport   = BIAYA_TRANSPORT_LUAR;
-                wilayahHTML = '<span class="wilayah-badge wilayah-luar"><i class="fas fa-road me-1"></i>Luar Subang</span>';
-                document.getElementById('viewAreaTransportWrap').style.display = 'none';
-            }
-
-            document.getElementById('viewWilayah').innerHTML = wilayahHTML;
-
-            // Rincian biaya breakdown
-            const total = BIAYA_TES + transport;
-            let breakdownHTML = `
-                <div class="biaya-row">
-                    <span>Biaya Tes</span>
-                    <span>${formatRupiah(BIAYA_TES)}</span>
-                </div>
-                <div class="biaya-row">
-                    <span>Biaya Transport${areaLabel ? ' (' + areaLabel + ')' : ''}</span>
-                    <span>${formatRupiah(transport)}</span>
-                </div>
-                <div class="biaya-total">
-                    <span>Total</span>
-                    <span>${formatRupiah(total)}</span>
-                </div>
-            `;
-            document.getElementById('viewBiayaBreakdown').innerHTML = breakdownHTML;
-
-            // Bukti transfer
-            const wrapper = document.getElementById('viewBuktiWrapper');
-            const btnWrap = document.getElementById('viewBuktiBtnWrap');
-            const btnLink = document.getElementById('viewBuktiLink');
-
-            if (buktiTransfer && buktiTransfer.trim() !== '') {
-                const imgUrl = '/uploads/bukti/' + buktiTransfer;
-                wrapper.innerHTML = `<img src="${imgUrl}" alt="Bukti Transfer" class="bukti-img"
-                    onclick="window.open('${imgUrl}','_blank')"
-                    onerror="this.parentElement.innerHTML='<div class=\\'bukti-empty\\'><i class=\\'fas fa-image fa-2x mb-2\\'></i><small>Gambar tidak dapat dimuat</small></div>'"
-                >`;
-                btnLink.href = imgUrl;
-                btnWrap.classList.remove('d-none');
-            } else {
-                wrapper.innerHTML = `
-                    <div class="bukti-empty">
-                        <i class="fas fa-file-image fa-2x mb-2"></i>
-                        <small>Belum ada bukti transfer yang diupload</small>
-                    </div>`;
-                btnWrap.classList.add('d-none');
-            }
-
-            modalViewBS.show();
+        if (!isLuarSubang) {
+            transport   = TRANSPORT_DALAM[kotaBersih] !== undefined ? TRANSPORT_DALAM[kotaBersih] : 0;
+            wilayahHTML = '<span class="wilayah-pill wilayah-dalam"><i class="fas fa-map-marker-alt"></i>Dalam Subang</span>';
+            if (kotaBersih !== '' && TRANSPORT_DALAM[kotaBersih] !== undefined) areaLabel = kotaBersih;
+        } else {
+            transport   = BIAYA_TRANSPORT_LUAR;
+            wilayahHTML = '<span class="wilayah-pill wilayah-luar"><i class="fas fa-road"></i>Luar Subang</span>';
         }
 
-        // ── openModalStatus ──────────────────────────────────────
-        function openModalStatus(id, nama, status, komentar) {
-            document.getElementById('modalNama').innerText   = nama;
-            document.getElementById('inputStatus').value    = status;
-            document.getElementById('inputKomentar').value  = komentar;
+        const total = BIAYA_TES + transport;
+        document.getElementById('viewWilayahWrap').innerHTML = wilayahHTML;
+        document.getElementById('viewBiayaBreakdown').innerHTML =
+            '<table class="biaya-breakdown-v2">' +
+            '<tr class="biaya-row-v2"><td>Biaya Tes</td><td class="text-end fw-semibold">' + formatRupiah(BIAYA_TES) + '</td></tr>' +
+            '<tr class="biaya-row-v2"><td>Biaya Transport' + (areaLabel ? ' <small class="text-muted">(' + areaLabel + ')</small>' : '') + '</td><td class="text-end fw-semibold">' + formatRupiah(transport) + '</td></tr>' +
+            '</table>' +
+            '<div class="biaya-total-v2"><span>Total Pembayaran</span><span>' + formatRupiah(total) + '</span></div>';
 
-            const baseUrl = "{{ url('pendaftaran-tes') }}";
-            document.getElementById('formStatus').action = baseUrl + '/' + id;
+        // Bukti transfer
+        const imgWrap  = document.getElementById('viewBuktiWrapper');
+        const btnWrap  = document.getElementById('viewBuktiBtnWrap');
+        const btnLink  = document.getElementById('viewBuktiLink');
 
-            modalStatusBS.show();
+        if (buktiTransfer && buktiTransfer.trim() !== '') {
+            const imgUrl = '/uploads/bukti/' + buktiTransfer;
+            imgWrap.innerHTML = '<img src="' + imgUrl + '" alt="Bukti Transfer"' +
+                ' onclick="window.open(\'' + imgUrl + '\', \'_blank\')"' +
+                ' onerror="this.parentElement.innerHTML=\'<div class=\\\'bukti-empty-v2\\\'><i class=\\\'fas fa-image\\\'></i><span>Gambar tidak dapat dimuat</span></div>\'">';
+            btnLink.href = imgUrl;
+            btnWrap.classList.remove('d-none');
+        } else {
+            imgWrap.innerHTML =
+                '<div class="bukti-empty-v2">' +
+                '<i class="fas fa-file-image"></i>' +
+                '<span>Belum ada bukti transfer yang diupload</span>' +
+                '</div>';
+            btnWrap.classList.add('d-none');
         }
-    </script>
+
+        new bootstrap.Modal(document.getElementById('modalView')).show();
+    }
+
+    function openModalStatus(id, nama, status, komentar) {
+        document.getElementById('modalNama').innerText    = nama;
+        document.getElementById('inputStatus').value     = status;
+        document.getElementById('inputKomentar').value   = komentar;
+
+        const baseUrl = "{{ url('pendaftaran-tes') }}";
+        document.getElementById('formStatus').action = baseUrl + '/' + id;
+
+        new bootstrap.Modal(document.getElementById('modalStatus')).show();
+    }
+</script>
 </body>
 </html>
