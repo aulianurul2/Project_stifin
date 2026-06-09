@@ -5,6 +5,7 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   Platform,
   ScrollView,
   ActivityIndicator,
@@ -56,7 +57,6 @@ export default function PendaftaranTes() {
   const [tempatTes, setTempatTes] = useState('Kantor Subang');
   const [wilayahHomeVisit, setWilayahHomeVisit] = useState<'dalam' | 'luar'>('dalam');
 
-  // Transport dropdown untuk Dalam Subang
   const [selectedTransport, setSelectedTransport] = useState<TransportOption>(TRANSPORT_DALAM_SUBANG[0]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -64,7 +64,6 @@ export default function PendaftaranTes() {
   const [loading, setLoading] = useState(true);
   const [selectedJadwal, setSelectedJadwal] = useState<Jadwal | null>(null);
 
-  // Derived
   const isLuarSubang = tempatTes === 'Home Visit' && wilayahHomeVisit === 'luar';
 
   const getBiaya = (): number => {
@@ -131,6 +130,16 @@ export default function PendaftaranTes() {
     });
   };
 
+  /** Batalkan pilihan jadwal saat tap di luar area interaktif */
+  const handleOutsideTap = () => {
+    if (selectedJadwal) {
+      setSelectedJadwal(null);
+    }
+    if (dropdownOpen) {
+      setDropdownOpen(false);
+    }
+  };
+
   const lokasiOptions = ['Home Visit', 'Kantor Subang'];
 
   return (
@@ -148,318 +157,320 @@ export default function PendaftaranTes() {
         <View style={{ width: 38 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      {/* TouchableWithoutFeedback: tap di mana saja membatalkan pilihan jadwal */}
+      <TouchableWithoutFeedback onPress={handleOutsideTap}>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-        {/* Info Banner */}
-        <View style={styles.infoBanner}>
-          <Ionicons name="information-circle-outline" size={18} color="#0288d1" />
-          <Text style={styles.infoBannerText}>
-            Pilih lokasi dan waktu tes yang sesuai dengan Anda
-          </Text>
-        </View>
-
-        {/* === Selector: Lokasi Tes === */}
-        <View style={styles.locationCard}>
-          <Text style={styles.locationLabel}>
-            <Ionicons name="location-outline" size={13} color="#546e7a" /> Lokasi Tes
-          </Text>
-          <View style={styles.locationOptions}>
-            {lokasiOptions.map((val) => (
-              <TouchableOpacity
-                key={val}
-                style={[styles.locationChip, tempatTes === val && styles.locationChipActive]}
-                onPress={() => {
-                  setTempatTes(val);
-                  setSelectedJadwal(null);
-                  setWilayahHomeVisit('dalam');
-                  setDropdownOpen(false);
-                }}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name={val === 'Home Visit' ? 'home-outline' : 'business-outline'}
-                  size={14}
-                  color={tempatTes === val ? '#fff' : '#546e7a'}
-                />
-                <Text style={[styles.locationChipText, tempatTes === val && styles.locationChipTextActive]}>
-                  {val}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          {/* Info Banner */}
+          <View style={styles.infoBanner}>
+            <Ionicons name="information-circle-outline" size={18} color="#0288d1" />
+            <Text style={styles.infoBannerText}>
+              Pilih lokasi dan waktu tes yang sesuai dengan Anda
+            </Text>
           </View>
 
-          {/* Wilayah — hanya muncul jika Home Visit dipilih */}
-          {tempatTes === 'Home Visit' && (
-            <View style={styles.wilayahBox}>
-              <Text style={styles.wilayahLabel}>
-                <Ionicons name="map-outline" size={12} color="#546e7a" /> Wilayah Home Visit
+          {/* === Selector: Lokasi Tes === */}
+          <View style={styles.locationCard}>
+            <Text style={styles.locationLabel}>
+                <Ionicons name="location-outline" size={13} color="#546e7a" /> Lokasi Tes
               </Text>
-              <View style={styles.wilayahOptions}>
-
-                {/* Dalam Subang */}
-                <TouchableOpacity
-                  style={[styles.wilayahChip, wilayahHomeVisit === 'dalam' && styles.wilayahChipActive]}
-                  onPress={() => { setWilayahHomeVisit('dalam'); setDropdownOpen(false); }}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.wilayahChipText, wilayahHomeVisit === 'dalam' && styles.wilayahChipTextActive]}>
-                    Dalam Subang
-                  </Text>
-                  <Text style={[styles.wilayahHarga, wilayahHomeVisit === 'dalam' && styles.wilayahHargaActive]}>
-                    + {formatRupiah(selectedTransport.biaya)} transport
-                  </Text>
-                </TouchableOpacity>
-
-                {/* Luar Subang */}
-                <TouchableOpacity
-                  style={[styles.wilayahChip, wilayahHomeVisit === 'luar' && styles.wilayahChipActive]}
-                  onPress={() => { setWilayahHomeVisit('luar'); setDropdownOpen(false); }}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.wilayahChipText, wilayahHomeVisit === 'luar' && styles.wilayahChipTextActive]}>
-                    Luar Subang
-                  </Text>
-                  <Text style={[styles.wilayahHarga, wilayahHomeVisit === 'luar' && styles.wilayahHargaActive]}>
-                    + Rp 75.000 transport
-                  </Text>
-                </TouchableOpacity>
+              <View style={styles.locationOptions}>
+                {lokasiOptions.map((val) => (
+                  <TouchableOpacity
+                    key={val}
+                    style={[styles.locationChip, tempatTes === val && styles.locationChipActive]}
+                    onPress={() => {
+                      setTempatTes(val);
+                      setSelectedJadwal(null);
+                      setWilayahHomeVisit('dalam');
+                      setDropdownOpen(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons
+                      name={val === 'Home Visit' ? 'home-outline' : 'business-outline'}
+                      size={14}
+                      color={tempatTes === val ? '#fff' : '#546e7a'}
+                    />
+                    <Text style={[styles.locationChipText, tempatTes === val && styles.locationChipTextActive]}>
+                      {val}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
 
-              {/* Dropdown transport — hanya muncul jika Dalam Subang */}
-              {wilayahHomeVisit === 'dalam' && (
-                <View style={styles.kotaBox}>
-                  <Text style={styles.kotaLabel}>
-                    <Ionicons name="car-outline" size={12} color="#546e7a" /> Pilih Area Transport
+              {/* Wilayah — hanya muncul jika Home Visit dipilih */}
+              {tempatTes === 'Home Visit' && (
+                <View style={styles.wilayahBox}>
+                  <Text style={styles.wilayahLabel}>
+                    <Ionicons name="map-outline" size={12} color="#546e7a" /> Wilayah Home Visit
                   </Text>
-
-                  <TouchableOpacity
-                    style={styles.dropdownTrigger}
-                    onPress={() => setDropdownOpen(!dropdownOpen)}
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.dropdownTriggerLeft}>
-                      <Ionicons name="location-outline" size={15} color="#00AA5B" />
-                      <Text style={styles.dropdownTriggerText}>{selectedTransport.label}</Text>
-                    </View>
-                    <View style={styles.dropdownTriggerRight}>
-                      <Text style={styles.dropdownTriggerHarga}>
-                        + {formatRupiah(selectedTransport.biaya)}
+                  <View style={styles.wilayahOptions}>
+                    <TouchableOpacity
+                      style={[styles.wilayahChip, wilayahHomeVisit === 'dalam' && styles.wilayahChipActive]}
+                      onPress={() => { setWilayahHomeVisit('dalam'); setDropdownOpen(false); }}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.wilayahChipText, wilayahHomeVisit === 'dalam' && styles.wilayahChipTextActive]}>
+                        Dalam Subang
                       </Text>
-                      <Ionicons
-                        name={dropdownOpen ? 'chevron-up' : 'chevron-down'}
-                        size={16}
-                        color="#546e7a"
-                      />
-                    </View>
-                  </TouchableOpacity>
+                      <Text style={[styles.wilayahHarga, wilayahHomeVisit === 'dalam' && styles.wilayahHargaActive]}>
+                        + {formatRupiah(selectedTransport.biaya)} transport
+                      </Text>
+                    </TouchableOpacity>
 
-                  {dropdownOpen && (
-                    <View style={styles.dropdownList}>
-                      {TRANSPORT_DALAM_SUBANG.map((item, index) => {
-                        const isActive = selectedTransport.label === item.label;
-                        return (
-                          <TouchableOpacity
-                            key={item.label}
-                            style={[
-                              styles.dropdownItem,
-                              isActive && styles.dropdownItemActive,
-                              index < TRANSPORT_DALAM_SUBANG.length - 1 && styles.dropdownItemBorder,
-                            ]}
-                            onPress={() => {
-                              setSelectedTransport(item);
-                              setDropdownOpen(false);
-                            }}
-                            activeOpacity={0.7}
-                          >
-                            <View style={styles.dropdownItemLeft}>
-                              <Ionicons
-                                name={isActive ? 'checkmark-circle' : 'radio-button-off-outline'}
-                                size={16}
-                                color={isActive ? '#00AA5B' : '#b0bec5'}
-                              />
-                              <Text style={[styles.dropdownItemText, isActive && styles.dropdownItemTextActive]}>
-                                {item.label}
-                              </Text>
-                            </View>
-                            <Text style={[styles.dropdownItemHarga, isActive && styles.dropdownItemHargaActive]}>
-                              + {formatRupiah(item.biaya)}
-                            </Text>
-                          </TouchableOpacity>
-                        );
-                      })}
+                    <TouchableOpacity
+                      style={[styles.wilayahChip, wilayahHomeVisit === 'luar' && styles.wilayahChipActive]}
+                      onPress={() => { setWilayahHomeVisit('luar'); setDropdownOpen(false); }}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.wilayahChipText, wilayahHomeVisit === 'luar' && styles.wilayahChipTextActive]}>
+                        Luar Subang
+                      </Text>
+                      <Text style={[styles.wilayahHarga, wilayahHomeVisit === 'luar' && styles.wilayahHargaActive]}>
+                        + Rp 75.000 transport
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {wilayahHomeVisit === 'dalam' && (
+                    <View style={styles.kotaBox}>
+                      <Text style={styles.kotaLabel}>
+                        <Ionicons name="car-outline" size={12} color="#546e7a" /> Pilih Area Transport
+                      </Text>
+                      <TouchableOpacity
+                        style={styles.dropdownTrigger}
+                        onPress={() => setDropdownOpen(!dropdownOpen)}
+                        activeOpacity={0.8}
+                      >
+                        <View style={styles.dropdownTriggerLeft}>
+                          <Ionicons name="location-outline" size={15} color="#00AA5B" />
+                          <Text style={styles.dropdownTriggerText}>{selectedTransport.label}</Text>
+                        </View>
+                        <View style={styles.dropdownTriggerRight}>
+                          <Text style={styles.dropdownTriggerHarga}>
+                            + {formatRupiah(selectedTransport.biaya)}
+                          </Text>
+                          <Ionicons
+                            name={dropdownOpen ? 'chevron-up' : 'chevron-down'}
+                            size={16}
+                            color="#546e7a"
+                          />
+                        </View>
+                      </TouchableOpacity>
+
+                      {dropdownOpen && (
+                        <View style={styles.dropdownList}>
+                          {TRANSPORT_DALAM_SUBANG.map((item, index) => {
+                            const isActive = selectedTransport.label === item.label;
+                            return (
+                              <TouchableOpacity
+                                key={item.label}
+                                style={[
+                                  styles.dropdownItem,
+                                  isActive && styles.dropdownItemActive,
+                                  index < TRANSPORT_DALAM_SUBANG.length - 1 && styles.dropdownItemBorder,
+                                ]}
+                                onPress={() => {
+                                  setSelectedTransport(item);
+                                  setDropdownOpen(false);
+                                }}
+                                activeOpacity={0.7}
+                              >
+                                <View style={styles.dropdownItemLeft}>
+                                  <Ionicons
+                                    name={isActive ? 'checkmark-circle' : 'radio-button-off-outline'}
+                                    size={16}
+                                    color={isActive ? '#00AA5B' : '#b0bec5'}
+                                  />
+                                  <Text style={[styles.dropdownItemText, isActive && styles.dropdownItemTextActive]}>
+                                    {item.label}
+                                  </Text>
+                                </View>
+                                <Text style={[styles.dropdownItemHarga, isActive && styles.dropdownItemHargaActive]}>
+                                  + {formatRupiah(item.biaya)}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      )}
                     </View>
                   )}
+
+                  {wilayahHomeVisit === 'luar' && (
+                    <View style={styles.luarSubangInfo}>
+                      <Ionicons name="information-circle-outline" size={15} color="#0288d1" />
+                      <Text style={styles.luarSubangInfoText}>
+                        Biaya transport luar Subang sebesar{' '}
+                        <Text style={{ fontWeight: '800', color: '#01579b' }}>Rp 75.000</Text>{' '}
+                        berlaku untuk semua wilayah di luar Kabupaten Subang.
+                      </Text>
+                    </View>
+                  )}
+
+                  <View style={styles.hargaInfoRow}>
+                    <Ionicons name="pricetag-outline" size={13} color="#00AA5B" />
+                    <View style={{ flex: 1 }}>
+                      {tempatTes === 'Home Visit' ? (
+                        <>
+                          <Text style={styles.hargaInfoText}>
+                            Biaya Tes:{' '}
+                            <Text style={{ color: '#546e7a', fontWeight: '700' }}>
+                              {formatRupiah(BIAYA_TES)}
+                            </Text>
+                            {'  +  '}
+                            Transport:{' '}
+                            <Text style={{ color: '#546e7a', fontWeight: '700' }}>
+                              {formatRupiah(getTransportBiaya())}
+                            </Text>
+                          </Text>
+                          <Text style={styles.hargaInfoTotal}>
+                            Total: {formatRupiah(getBiaya())}
+                          </Text>
+                        </>
+                      ) : (
+                        <Text style={styles.hargaInfoText}>
+                          Biaya:{' '}
+                          <Text style={styles.hargaInfoNominal}>{formatRupiah(getBiaya())}</Text>
+                        </Text>
+                      )}
+                      <Text style={styles.hargaInfoNote}>
+                        * Belum termasuk biaya admin antar bank
+                      </Text>
+                    </View>
+                  </View>
                 </View>
               )}
 
-              {/* Keterangan biaya luar subang */}
-              {wilayahHomeVisit === 'luar' && (
-                <View style={styles.luarSubangInfo}>
-                  <Ionicons name="information-circle-outline" size={15} color="#0288d1" />
-                  <Text style={styles.luarSubangInfoText}>
-                    Biaya transport luar Subang sebesar{' '}
-                    <Text style={{ fontWeight: '800', color: '#01579b' }}>Rp 75.000</Text>{' '}
-                    berlaku untuk semua wilayah di luar Kabupaten Subang.
-                  </Text>
-                </View>
-              )}
-
-              {/* Info biaya total */}
-              <View style={styles.hargaInfoRow}>
-                <Ionicons name="pricetag-outline" size={13} color="#00AA5B" />
-                <View style={{ flex: 1 }}>
-                  {tempatTes === 'Home Visit' ? (
-                    <>
-                      <Text style={styles.hargaInfoText}>
-                        Biaya Tes:{' '}
-                        <Text style={{ color: '#546e7a', fontWeight: '700' }}>
-                          {formatRupiah(BIAYA_TES)}
-                        </Text>
-                        {'  +  '}
-                        Transport:{' '}
-                        <Text style={{ color: '#546e7a', fontWeight: '700' }}>
-                          {formatRupiah(getTransportBiaya())}
-                        </Text>
-                      </Text>
-                      <Text style={styles.hargaInfoTotal}>
-                        Total: {formatRupiah(getBiaya())}
-                      </Text>
-                    </>
-                  ) : (
+              {tempatTes !== 'Home Visit' && (
+                <View style={styles.hargaInfoRow}>
+                  <Ionicons name="pricetag-outline" size={13} color="#00AA5B" />
+                  <View style={{ flex: 1 }}>
                     <Text style={styles.hargaInfoText}>
                       Biaya:{' '}
                       <Text style={styles.hargaInfoNominal}>{formatRupiah(getBiaya())}</Text>
                     </Text>
-                  )}
-                  <Text style={styles.hargaInfoNote}>
-                    * Belum termasuk biaya admin antar bank
-                  </Text>
+                    <Text style={styles.hargaInfoNote}>
+                      * Belum termasuk biaya admin antar bank
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
+
+          {/* Schedule Table */}
+          <View style={styles.tableCard}>
+              <View style={styles.tableCardHeader}>
+                <View style={styles.tableCardHeaderLeft}>
+                  <Ionicons name="calendar-outline" size={18} color="#00AA5B" />
+                  <Text style={styles.tableCardTitle}>Jadwal Tersedia</Text>
+                </View>
+                <View style={styles.countBadge}>
+                  <Text style={styles.countBadgeText}>{filteredJadwal.length} Slot</Text>
                 </View>
               </View>
-            </View>
-          )}
 
-          {/* Info harga untuk Kantor Subang */}
-          {tempatTes !== 'Home Visit' && (
-            <View style={styles.hargaInfoRow}>
-              <Ionicons name="pricetag-outline" size={13} color="#00AA5B" />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.hargaInfoText}>
-                  Biaya:{' '}
-                  <Text style={styles.hargaInfoNominal}>{formatRupiah(getBiaya())}</Text>
-                </Text>
-                <Text style={styles.hargaInfoNote}>
-                  * Belum termasuk biaya admin antar bank
-                </Text>
+              <View style={styles.rowHeader}>
+                <Text style={[styles.col, styles.colHeader]}>Tanggal</Text>
+                <Text style={[styles.colMid, styles.colHeader]}>Waktu</Text>
+                <Text style={[styles.colEnd, styles.colHeader]}>Status</Text>
               </View>
-            </View>
-          )}
-        </View>
 
-        {/* Schedule Table */}
-        <View style={styles.tableCard}>
-          <View style={styles.tableCardHeader}>
-            <View style={styles.tableCardHeaderLeft}>
-              <Ionicons name="calendar-outline" size={18} color="#00AA5B" />
-              <Text style={styles.tableCardTitle}>Jadwal Tersedia</Text>
-            </View>
-            <View style={styles.countBadge}>
-              <Text style={styles.countBadgeText}>{filteredJadwal.length} Slot</Text>
-            </View>
-          </View>
+              {/* Hint pilih jadwal */}
+              {!loading && filteredJadwal.length > 0 && !selectedJadwal && (
+                <View style={styles.hintRow}>
+                  <Ionicons name="finger-print-outline" size={14} color="#00AA5B" />
+                  <Text style={styles.hintText}>Pilih salah satu jadwal di bawah ini untuk memilih</Text>
+                </View>
+              )}
 
-          {/* Table Head */}
-          <View style={styles.rowHeader}>
-            <Text style={[styles.col, styles.colHeader]}>Tanggal</Text>
-            <Text style={[styles.colMid, styles.colHeader]}>Waktu</Text>
-            <Text style={[styles.colEnd, styles.colHeader]}>Status</Text>
-          </View>
-
-          {loading ? (
-            <View style={styles.loadingBox}>
-              <ActivityIndicator size="large" color="#00AA5B" />
-              <Text style={styles.loadingText}>Memuat jadwal...</Text>
-            </View>
-          ) : filteredJadwal.length > 0 ? (
-            filteredJadwal.map((item) => {
-              const isSelected = selectedJadwal?.id_jadwal === item.id_jadwal;
-              return (
-                <TouchableOpacity
-                  key={item.id_jadwal}
-                  onPress={() => setSelectedJadwal(item)}
-                  style={[styles.rowData, isSelected && styles.selectedRow]}
-                  activeOpacity={0.7}
-                >
-                  {isSelected && <View style={styles.selectedIndicator} />}
-                  <Text style={[styles.col, isSelected && styles.selectedText]}>
-                    {formatTanggalIndo(item.tanggal)}
-                  </Text>
-                  <Text style={[styles.colMid, isSelected && styles.selectedText]}>
-                    {item.waktu} WIB
-                  </Text>
-                  <View style={styles.colEnd}>
-                    <View style={styles.statusBadge}>
-                      <View style={styles.statusDot} />
-                      <Text style={styles.statusText}>{item.status}</Text>
-                    </View>
+              {loading ? (
+                <View style={styles.loadingBox}>
+                  <ActivityIndicator size="large" color="#00AA5B" />
+                  <Text style={styles.loadingText}>Memuat jadwal...</Text>
+                </View>
+              ) : filteredJadwal.length > 0 ? (
+                filteredJadwal.map((item) => {
+                  const isSelected = selectedJadwal?.id_jadwal === item.id_jadwal;
+                  return (
+                    <TouchableOpacity
+                      key={item.id_jadwal}
+                      onPress={() => setSelectedJadwal(item)}
+                      style={[styles.rowData, isSelected && styles.selectedRow]}
+                      activeOpacity={0.7}
+                    >
+                      {isSelected && <View style={styles.selectedIndicator} />}
+                      <Text style={[styles.col, isSelected && styles.selectedText]}>
+                        {formatTanggalIndo(item.tanggal)}
+                      </Text>
+                      <Text style={[styles.colMid, isSelected && styles.selectedText]}>
+                        {item.waktu} WIB
+                      </Text>
+                      <View style={styles.colEnd}>
+                        <View style={styles.statusBadge}>
+                          <View style={styles.statusDot} />
+                          <Text style={styles.statusText}>{item.status}</Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })
+              ) : (
+                <View style={styles.emptyState}>
+                  <View style={styles.emptyIconBg}>
+                    <Ionicons name="calendar-outline" size={32} color="#90a4ae" />
                   </View>
-                </TouchableOpacity>
-              );
-            })
-          ) : (
-            <View style={styles.emptyState}>
-              <View style={styles.emptyIconBg}>
-                <Ionicons name="calendar-outline" size={32} color="#90a4ae" />
-              </View>
-              <Text style={styles.emptyTitle}>Tidak Ada Jadwal</Text>
-              <Text style={styles.emptyText}>
-                Belum ada jadwal tersedia untuk lokasi ini.
-              </Text>
+                  <Text style={styles.emptyTitle}>Tidak Ada Jadwal</Text>
+                  <Text style={styles.emptyText}>
+                    Belum ada jadwal tersedia untuk lokasi ini.
+                  </Text>
+                </View>
+              )}
+            </View>
+
+          {/* Selected Info */}
+          {selectedJadwal && (
+            <View style={styles.selectedInfo}>
+                <Ionicons name="checkmark-circle" size={18} color="#00AA5B" />
+                <Text style={styles.selectedInfoText}>
+                  Dipilih:{' '}
+                  <Text style={{ fontWeight: '800' }}>{formatTanggalIndo(selectedJadwal.tanggal)}</Text> pukul{' '}
+                  {selectedJadwal.waktu} WIB
+                </Text>
             </View>
           )}
-        </View>
 
-        {/* Selected Info */}
-        {selectedJadwal && (
-          <View style={styles.selectedInfo}>
-            <Ionicons name="checkmark-circle" size={18} color="#00AA5B" />
-            <Text style={styles.selectedInfoText}>
-              Dipilih:{' '}
-              <Text style={{ fontWeight: '800' }}>{formatTanggalIndo(selectedJadwal.tanggal)}</Text> pukul{' '}
-              {selectedJadwal.waktu} WIB
-            </Text>
+          {/* Footer Buttons */}
+          <View style={styles.footerBtns}>
+              <TouchableOpacity
+                style={styles.btnBack}
+                onPress={() => router.back()}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="arrow-back" size={16} color="#546e7a" />
+                <Text style={styles.btnBackText}>Kembali</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.btnNext, !selectedJadwal && styles.btnNextDisabled]}
+                onPress={handleNext}
+                disabled={!selectedJadwal}
+                activeOpacity={0.85}
+              >
+                <Text style={[styles.btnNextText, !selectedJadwal && styles.btnNextTextDisabled]}>
+                  Berikutnya
+                </Text>
+                <Ionicons
+                  name="arrow-forward"
+                  size={16}
+                  color={selectedJadwal ? '#fff' : '#b0bec5'}
+                />
+              </TouchableOpacity>
           </View>
-        )}
 
-        {/* Footer Buttons */}
-        <View style={styles.footerBtns}>
-          <TouchableOpacity
-            style={styles.btnBack}
-            onPress={() => router.back()}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={16} color="#546e7a" />
-            <Text style={styles.btnBackText}>Kembali</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.btnNext, !selectedJadwal && styles.btnNextDisabled]}
-            onPress={handleNext}
-            disabled={!selectedJadwal}
-            activeOpacity={0.85}
-          >
-            <Text style={[styles.btnNextText, !selectedJadwal && styles.btnNextTextDisabled]}>
-              Berikutnya
-            </Text>
-            <Ionicons
-              name="arrow-forward"
-              size={16}
-              color={selectedJadwal ? '#fff' : '#b0bec5'}
-            />
-          </TouchableOpacity>
-        </View>
-
-      </ScrollView>
+        </ScrollView>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }
@@ -526,7 +537,6 @@ const styles = StyleSheet.create({
   locationChipText: { fontSize: 13, fontWeight: '700', color: '#546e7a' },
   locationChipTextActive: { color: '#fff' },
 
-  // Wilayah Home Visit
   wilayahBox: {
     marginTop: 14, paddingTop: 14,
     borderTopWidth: 1, borderTopColor: '#e8f5e9',
@@ -547,7 +557,6 @@ const styles = StyleSheet.create({
   wilayahHarga: { fontSize: 11, fontWeight: '600', color: '#90a4ae' },
   wilayahHargaActive: { color: 'rgba(255,255,255,0.85)' },
 
-  // Dropdown Transport Dalam Subang
   kotaBox: {
     marginTop: 12, paddingTop: 12,
     borderTopWidth: 1, borderTopColor: '#e8f5e9',
@@ -589,7 +598,6 @@ const styles = StyleSheet.create({
   dropdownItemHarga: { fontSize: 12, fontWeight: '700', color: '#90a4ae' },
   dropdownItemHargaActive: { color: '#00AA5B' },
 
-  // Info luar subang
   luarSubangInfo: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 8,
     marginTop: 12, padding: 12,
@@ -600,7 +608,6 @@ const styles = StyleSheet.create({
     flex: 1, fontSize: 12, color: '#01579b', lineHeight: 17,
   },
 
-  // Info harga
   hargaInfoRow: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 6,
     marginTop: 12, paddingTop: 12,
@@ -639,8 +646,8 @@ const styles = StyleSheet.create({
   rowData: {
     flexDirection: 'row', paddingHorizontal: 14, paddingVertical: 14,
     borderBottomWidth: 1, borderBottomColor: '#f5faf7', alignItems: 'center', position: 'relative',
-},
-selectedRow: { backgroundColor: '#e8f5e9' },
+  },
+  selectedRow: { backgroundColor: '#e8f5e9' },
   selectedIndicator: {
     position: 'absolute', left: 0, top: 0, bottom: 0,
     width: 3, backgroundColor: '#00AA5B', borderRadius: 2,
@@ -657,6 +664,13 @@ selectedRow: { backgroundColor: '#e8f5e9' },
   statusDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: '#00AA5B' },
   statusText: { fontSize: 10, color: '#00AA5B', fontWeight: '800', textTransform: 'uppercase' },
 
+  hintRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 14, paddingVertical: 9,
+    backgroundColor: '#f0faf5',
+    borderBottomWidth: 1, borderBottomColor: '#e8f5e9',
+  },
+  hintText: { fontSize: 12, color: '#2e7d32', fontWeight: '600', fontStyle: 'normal', flex: 1 },
   loadingBox: { padding: 40, alignItems: 'center', gap: 10 },
   loadingText: { fontSize: 12, color: '#90a4ae' },
   emptyState: { padding: 36, alignItems: 'center' },
