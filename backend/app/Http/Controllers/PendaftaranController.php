@@ -398,11 +398,41 @@ class PendaftaranController extends Controller
             $isLuarSubang = (bool) $pendaftaranLama->is_luar_subang;
         }
 
+        // ── Format tanggal lama ───────────────────────────────────────────────
+        $tanggalLamaStr = trim($pendaftaranLama->tanggal ?? '');
+        try {
+            if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $tanggalLamaStr)) {
+                $tanggalLamaFormatted = Carbon::createFromFormat('d/m/Y', $tanggalLamaStr)
+                    ->locale('id')->translatedFormat('d F Y');
+            } else {
+                $tanggalLamaFormatted = Carbon::parse($tanggalLamaStr)
+                    ->locale('id')->translatedFormat('d F Y');
+            }
+        } catch (\Exception $e) {
+            $tanggalLamaFormatted = $tanggalLamaStr;
+        }
+
+        // ── Format tanggal baru ───────────────────────────────────────────────
+        $tanggalBaruStr = trim($jadwalBaru->tanggal ?? '');
+        try {
+            if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $tanggalBaruStr)) {
+                $tanggalBaruFormatted = Carbon::createFromFormat('d/m/Y', $tanggalBaruStr)
+                    ->locale('id')->translatedFormat('d F Y');
+            } else {
+                $tanggalBaruFormatted = Carbon::parse($tanggalBaruStr)
+                    ->locale('id')->translatedFormat('d F Y');
+            }
+        } catch (\Exception $e) {
+            $tanggalBaruFormatted = $tanggalBaruStr;
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         try {
             DB::transaction(function () use (
                 $id_jadwal_lama, $id_jadwal_baru,
                 $pendaftaranLama, $jadwalBaru,
-                $request, $isLuarSubang
+                $request, $isLuarSubang,
+                $tanggalLamaFormatted, $tanggalBaruFormatted
             ) {
                 // Hapus manual dulu — CASCADE tidak jalan saat UPDATE
                 DB::table('hasiltes')->where('id_jadwal', $id_jadwal_lama)->delete();
@@ -454,7 +484,7 @@ class PendaftaranController extends Controller
                                             : (int) $pendaftaranLama->biaya,
                     'status'         => 'Menunggu',
                     'kuota'          => $jadwalBaru->kuota - 1,
-                    'komentar'       => 'Reschedule dari jadwal tanggal: ' . $pendaftaranLama->tanggal,
+                    'komentar'       => 'Reschedule dari jadwal ' . $tanggalLamaFormatted . ' ke ' . $tanggalBaruFormatted,
                     'updated_at'     => now(),
                 ]);
             });

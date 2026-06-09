@@ -209,7 +209,7 @@ export default function HasilTes() {
       Toast.show({
         type: 'error',
         text1: 'Batas Reschedule Terlewat',
-        text2: 'Reschedule hanya bisa diajukan maksimal 14 hari setelah jadwal. Silakan hubungi admin.',
+        text2: 'Silakan hubungi admin.',
         position: 'top',
         visibilityTime: 3500,
       });
@@ -224,7 +224,7 @@ export default function HasilTes() {
       return;
     }
     if (melewatiBatasReschedule) {
-      Toast.show({ type: 'error', text1: 'Batas Reschedule Terlewat', text2: 'Tidak dapat mengajukan reschedule lebih dari 14 hari setelah jadwal.', position: 'top' });
+      Toast.show({ type: 'error', text1: 'Batas Reschedule Terlewat', text2: 'Tidak dapat mengajukan reschedule.', position: 'top' });
       return;
     }
 
@@ -246,9 +246,9 @@ export default function HasilTes() {
         Toast.show({
           type: 'success',
           text1: 'Reschedule Berhasil',
-          text2: 'Pengajuan perubahan jadwal berhasil terkirim. Menunggu konfirmasi admin.',
+          text2: 'Menunggu konfirmasi dari admin.',
           position: 'top',
-          visibilityTime: 2500,
+          visibilityTime: 3000,
         });
         setTimeout(() => router.replace('/riwayat'), 1000);
       }
@@ -412,7 +412,7 @@ export default function HasilTes() {
                 color={isDitolak ? '#e53935' : '#00AA5B'}
               />
               <Text style={[styles.commentTitle, isDitolak && { color: '#c62828' }]}>
-                {isDitolak ? 'Alasan Penolakan' : 'Catatan Promotor'}
+                {isDitolak ? 'Alasan Penolakan' : 'Catatan'}
               </Text>
             </View>
             <Text style={styles.commentText}>{komentar}</Text>
@@ -818,7 +818,7 @@ export default function HasilTes() {
                             <Ionicons name="calendar-outline" size={16} color="#00AA5B" />
                           </View>
                           <View>
-                            <Text style={styles.jadwalTanggal}>{item.tanggal}</Text>
+                            <Text style={styles.jadwalTanggal}>{formatTanggalIndo(item.tanggal)}</Text>
                             <Text style={styles.jadwalDetail}>{item.waktu} WIB • {item.lokasi}</Text>
                           </View>
                         </View>

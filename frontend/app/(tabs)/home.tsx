@@ -46,6 +46,16 @@ export default function DashboardIndex() {
 
   const [now, setNow] = useState<Date>(new Date());
 
+  const formatTanggal = (tanggalStr: string): string => {
+  if (!tanggalStr) return tanggalStr;
+  try {
+    const d = new Date(tanggalStr + 'T00:00:00');
+    if (isNaN(d.getTime())) return tanggalStr;
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  } catch {
+    return tanggalStr;
+  }
+};
   const getFormattedDate = () => {
     const options: Intl.DateTimeFormatOptions = {
       weekday: 'long',
@@ -121,37 +131,34 @@ export default function DashboardIndex() {
     return statusUtama || "Menunggu";
   };
 
-  const getRelativeTime = (tanggalStr: string, jamStr?: string): string => {
-    if (!tanggalStr) return "Baru saja";
-    
-    try {
-      const waktuEfektif = jamStr ? jamStr : "00:00";
-      const formatIso = `${tanggalStr}T${waktuEfektif}`;
-      const timestampNotif = new Date(formatIso);
-      
-      if (isNaN(timestampNotif.getTime())) return "Baru saja";
+const getRelativeTime = (tanggalStr: string, jamStr?: string): string => {
+  if (!tanggalStr) return "Baru saja";
+  try {
+    const waktuEfektif = jamStr && jamStr.trim() ? jamStr.trim() : "00:00";
+    const formatIso = `${tanggalStr}T${waktuEfektif}`;
+    const timestampNotif = new Date(formatIso);
+    if (isNaN(timestampNotif.getTime())) return formatTanggal(tanggalStr);
 
-      const selisihMiliDetik = now.getTime() - timestampNotif.getTime();
-      const selisihDetik = Math.floor(selisihMiliDetik / 1000);
-      const selisihMenit = Math.floor(selisihDetik / 60);
-      const selisihJam = Math.floor(selisihMenit / 60);
-      const selisihHari = Math.floor(selisihJam / 24);
+    const selisihMiliDetik = now.getTime() - timestampNotif.getTime();
+    // Jika waktu notif di masa depan, tampilkan tanggal saja
+    if (selisihMiliDetik < 0) return formatTanggal(tanggalStr);
 
-      if (selisihDetik < 45) {
-        return "Baru saja";
-      } else if (selisihMenit < 60) {
-        return `${selisihMenit} menit yang lalu`;
-      } else if (selisihJam < 24) {
-        return `${selisihJam} jam yang lalu`;
-      } else if (selisihHari < 7) {
-        return `${selisihHari} hari yang lalu`;
-      } else {
-        return timestampNotif.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-      }
-    } catch (e) {
-      return "Baru saja";
-    }
-  };
+    const selisihDetik = Math.floor(selisihMiliDetik / 1000);
+    const selisihMenit = Math.floor(selisihDetik / 60);
+    const selisihJam   = Math.floor(selisihMenit / 60);
+    const selisihHari  = Math.floor(selisihJam / 24);
+
+    if (selisihDetik < 60)        return "Baru saja";
+    if (selisihMenit < 60)        return `${selisihMenit} menit yang lalu`;
+    if (selisihJam < 24)          return `${selisihJam} jam yang lalu`;
+    if (selisihHari === 1)        return "Kemarin";
+    if (selisihHari < 7)          return `${selisihHari} hari yang lalu`;
+    // Lebih dari seminggu → tampilkan tanggal lengkap
+    return formatTanggal(tanggalStr);
+  } catch {
+    return formatTanggal(tanggalStr);
+  }
+};  
 
   const handleNotificationPress = () => {
     setNow(new Date());
@@ -206,32 +213,32 @@ export default function DashboardIndex() {
     switch (statusValid) {
       case "Ditolak":
         return {
-          text: `Pendaftaran Anda tanggal ${latestRegistration.tanggal} ditolak. Alasan: ${latestRegistration.komentar || 'Data tidak sesuai.'}`,
+          text: `Pendaftaran Anda tanggal ${formatTanggal(latestRegistration.tanggal)} ditolak. Alasan: ${latestRegistration.komentar || 'Data tidak sesuai.'}`,
           icon: "close-circle-outline",
           color: "#ef4444"
         };
       case "Menunggu":
         return {
-          text: `Pendaftaran tes tanggal ${latestRegistration.tanggal} sedang menunggu verifikasi dokumen oleh admin.`,
+          text: `Pendaftaran tes tanggal ${formatTanggal(latestRegistration.tanggal)} sedang menunggu verifikasi dokumen oleh admin.`,
           icon: "time-outline",
           color: "#f57c00"
         };
       case "Diproses":
         return {
-          text: `Pelaksanaan tes tanggal ${latestRegistration.tanggal} sedang dalam tahap analisis berkas oleh tim ahli.`,
+          text: `Pelaksanaan tes tanggal ${formatTanggal(latestRegistration.tanggal)} sedang dalam tahap analisis berkas oleh tim ahli.`,
           icon: "sync-outline",
           color: "#0288d1"
         };
       case "Selesai":
         return {
-          text: `Selamat! Sertifikat dan hasil analisis kecerdasan STIFIn Anda untuk pendaftaran tanggal ${latestRegistration.tanggal} telah diterbitkan.`,
+          text: `Selamat! Sertifikat dan hasil analisis kecerdasan STIFIn Anda untuk pendaftaran tanggal ${formatTanggal(latestRegistration.tanggal)} telah diterbitkan.`,
           icon: "checkmark-circle-outline",
           color: "#00AA5B",
           actionable: true
         };
       default:
         return {
-          text: `Pendaftaran Anda pada tanggal ${latestRegistration.tanggal} saat ini berstatus: ${statusValid}.`,
+          text: `Pendaftaran Anda pada tanggal ${formatTanggal(latestRegistration.tanggal)} saat ini berstatus: ${statusValid}.`,
           icon: "notifications-outline",
           color: "#00AA5B"
         };
@@ -381,10 +388,7 @@ export default function DashboardIndex() {
                 
                 <View style={styles.dropdownHeader}>
                   <Text style={styles.dropdownHeaderText}>Notifikasi Terbaru</Text>
-                  <View style={styles.activeIndicatorContainer}>
-                    <View style={styles.activeDot} />
-                    <Text style={styles.activeText}>Realtime</Text>
-                  </View>
+          
                 </View>
 
                 <ScrollView style={styles.dropdownList} bounces={false}>

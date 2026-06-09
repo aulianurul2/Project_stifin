@@ -130,14 +130,9 @@ export default function PendaftaranTes() {
     });
   };
 
-  /** Batalkan pilihan jadwal saat tap di luar area interaktif */
-  const handleOutsideTap = () => {
-    if (selectedJadwal) {
-      setSelectedJadwal(null);
-    }
-    if (dropdownOpen) {
-      setDropdownOpen(false);
-    }
+  const handleDismiss = () => {
+    if (selectedJadwal) setSelectedJadwal(null);
+    if (dropdownOpen) setDropdownOpen(false);
   };
 
   const lokasiOptions = ['Home Visit', 'Kantor Subang'];
@@ -157,21 +152,21 @@ export default function PendaftaranTes() {
         <View style={{ width: 38 }} />
       </View>
 
-      {/* TouchableWithoutFeedback: tap di mana saja membatalkan pilihan jadwal */}
-      <TouchableWithoutFeedback onPress={handleOutsideTap}>
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <TouchableWithoutFeedback onPress={handleDismiss}>
+          <View>
 
-          {/* Info Banner */}
-          <View style={styles.infoBanner}>
-            <Ionicons name="information-circle-outline" size={18} color="#0288d1" />
-            <Text style={styles.infoBannerText}>
-              Pilih lokasi dan waktu tes yang sesuai dengan Anda
-            </Text>
-          </View>
+            {/* Info Banner */}
+            <View style={styles.infoBanner}>
+              <Ionicons name="information-circle-outline" size={18} color="#0288d1" />
+              <Text style={styles.infoBannerText}>
+                Pilih lokasi dan waktu tes yang sesuai dengan Anda
+              </Text>
+            </View>
 
-          {/* === Selector: Lokasi Tes === */}
-          <View style={styles.locationCard}>
-            <Text style={styles.locationLabel}>
+            {/* === Selector: Lokasi Tes === */}
+            <View style={styles.locationCard}>
+              <Text style={styles.locationLabel}>
                 <Ionicons name="location-outline" size={13} color="#546e7a" /> Lokasi Tes
               </Text>
               <View style={styles.locationOptions}>
@@ -359,8 +354,8 @@ export default function PendaftaranTes() {
               )}
             </View>
 
-          {/* Schedule Table */}
-          <View style={styles.tableCard}>
+            {/* Schedule Table */}
+            <View style={styles.tableCard}>
               <View style={styles.tableCardHeader}>
                 <View style={styles.tableCardHeaderLeft}>
                   <Ionicons name="calendar-outline" size={18} color="#00AA5B" />
@@ -396,7 +391,11 @@ export default function PendaftaranTes() {
                   return (
                     <TouchableOpacity
                       key={item.id_jadwal}
-                      onPress={() => setSelectedJadwal(item)}
+                      onPress={() =>
+                        setSelectedJadwal(prev =>
+                          prev?.id_jadwal === item.id_jadwal ? null : item
+                        )
+                      }
                       style={[styles.rowData, isSelected && styles.selectedRow]}
                       activeOpacity={0.7}
                     >
@@ -429,20 +428,20 @@ export default function PendaftaranTes() {
               )}
             </View>
 
-          {/* Selected Info */}
-          {selectedJadwal && (
-            <View style={styles.selectedInfo}>
+            {/* Selected Info */}
+            {selectedJadwal && (
+              <View style={styles.selectedInfo}>
                 <Ionicons name="checkmark-circle" size={18} color="#00AA5B" />
                 <Text style={styles.selectedInfoText}>
                   Dipilih:{' '}
                   <Text style={{ fontWeight: '800' }}>{formatTanggalIndo(selectedJadwal.tanggal)}</Text> pukul{' '}
                   {selectedJadwal.waktu} WIB
                 </Text>
-            </View>
-          )}
+              </View>
+            )}
 
-          {/* Footer Buttons */}
-          <View style={styles.footerBtns}>
+            {/* Footer Buttons */}
+            <View style={styles.footerBtns}>
               <TouchableOpacity
                 style={styles.btnBack}
                 onPress={() => router.back()}
@@ -467,10 +466,18 @@ export default function PendaftaranTes() {
                   color={selectedJadwal ? '#fff' : '#b0bec5'}
                 />
               </TouchableOpacity>
-          </View>
+            </View>
 
-        </ScrollView>
-      </TouchableWithoutFeedback>
+            {/* Area tap transparan di bawah tombol untuk dismiss */}
+            <TouchableOpacity
+              style={styles.dismissArea}
+              onPress={handleDismiss}
+              activeOpacity={1}
+            />
+
+          </View>
+        </TouchableWithoutFeedback>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -706,4 +713,9 @@ const styles = StyleSheet.create({
   btnNextDisabled: { backgroundColor: '#e0e0e0', shadowOpacity: 0, elevation: 0 },
   btnNextText: { color: '#fff', fontWeight: '800', fontSize: 14 },
   btnNextTextDisabled: { color: '#b0bec5' },
+
+  dismissArea: {
+    height: 60,
+    width: '100%',
+  },
 });

@@ -221,7 +221,7 @@ export default function FormPendaftaran() {
       Toast.show({
         type: 'error',
         text1: 'Bukti Transfer Diperlukan',
-        text2: 'Mohon upload bukti transfer terlebih dahulu.',
+        text2: 'Upload bukti transfer terlebih dahulu.',
         position: 'top',
       });
       return;
