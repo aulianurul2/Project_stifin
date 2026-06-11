@@ -82,7 +82,7 @@
                                         </div>
                                         <div class="col col-stats ms-3 ms-sm-0">
                                             <div class="numbers">
-                                                <p class="card-category">Pendaftaran</p>
+                                                <p class="card-category">Pendaftaran Tes</p>
                                                 <h4 class="card-title">{{ $pendaftaran }}</h4>
                                                 <small class="text-muted" style="font-size:10px;">{{ $labelBulan }}</small>
                                             </div>
