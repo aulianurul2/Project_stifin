@@ -133,7 +133,7 @@ export default function HasilTes() {
   const statusLower  = status?.toLowerCase() ?? '';
   const isDitolak    = statusLower === 'ditolak';
   const isDibatalkan = statusLower === 'dibatalkan';
-  const isDiterima   = ['diterima', 'disetujui', 'diproses'].includes(statusLower);
+  const isDiterima   = ['diterima', 'disetujui', 'diproses', 'terjadwal'].includes(statusLower);
 
   const belumMengajukan =
     (!tanggal || tanggal.trim() === '' || tanggal === 'null') &&
@@ -300,7 +300,7 @@ export default function HasilTes() {
     if (berkasTersedia)   return { icon: 'checkmark-circle',      color: '#00AA5B', bgColor: '#e8f5e9',  title: 'Selamat! Tes Anda Selesai',     sub: 'Silakan unduh dokumen berkas resmi hasil tes pemeriksaan genetik STIFIn Anda.' };
     if (isDitolak)        return { icon: 'close-circle',           color: '#e53935', bgColor: '#ffebee',  title: 'Maaf, Tes Anda Ditolak',        sub: 'Pendaftaran jadwal tes Anda ditolak oleh pihak admin. Silakan periksa Catatan Promotor di bawah.' };
     if (isDibatalkan)     return { icon: 'close-circle-outline',   color: '#78909c', bgColor: '#f5f5f5',  title: 'Pendaftaran Dibatalkan',        sub: 'Jadwal pendaftaran ini telah Anda batalkan.' };
-    if (isDiterima)       return { icon: 'checkmark-circle-outline', color: '#0288d1', bgColor: '#e1f5fe', title: 'Bukti Transfer Terverifikasi', sub: 'Bukti transfer Anda telah diverifikasi oleh admin. Harap menunggu proses tes dan pengerjaan dokumen selesai.' };
+    if (isDiterima)       return { icon: 'checkmark-circle-outline', color: '#0288d1', bgColor: '#e1f5fe', title: 'Pembayaran Terverifikasi', sub: 'Bukti transfer Anda telah diverifikasi. Harap hadir sesuai jadwal yang telah ditentukan.' };
     return                       { icon: 'time-outline',            color: '#f57c00', bgColor: '#fff3e0',  title: 'Menunggu Verifikasi',           sub: 'Bukti transfer Anda sedang menunggu verifikasi oleh admin.' };
   };
 
@@ -396,7 +396,15 @@ export default function HasilTes() {
             <Text style={styles.metaLabel}>Status Tes</Text>
             <View style={[styles.statusPill, { backgroundColor: cardInfo.bgColor }]}>
               <Text style={[styles.statusPillText, { color: cardInfo.color }]}>
-                {belumMengajukan ? 'Belum Mendaftar' : (status || 'Menunggu')}
+                {belumMengajukan
+  ? 'Belum Mendaftar'
+  : isDiterima
+    ? 'Terjadwal'
+    : isDitolak
+      ? 'Ditolak'
+      : isDibatalkan
+        ? 'Dibatalkan'
+        : (status || 'Menunggu')}
               </Text>
             </View>
           </View>

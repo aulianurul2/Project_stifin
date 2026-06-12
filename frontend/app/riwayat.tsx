@@ -79,11 +79,13 @@ export default function RiwayatJadwal() {
 
   // Pastikan status "Ditolak" dari kolom 'status' (jadwal) diutamakan
   if (statusUtama.toLowerCase() === "ditolak") return "Ditolak";
+  if (statusUtama.toLowerCase() === "diproses") return "Terjadwal";
+  
   
   if (statusUtama === "Menunggu" || statusUtama === "Konfirmasi") return "Menunggu";
 
   if (statusHasil) {
-    if (statusHasil.toLowerCase() === 'proses') return "Diproses";
+    if (statusHasil.toLowerCase() === 'proses') return "Terjadwal";
     if (statusHasil.toLowerCase() === 'selesai') return "Selesai";
     // Tambahan: jika ada status ditolak di tabel hasil tes
     if (statusHasil.toLowerCase() === 'ditolak') return "Ditolak"; 
@@ -98,7 +100,7 @@ export default function RiwayatJadwal() {
   const s = status.toLowerCase();
   if (s === "selesai") return "#00AA5B"; // Hijau (Selesai)
   if (s === "menunggu" || s === "konfirmasi") return "#f57c00"; // Oranye (Menunggu)
-  if (s === "diproses" || s === "proses" || s === "diterima") return "#0288d1"; // Biru (Diproses)
+  if (s === "terjadwal" || s === "proses" || s === "diterima") return "#0288d1"; // Biru (Diproses)
   
   // Pastikan ini ada dan warnanya kontras (Merah)
   if (s === "ditolak") return "#e53935"; 
@@ -111,7 +113,7 @@ export default function RiwayatJadwal() {
     const s = status.toLowerCase();
     if (s === "selesai") return "#e8f5e9";
     if (s === "menunggu" || s === "konfirmasi") return "#fff3e0";
-    if (s === "diproses" || s === "proses" || s === "diterima") return "#e1f5fe";
+    if (s === "terjadwal" || s === "proses" || s === "diterima") return "#e1f5fe";
     if (s === "ditolak") return "#ffebee";
     if (s === "dibatalkan") return "#f5f5f5";
     return "#e1f5fe";
@@ -121,7 +123,7 @@ export default function RiwayatJadwal() {
     const s = status.toLowerCase();
     if (s === "selesai") return "checkmark-circle";
     if (s === "menunggu" || s === "konfirmasi") return "time-outline";
-    if (s === "diproses" || s === "proses" || s === "diterima") return "sync-outline";
+    if (s === "terjadwal" || s === "proses" || s === "diterima") return "sync-outline";
     if (s === "ditolak") return "close-circle";
     if (s === "dibatalkan") return "ban-outline";
     return "ellipse-outline";
