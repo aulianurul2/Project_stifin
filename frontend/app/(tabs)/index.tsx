@@ -1,25 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  SafeAreaView, 
-  ScrollView, 
-  TouchableOpacity, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
   Dimensions,
   ViewStyle,
   ActivityIndicator,
   Image,
   Animated,
-  Modal
+  Modal,
+  StatusBar,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import axiosInstance from '@/src/api/axiosConfig';
 
 const { width, height } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.85; 
-const CARD_GAP = 14; 
+const CARD_WIDTH = width * 0.85;
+const CARD_GAP = 14;
 
 const AXIOS_BASE_URL = axiosInstance.defaults.baseURL;
 const BACKEND_ROOT = AXIOS_BASE_URL ? AXIOS_BASE_URL.replace('/api', '') : '';
@@ -37,14 +40,12 @@ export default function HomeSTIFIn() {
   const router = useRouter();
   const [infoCards, setInfoCards] = useState<InfoCard[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-
   const [selectedCard, setSelectedCard] = useState<InfoCard | null>(null);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
 
   const scrollViewRef = useRef<ScrollView>(null);
   const currentIndexRef = useRef<number>(0);
-
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
@@ -52,50 +53,27 @@ export default function HomeSTIFIn() {
       try {
         const response = await axiosInstance.get('/informasi-tes');
         setInfoCards(response.data);
-        
         Animated.parallel([
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 600,
-            useNativeDriver: true,
-          }),
-          Animated.timing(slideAnim, {
-            toValue: 0,
-            duration: 600,
-            useNativeDriver: true,
-          })
+          Animated.timing(fadeAnim,  { toValue: 1, duration: 600, useNativeDriver: true }),
+          Animated.timing(slideAnim, { toValue: 0, duration: 600, useNativeDriver: true }),
         ]).start();
-
       } catch (error) {
-        console.log("Gagal memuat info dari backend:", error);
+        console.log('Gagal memuat info dari backend:', error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchInformasi();
   }, []);
 
   useEffect(() => {
     if (infoCards.length <= 1 || modalVisible) return;
-
     const autoPlayInterval = setInterval(() => {
       let nextIndex = currentIndexRef.current + 1;
-      
-      if (nextIndex >= infoCards.length) {
-        nextIndex = 0;
-      }
-
+      if (nextIndex >= infoCards.length) nextIndex = 0;
       currentIndexRef.current = nextIndex;
-      const scrollPosition = nextIndex * (CARD_WIDTH + CARD_GAP);
-
-      scrollViewRef.current?.scrollTo({
-        x: scrollPosition,
-        animated: true,
-      });
-
+      scrollViewRef.current?.scrollTo({ x: nextIndex * (CARD_WIDTH + CARD_GAP), animated: true });
     }, 3000);
-
     return () => clearInterval(autoPlayInterval);
   }, [infoCards, modalVisible]);
 
@@ -106,18 +84,18 @@ export default function HomeSTIFIn() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
-      {/* Compact Green Header */}
+      {/* ── Header ── */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Image 
-            source={require('../../assets/images/logo_light.png')} 
+          <Image
+            source={require('../../assets/images/logo_light.png')}
             style={styles.headerLogo}
             resizeMode="contain"
           />
           <Text style={styles.brandSub}>Information System</Text>
         </View>
-        
         <TouchableOpacity style={styles.profileButton} onPress={() => router.push('/edit-profile')}>
           <View style={styles.profileAvatar}>
             <Ionicons name="person-outline" size={20} color="#00AA5B" />
@@ -127,64 +105,59 @@ export default function HomeSTIFIn() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 
-        {/* Hero Banner */}
+        {/* ── Hero Banner ── */}
         <View style={styles.heroBanner}>
-          <View style={styles.heroBannerContent}>
-      
+
+          {/* Baris atas: tag + judul + sub */}
+          <View style={styles.heroTop}>
             <View style={styles.heroTagContainer}>
-              <Ionicons name="fitness-outline" size={14} color="rgba(255,255,255,0.9)" />
-                <Text style={styles.heroBannerTag}>Genetik Tes</Text>
+              <Ionicons name="fitness-outline" size={13} color="rgba(255,255,255,0.9)" />
+              <Text style={styles.heroBannerTag}>Genetik Tes</Text>
             </View>
-      
             <Text style={styles.heroBannerTitle}>Unlocking Your{'\n'}Genetic Potential</Text>
-      
-            <View style={styles.promotorWrapper}>
-              <Image
-                source={require('../../assets/images/promotor.jpeg')}
-                style={styles.promotorProfile}
-                resizeMode="cover"
-              />
-            </View>
-      
-            <Text style={styles.heroBannerSub}>Bersama Kami, Temukan Jati Diri Anda Lewat Metode STIFIn</Text>
-
-            <View style={styles.advantagesContainer}>
-              <Text style={styles.advantagesHeading}>KEUNGGULAN METODE STIFIn:</Text>
-        
-              <View style={styles.advantageItem}>
-                <View style={styles.advantageIconWrapper}>
-                  <Ionicons name="checkbox-outline" size={18} color="#00AA5B" />
-                </View>
-                <Text style={styles.advantageText}>Simpel</Text>
-              </View>
-
-              <View style={styles.advantageItem}>
-                <View style={styles.advantageIconWrapper}>
-                  <Ionicons name="create-outline" size={18} color="#00AA5B" />
-                </View>
-                <Text style={styles.advantageText}>Aplikatif</Text>
-              </View>
-
-              <View style={styles.advantageItem}>
-                <View style={styles.advantageIconWrapper}>
-                  <Ionicons name="disc-outline" size={18} color="#00AA5B" />
-                </View>
-                <Text style={styles.advantageText}>Akurat</Text>
-              </View>
-            </View>
-      
+            <Text style={styles.heroBannerSub}>
+              Bersama Kami, Temukan Jati Diri Anda Lewat Metode STIFIn
+            </Text>
           </View>
 
+          {/* Gambar promotor — contain agar tidak terpotong */}
+          <View style={styles.promotorWrapper}>
+            <Image
+              source={require('../../assets/images/promotor.jpeg')}
+              style={styles.promotorProfile}
+              resizeMode="contain"
+            />
+          </View>
+
+          {/* Keunggulan */}
+          <View style={styles.advantagesContainer}>
+            <Text style={styles.advantagesHeading}>KEUNGGULAN METODE STIFIn:</Text>
+
+            {[
+              { icon: 'checkbox-outline',  label: 'Simpel' },
+              { icon: 'create-outline',    label: 'Aplikatif' },
+              { icon: 'disc-outline',      label: 'Akurat' },
+            ].map(({ icon, label }) => (
+              <View key={label} style={styles.advantageItem}>
+                <View style={styles.advantageIconWrapper}>
+                  <Ionicons name={icon as any} size={16} color="#00AA5B" />
+                </View>
+                <Text style={styles.advantageText}>{label}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* Dekorasi sudut */}
           <View style={styles.heroBannerDeco}>
-            <Ionicons name="analytics" size={80} color="rgba(255,255,255,0.15)" />
+            <Ionicons name="analytics" size={80} color="rgba(255,255,255,0.1)" />
           </View>
         </View>
 
-        {/* Info Cards Slider */}
+        {/* ── Info Cards Slider ── */}
         <View style={styles.sliderSection}>
           <View style={styles.sliderTitleRow}>
             <Text style={styles.sectionTitle}>Informasi Layanan</Text>
-            <View style={styles.liveDot}>
+            <View style={styles.livePill}>
               <View style={styles.liveDotInner} />
               <Text style={styles.liveText}>Live</Text>
             </View>
@@ -197,16 +170,17 @@ export default function HomeSTIFIn() {
             </View>
           ) : (
             <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-              <ScrollView 
+              <ScrollView
                 ref={scrollViewRef}
-                horizontal 
-                showsHorizontalScrollIndicator={false} 
+                horizontal
+                showsHorizontalScrollIndicator={false}
                 snapToInterval={CARD_WIDTH + CARD_GAP}
                 decelerationRate="fast"
                 contentContainerStyle={styles.sliderContainer}
                 onMomentumScrollEnd={(e) => {
-                  const offsetX = e.nativeEvent.contentOffset.x;
-                  currentIndexRef.current = Math.round(offsetX / (CARD_WIDTH + CARD_GAP));
+                  currentIndexRef.current = Math.round(
+                    e.nativeEvent.contentOffset.x / (CARD_WIDTH + CARD_GAP)
+                  );
                 }}
               >
                 {infoCards.map((card) => (
@@ -216,18 +190,15 @@ export default function HomeSTIFIn() {
                     activeOpacity={0.9}
                     onPress={() => handleCardPress(card)}
                   >
-                    {/* Gambar dengan blur background */}
                     <View style={styles.cardImageWrapper}>
                       {card.image ? (
                         <>
-                          {/* Blur layer sebagai background */}
                           <Image
                             source={{ uri: `${BACKEND_ROOT}/storage/${card.image}` }}
                             style={styles.cardImageBlur}
                             resizeMode="cover"
                             blurRadius={18}
                           />
-                          {/* Gambar utama contain di atas blur */}
                           <Image
                             source={{ uri: `${BACKEND_ROOT}/storage/${card.image}` }}
                             style={styles.cardFullImage}
@@ -240,15 +211,9 @@ export default function HomeSTIFIn() {
                         </View>
                       )}
                     </View>
-
-                    {/* Teks di bawah gambar */}
                     <View style={styles.cardTextContent}>
-                      <Text style={styles.cardTitle} numberOfLines={2}>
-                        {card.title}
-                      </Text>
-                      <Text style={styles.cardDescription} numberOfLines={3}>
-                        {card.description}
-                      </Text>
+                      <Text style={styles.cardTitle} numberOfLines={2}>{card.title}</Text>
+                      <Text style={styles.cardDescription} numberOfLines={3}>{card.description}</Text>
                     </View>
                   </TouchableOpacity>
                 ))}
@@ -257,15 +222,15 @@ export default function HomeSTIFIn() {
           )}
         </View>
 
-        {/* CTA Section */}
+        {/* ── CTA ── */}
         <View style={styles.ctaSection}>
           <View style={styles.ctaCard}>
             <View style={styles.ctaLeft}>
               <Text style={styles.ctaLabel}>Siap Memulai?</Text>
               <Text style={styles.ctaTitle}>Daftarkan diri Anda sekarang</Text>
             </View>
-            <TouchableOpacity 
-              style={styles.ctaButton} 
+            <TouchableOpacity
+              style={styles.ctaButton}
               onPress={() => router.push('/pendaftaran')}
               activeOpacity={0.85}
             >
@@ -276,61 +241,58 @@ export default function HomeSTIFIn() {
 
       </ScrollView>
 
-      {/* MODAL VIEW DETAIL JIKA CARD DIKLIK */}
+      {/* ── Modal ── */}
       <Modal
         animationType="fade"
-        transparent={true}
+        transparent
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            
-            {/* Tombol Tutup */}
-            <TouchableOpacity 
-              style={styles.modalCloseButton} 
-              onPress={() => setModalVisible(false)}
-            >
-              <Ionicons name="close" size={20} color="#334155" />
-            </TouchableOpacity>
+        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+              <View style={styles.modalContent}>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Gambar Full Size di Modal */}
-              {selectedCard?.image && (
-                <View style={styles.modalImageContainer}>
-                  {/* Blur background */}
-                  <Image
-                    source={{ uri: `${BACKEND_ROOT}/storage/${selectedCard.image}` }}
-                    style={styles.modalImageBlur}
-                    resizeMode="cover"
-                    blurRadius={18}
-                  />
-                  {/* Gambar utama contain — tidak terpotong */}
-                  <Image
-                    source={{ uri: `${BACKEND_ROOT}/storage/${selectedCard.image}` }}
-                    style={styles.modalImageFull}
-                    resizeMode="contain"
-                  />
-                </View>
-              )}
+                <TouchableOpacity
+                  style={styles.modalCloseButton}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Ionicons name="close" size={15} color="#334155" />
+                </TouchableOpacity>
 
-              {/* Konten Teks Utuh */}
-              <View style={styles.modalTextContainer}>
-                <Text style={styles.modalTitle}>{selectedCard?.title}</Text>
-                <Text style={styles.modalDescription}>{selectedCard?.description}</Text>
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  {selectedCard?.image && (
+                    <View style={styles.modalImageContainer}>
+                      <Image
+                        source={{ uri: `${BACKEND_ROOT}/storage/${selectedCard.image}` }}
+                        style={styles.modalImageBlur}
+                        resizeMode="cover"
+                        blurRadius={18}
+                      />
+                      <Image
+                        source={{ uri: `${BACKEND_ROOT}/storage/${selectedCard.image}` }}
+                        style={styles.modalImageFull}
+                        resizeMode="contain"
+                      />
+                    </View>
+                  )}
+                  <View style={styles.modalTextContainer}>
+                    <Text style={styles.modalTitle}>{selectedCard?.title}</Text>
+                    <Text style={styles.modalDescription}>{selectedCard?.description}</Text>
+                  </View>
+                </ScrollView>
+
+                <TouchableOpacity
+                  style={styles.modalActionButon}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={styles.modalActionButtonText}>Tutup</Text>
+                </TouchableOpacity>
+
               </View>
-            </ScrollView>
-
-            {/* Tombol Tutup di bawah */}
-            <TouchableOpacity 
-              style={styles.modalActionButon}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.modalActionButtonText}>Tutup</Text>
-            </TouchableOpacity>
-
+            </TouchableWithoutFeedback>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
     </SafeAreaView>
@@ -338,17 +300,19 @@ export default function HomeSTIFIn() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
+  container: {
+    flex: 1,
     backgroundColor: '#f5faf7',
   },
-  header: { 
-    paddingHorizontal: 20, 
-    paddingTop: 16, 
-    paddingBottom: 14, 
+
+  // Header
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 14,
     backgroundColor: '#fff',
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
     borderColor: '#e8f5e9',
@@ -369,19 +333,12 @@ const styles = StyleSheet.create({
     marginLeft: -60,
     height: 40,
   },
-  brandText: { 
-    fontSize: 12, 
-    fontWeight: '600', 
-    color: '#00AA5B',
-    marginTop: 2,
-  },
   brandSub: {
     fontSize: 10,
     color: '#1a1a2e',
     marginTop: 2,
     fontWeight: '600',
     letterSpacing: 0.5,
-    textAlign: 'left',
     marginLeft: -20,
   },
   profileButton: { padding: 2 },
@@ -398,17 +355,16 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
+
   content: { paddingVertical: 20 },
 
+  // Hero — layout vertikal: teks → gambar → keunggulan
   heroBanner: {
     marginHorizontal: 16,
     marginBottom: 24,
     backgroundColor: '#00AA5B',
     borderRadius: 20,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    position: 'relative',
+    padding: 20,
     overflow: 'hidden',
     shadowColor: '#00AA5B',
     shadowOffset: { width: 0, height: 6 },
@@ -416,83 +372,79 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
-  promotorContainer: {
-    flex: 1,             
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    zIndex: 2,
-  },
-  heroLeftContainer: {
-    flex: 1.3,             
-    zIndex: 2,
-    justifyContent: 'center',
-  },
-  promotorWrapper: {
-    alignItems: 'center',      
-    marginVertical: 14,        
-    width: '100%',
-  },
-  promotorProfile: {
-    width: 270,            
-    height: 270,           
-    borderRadius: 14,      
-  },
-  heroBannerContent: { 
-    flex: 1,
+  heroTop: {
+    marginBottom: 16,
     zIndex: 2,
   },
   heroTagContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   heroBannerTag: {
-    fontSize: 12,
+    fontSize: 11,
     color: 'rgba(255,255,255,0.9)',
     fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: 0.5
+    letterSpacing: 0.8,
   },
   heroBannerTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '900',
     color: '#fff',
-    lineHeight: 28,
+    lineHeight: 30,
     marginBottom: 8,
+    letterSpacing: -0.3,
   },
   heroBannerSub: {
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.9)',
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.85)',
     lineHeight: 20,
-    fontWeight: '600',
-    marginBottom: 16, 
+    fontWeight: '500',
   },
+
+  // Promotor — contain agar tidak terpotong
+  promotorWrapper: {
+    width: '100%',
+    aspectRatio: 1,          // bujur sangkar — sesuaikan jika foto aslinya berbeda rasio
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 16,
+    alignSelf: 'center',
+  },
+  promotorProfile: {
+    width: '100%',
+    height: '100%',
+  },
+
+  // Keunggulan
   advantagesContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.12)', 
+    backgroundColor: 'rgba(255,255,255,0.12)',
     borderRadius: 14,
-    padding: 12,
+    padding: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    marginTop: 6,
+    borderColor: 'rgba(255,255,255,0.22)',
   },
   advantagesHeading: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
-    color: '#fff',
-    letterSpacing: 0.5,
-    marginBottom: 8,
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 1,
+    marginBottom: 10,
   },
   advantageItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
-    gap: 8,
+    marginBottom: 8,
+    gap: 10,
   },
   advantageIconWrapper: {
     backgroundColor: '#fff',
-    borderRadius: 6,
-    padding: 3,
+    borderRadius: 8,
+    width: 28,
+    height: 28,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -508,6 +460,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
 
+  // Slider
   sliderSection: { marginBottom: 20 },
   sliderTitleRow: {
     flexDirection: 'row',
@@ -516,19 +469,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 14,
   },
-  sectionTitle: { 
-    fontSize: 16, 
-    fontWeight: '800', 
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
     color: '#1a1a2e',
   },
-  liveDot: {
+  livePill: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#e8f5e9',
     borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    gap: 4,
+    gap: 5,
   },
   liveDotInner: {
     width: 6,
@@ -538,22 +491,15 @@ const styles = StyleSheet.create({
   },
   liveText: { fontSize: 11, color: '#00AA5B', fontWeight: '700' },
 
-  loadingBox: {
-    padding: 40,
-    alignItems: 'center',
-    gap: 8,
-  },
-  loadingText: {
-    fontSize: 12,
-    color: '#90a4ae',
-  },
-  sliderContainer: { 
-    paddingLeft: 16, 
+  loadingBox: { padding: 40, alignItems: 'center', gap: 8 },
+  loadingText: { fontSize: 12, color: '#90a4ae' },
+  sliderContainer: {
+    paddingLeft: 16,
     paddingRight: 4,
     paddingBottom: 12,
   },
 
-  /* ── CARD: gambar penuh di atas, teks di bawah ── */
+  // Card
   card: {
     width: CARD_WIDTH,
     borderRadius: 16,
@@ -568,7 +514,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e8f0eb',
   } as ViewStyle,
-
   cardImageWrapper: {
     width: '100%',
     aspectRatio: 4 / 3,
@@ -577,19 +522,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     overflow: 'hidden',
   },
-
   cardImageBlur: {
     width: '100%',
     height: '100%',
     position: 'absolute',
     opacity: 0.6,
   },
-
-  cardFullImage: {
-    width: '100%',
-    height: '100%',
-  },
-
+  cardFullImage: { width: '100%', height: '100%' },
   cardNoImage: {
     width: '100%',
     height: '100%',
@@ -597,11 +536,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
-  cardTextContent: {
-    padding: 14,
-  },
-
+  cardTextContent: { padding: 14 },
   cardTitle: {
     fontSize: 15,
     fontWeight: '800',
@@ -609,24 +544,23 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     marginBottom: 6,
   },
-
   cardDescription: {
     fontSize: 13,
     color: '#475569',
     lineHeight: 19,
   },
 
-  /* ── MODAL ── */
+  // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)', 
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
   modalContent: {
     width: '100%',
-    maxHeight: height * 0.8, 
+    maxHeight: height * 0.8,
     backgroundColor: '#ffffff',
     borderRadius: 24,
     padding: 20,
@@ -643,9 +577,9 @@ const styles = StyleSheet.create({
     right: 16,
     zIndex: 10,
     backgroundColor: '#f1f5f9',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -666,13 +600,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     opacity: 0.6,
   },
-  modalImageFull: {
-    width: '100%',
-    height: '100%',
-  },
-  modalTextContainer: {
-    paddingVertical: 4,
-  },
+  modalImageFull: { width: '100%', height: '100%' },
+  modalTextContainer: { paddingVertical: 4 },
   modalTitle: {
     fontSize: 18,
     fontWeight: '800',
@@ -699,10 +628,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  ctaSection: {
-    paddingHorizontal: 16,
-    marginTop: 6,
-  },
+  // CTA
+  ctaSection: { paddingHorizontal: 16, marginTop: 6 },
   ctaCard: {
     backgroundColor: '#fff',
     borderRadius: 18,

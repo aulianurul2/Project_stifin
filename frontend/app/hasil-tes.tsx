@@ -356,7 +356,6 @@ export default function HasilTes() {
               <Text style={styles.verifikasiNoteTitle}>Estimasi Waktu Verifikasi</Text>
             </View>
             <View style={styles.rowGap6}>
-              <Ionicons name="time-outline" size={13} color="#f57c00" />
               <Text style={styles.verifikasiNoteText}>
                 Bukti transfer Anda akan diverifikasi maksimal{' '}
                 <Text style={styles.bold546}>1×24 jam</Text> setelah pengiriman.
@@ -551,49 +550,55 @@ export default function HasilTes() {
           </View>
         )}
 
-        {/* ── Kontak Admin ── */}
+        {/* ── Butuh Bantuan? (samakan dengan profile) ── */}
         {!belumMengajukan && (
-          <View style={styles.kontakAdminCard}>
-            <View style={styles.kontakAdminHeader}>
-              <View style={styles.kontakAdminIconWrap}>
-                <Ionicons name="headset-outline" size={18} color="#00AA5B" />
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionIconWrap}>
+                <Ionicons name="headset-outline" size={14} color="#00AA5B" />
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.kontakAdminTitle}>Butuh Bantuan?</Text>
-                <Text style={styles.kontakAdminSub}>
-                  Hubungi Admin untuk pertanyaan seputar jadwal dan hasil tes.
-                </Text>
+              <View>
+                <Text style={styles.sectionTitle}>Butuh Bantuan?</Text>
+                <Text style={styles.sectionSub}>Hubungi kami via WhatsApp</Text>
               </View>
             </View>
+
+            <Text style={styles.waDesc}>
+              Tanya seputar jadwal, reschedule, atau hasil tes STIFIn langsung ke tim kami.
+            </Text>
 
             <TouchableOpacity
               style={styles.waBtn}
               onPress={() => hubungiAdmin(adminWa1, 'reschedule untuk jadwal')}
-              activeOpacity={0.75}
+              activeOpacity={0.82}
             >
-              <View style={styles.waBtnIcon}>
-                <Ionicons name="logo-whatsapp" size={20} color="#25D366" />
+              <View style={styles.waBtnIconWrap}>
+                <Ionicons name="logo-whatsapp" size={20} color="#22C55E" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.waBtnLabel}>Chat dengan promotor</Text>
+                <Text style={styles.waBtnRole}>Promotor STIFIn</Text>
                 <Text style={styles.waBtnNomor}>{toLokalFormat(adminWa1)}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={14} color="#25D366" />
+              <View style={styles.waBtnArrow}>
+                <Ionicons name="arrow-forward" size={13} color="#22C55E" />
+              </View>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.waBtn}
+              style={[styles.waBtn, { marginTop: 10 }]}
               onPress={() => hubungiAdmin(adminWa2, 'reschedule untuk jadwal')}
-              activeOpacity={0.75}
+              activeOpacity={0.82}
             >
-              <View style={styles.waBtnIcon}>
-                <Ionicons name="logo-whatsapp" size={20} color="#25D366" />
+              <View style={styles.waBtnIconWrap}>
+                <Ionicons name="logo-whatsapp" size={20} color="#22C55E" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.waBtnLabel}>Chat dengan admin</Text>
+                <Text style={styles.waBtnRole}>Admin STIFIn</Text>
                 <Text style={styles.waBtnNomor}>{toLokalFormat(adminWa2)}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={14} color="#25D366" />
+              <View style={styles.waBtnArrow}>
+                <Ionicons name="arrow-forward" size={13} color="#22C55E" />
+              </View>
             </TouchableOpacity>
           </View>
         )}
@@ -1019,35 +1024,56 @@ const styles = StyleSheet.create({
   rescheduleNoteText: { fontSize: 11, color: '#78909c', flex: 1, lineHeight: 16 },
   rescheduleNoteBold: { fontWeight: '800', color: '#546e7a' },
 
-  // ── Kontak Admin ──
-  kontakAdminCard: {
-    backgroundColor: '#fff', borderRadius: 18,
-    padding: 16, marginBottom: 16,
-    borderWidth: 1, borderColor: '#e8f5e9', gap: 10,
+  // ── Section (Butuh Bantuan - WA) — disamakan dengan profile ──
+  section: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#E2ECE7',
+    ...Platform.select({
+      ios:     { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 10 },
+      android: { elevation: 2 },
+    }),
   },
-  kontakAdminHeader: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
+  sectionHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    marginBottom: 12,
   },
-  kontakAdminIconWrap: {
-    width: 36, height: 36, borderRadius: 10,
-    backgroundColor: '#e8f5e9',
+  sectionIconWrap: {
+    width: 34, height: 34, borderRadius: 10,
+    backgroundColor: '#E8F5EE',
     justifyContent: 'center', alignItems: 'center',
   },
-  kontakAdminTitle: { fontSize: 14, fontWeight: '800', color: '#1a1a2e', marginBottom: 2 },
-  kontakAdminSub:   { fontSize: 11, color: '#90a4ae', lineHeight: 15 },
+  sectionTitle: { fontSize: 14, fontWeight: '800', color: '#0F172A' },
+  sectionSub:   { fontSize: 11, color: '#94A3B8', marginTop: 1 },
+
+  waDesc: {
+    fontSize: 12, color: '#64748B', lineHeight: 18,
+    marginBottom: 14,
+    paddingBottom: 14,
+    borderBottomWidth: 1, borderColor: '#E2ECE7',
+  },
 
   waBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: '#f0fff8', borderRadius: 14, padding: 13,
-    borderWidth: 1.5, borderColor: '#b9f0d0',
+    backgroundColor: '#F0FDF4',
+    borderRadius: 14, padding: 14,
+    borderWidth: 1, borderColor: '#BBF7D0',
   },
-  waBtnIcon: {
-    width: 42, height: 42, borderRadius: 12,
-    backgroundColor: '#e8ffe8',
+  waBtnIconWrap: {
+    width: 40, height: 40, borderRadius: 12,
+    backgroundColor: '#DCFCE7',
     justifyContent: 'center', alignItems: 'center',
   },
-  waBtnLabel: { fontSize: 10, fontWeight: '700', color: '#78909c', letterSpacing: 0.5 },
-  waBtnNomor: { fontSize: 14, fontWeight: '800', color: '#1a1a2e', marginTop: 1 },
+  waBtnRole:  { fontSize: 10, fontWeight: '700', color: '#94A3B8', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 2 },
+  waBtnNomor: { fontSize: 15, fontWeight: '800', color: '#0F172A' },
+  waBtnArrow: {
+    width: 28, height: 28, borderRadius: 8,
+    backgroundColor: '#DCFCE7',
+    justifyContent: 'center', alignItems: 'center',
+  },
 
   // ── Modal ──
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },

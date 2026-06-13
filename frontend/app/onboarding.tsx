@@ -14,11 +14,8 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-const { width, height } = Dimensions.get('window');
-
-const SLIDES = ['intro', 'action'];
-
-
+const { width } = Dimensions.get('window');
+const SLIDES = ['intro', 'kenali', 'action'];
 
 const KEUNGGULAN = [
   { icon: 'checkbox-outline', text: 'Simpel',    desc: 'Mudah dipahami' },
@@ -26,14 +23,21 @@ const KEUNGGULAN = [
   { icon: 'disc-outline',     text: 'Akurat',    desc: 'Berbasis sains' },
 ];
 
+const FEATURES = [
+  { icon: 'sparkles-outline',  label: 'Bakat Alami',       desc: 'Kenali potensi bawaan yang unik' },
+  { icon: 'book-outline',      label: 'Gaya Belajar',      desc: 'Cara belajar paling efektif untukmu' },
+  { icon: 'briefcase-outline', label: 'Karier Ideal',      desc: 'Arah karier sesuai kepribadianmu' },
+  { icon: 'heart-outline',     label: 'Hubungan Harmonis', desc: 'Pahami dirimu untuk relasi lebih baik' },
+];
+
 export default function OnboardingScreen() {
   const router = useRouter();
   const flatRef = useRef<FlatList>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const goNext = () => {
-    flatRef.current?.scrollToIndex({ index: 1, animated: true });
-    setActiveIndex(1);
+  const goTo = (index: number) => {
+    flatRef.current?.scrollToIndex({ index, animated: true });
+    setActiveIndex(index);
   };
 
   const handleScroll = (e: any) => {
@@ -43,84 +47,109 @@ export default function OnboardingScreen() {
 
   const SlideIntro = () => (
     <View style={{ width }}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
-        bounces={false}
-      >
-        {/* Hero Image boarding - rasio 1600x1331 */}
-        <View style={[styles.heroImageWrapper, { aspectRatio: 1600 / 1331 }]}>
-          <Image
-            source={require('../assets/images/boarding.webp')}
-            style={styles.heroImageFull}
-            resizeMode="cover"
-          />
-          <View style={styles.heroGradient} />
+      <ScrollView showsVerticalScrollIndicator={false} bounces={false} contentContainerStyle={{ paddingBottom: 36 }}>
+
+        {/* Image */}
+        <View style={styles.imageBox}>
+          <Image source={require('../assets/images/boarding.webp')} style={styles.image} resizeMode="cover" />
         </View>
 
-        <View style={styles.contentArea}>
+        <View style={styles.content}>
+          <Text style={styles.headline}>Apa Itu <Text style={styles.accent}>STIFIn?</Text></Text>
+          <View style={styles.underline} />
 
-          {/* Headline */}
-          <View>
-            <Text style={styles.headline}>Apa Itu{'\n'}
-              <Text style={styles.headlineAccent}>STIFIn?</Text>
-            </Text>
-            <View style={styles.headlineUnderline} />
-          </View>
-
-          {/* Body */}
           <Text style={styles.body}>
             <Text style={styles.bold}>STIFIn</Text> mengidentifikasi{' '}
             <Text style={styles.bold}>mesin kecerdasan</Text> dan karakter manusia
             berdasarkan sistem operasi otak dominan, melalui pemindaian sidik jari
-            yang disebut <Text style={{ color: '#00AA5B', fontWeight: '700' }}>Tes STIFIn</Text>.
+            yang disebut <Text style={styles.accent}>Tes STIFIn</Text>.
           </Text>
 
-          {/* Stat bar */}
+          {/* Stat row */}
           <View style={styles.statRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>5</Text>
-              <Text style={styles.statLabel}>Mesin Kecerdasan</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>1'</Text>
-              <Text style={styles.statLabel}>Cukup 1 Menit</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>∞</Text>
-              <Text style={styles.statLabel}>Seumur Hidup</Text>
-            </View>
+            {[
+              { num: '5',  label: 'Mesin\nKecerdasan' },
+              { num: '1\'', label: 'Cukup\n1 Menit' },
+              { num: '∞',  label: 'Berlaku\nSeumur Hidup' },
+            ].map((s, i, arr) => (
+              <React.Fragment key={s.num}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNum}>{s.num}</Text>
+                  <Text style={styles.statLabel}>{s.label}</Text>
+                </View>
+                {i < arr.length - 1 && <View style={styles.statDiv} />}
+              </React.Fragment>
+            ))}
           </View>
 
-          {/* Keunggulan grid */}
-          <View style={styles.keunggulanWrap}>
-            <View style={styles.keunggulanHeader}>
-              <View style={styles.keunggulanHeaderDot} />
-              <Text style={styles.sectionLabel}>KEUNGGULAN METODE STIFIn</Text>
+          {/* Keunggulan */}
+          <View style={styles.keunggulanBox}>
+            <View style={styles.boxHeader}>
+              <View style={styles.boxAccentBar} />
+              <Text style={styles.boxTitle}>KEUNGGULAN METODE STIFIn</Text>
             </View>
             <View style={styles.keunggulanGrid}>
-              {KEUNGGULAN.map((item) => (
-                <View key={item.icon} style={styles.keunggulanCard}>
-                  <View style={styles.keunggulanIconCircle}>
-                    <Ionicons name={item.icon as any} size={20} color="#00AA5B" />
+              {KEUNGGULAN.map((k) => (
+                <View key={k.icon} style={styles.keunggulanCard}>
+                  <View style={styles.iconCircle}>
+                    <Ionicons name={k.icon as any} size={18} color="#00AA5B" />
                   </View>
-                  <Text style={styles.keunggulanCardTitle}>{item.text}</Text>
-                  <Text style={styles.keunggulanCardDesc}>{item.desc}</Text>
+                  <Text style={styles.keunggulanTitle}>{k.text}</Text>
+                  <Text style={styles.keunggulanDesc}>{k.desc}</Text>
                 </View>
               ))}
             </View>
           </View>
 
-          {/* CTA Button */}
-          <TouchableOpacity style={styles.primaryBtn} onPress={goNext} activeOpacity={0.85}>
-            <Text style={styles.primaryBtnText}>Mulai Sekarang</Text>
-            <View style={styles.primaryBtnIcon}>
-              <Ionicons name="arrow-forward" size={16} color="#00AA5B" />
-            </View>
+          <TouchableOpacity style={styles.btn} onPress={() => goTo(1)} activeOpacity={0.85}>
+            <Text style={styles.btnText}>Selanjutnya</Text>
+            <View style={styles.btnIcon}><Ionicons name="arrow-forward" size={16} color="#00AA5B" /></View>
           </TouchableOpacity>
 
+          <TouchableOpacity style={styles.skipRow} onPress={() => goTo(2)} activeOpacity={0.7}>
+            <Text style={styles.skipText}>Lewati</Text>
+            <Ionicons name="play-skip-forward-outline" size={12} color="#90a4ae" />
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
+  );
+
+  const SlideKenali = () => (
+    <View style={{ width }}>
+      <ScrollView showsVerticalScrollIndicator={false} bounces={false} contentContainerStyle={{ paddingBottom: 36 }}>
+
+        <View style={[styles.imageBox, { aspectRatio: 946 / 873 }]}>
+          <Image source={require('../assets/images/board.jpeg')} style={styles.image} resizeMode="cover" />
+        </View>
+
+        <View style={styles.content}>
+          <Text style={styles.headline}>Kenali Dirimu,{'\n'}<Text style={styles.accent}>Maksimalkan Potensimu.</Text></Text>
+          <View style={styles.underline} />
+
+          <Text style={styles.body}>
+            Temukan bakat alami, gaya belajar, karier, dan hubungan yang lebih harmonis
+            melalui <Text style={styles.accent}>Tes STIFIn</Text>.
+          </Text>
+
+          <View style={styles.featureList}>
+            {FEATURES.map((f) => (
+              <View key={f.label} style={styles.featureItem}>
+                <View style={styles.iconCircle}>
+                  <Ionicons name={f.icon as any} size={16} color="#00AA5B" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.featureLabel}>{f.label}</Text>
+                  <Text style={styles.featureDesc}>{f.desc}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+
+          <TouchableOpacity style={styles.btn} onPress={() => goTo(2)} activeOpacity={0.85}>
+            <Text style={styles.btnText}>Selanjutnya</Text>
+            <View style={styles.btnIcon}><Ionicons name="arrow-forward" size={16} color="#00AA5B" /></View>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
@@ -128,61 +157,36 @@ export default function OnboardingScreen() {
 
   const SlideAction = () => (
     <View style={{ width }}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
-        bounces={false}
-      >
-        {/* Hero Image promotor - rasio 640x640 (1:1) */}
-        <View style={[styles.heroImageWrapper, { aspectRatio: 1 / 1 }]}>
-          <Image
-            source={require('../assets/images/promotor.jpeg')}
-            style={styles.heroImageFull}
-            resizeMode="cover"
-          />
-          <View style={styles.heroGradient} />
+      <ScrollView showsVerticalScrollIndicator={false} bounces={false} contentContainerStyle={{ paddingBottom: 36 }}>
+
+        <View style={styles.imageBox}>
+          <Image source={require('../assets/images/promotor.jpeg')} style={styles.image} resizeMode="cover" />
         </View>
 
-        <View style={styles.contentArea}>
-
-          <View>
-            <Text style={styles.headline}>Siap{' '}
-              <Text style={styles.headlineAccent}>Memulai?</Text>
-            </Text>
-            <View style={styles.headlineUnderline} />
-          </View>
+        <View style={styles.content}>
+          <Text style={styles.headline}>Siap <Text style={styles.accent}>Memulai?</Text></Text>
+          <View style={styles.underline} />
 
           <Text style={styles.body}>
             Daftar dan ikuti <Text style={styles.bold}>Tes STIFIn</Text> untuk menemukan
             mesin kecerdasan, karakter, dan potensi terbaikmu.
           </Text>
 
-          <TouchableOpacity
-            style={styles.primaryBtn}
-            onPress={() => router.push('/register')}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.primaryBtnText}>Daftar Sekarang</Text>
-            <View style={styles.primaryBtnIcon}>
-              <Ionicons name="arrow-forward" size={16} color="#00AA5B" />
-            </View>
+          <TouchableOpacity style={styles.btn} onPress={() => router.push('/register')} activeOpacity={0.85}>
+            <Text style={styles.btnText}>Daftar Sekarang</Text>
+            <View style={styles.btnIcon}><Ionicons name="arrow-forward" size={16} color="#00AA5B" /></View>
           </TouchableOpacity>
 
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>atau</Text>
-            <View style={styles.dividerLine} />
+          <View style={styles.divRow}>
+            <View style={styles.divLine} />
+            <Text style={styles.divText}>atau</Text>
+            <View style={styles.divLine} />
           </View>
 
-          <TouchableOpacity
-            style={styles.secondaryBtn}
-            onPress={() => router.replace('/login')}
-            activeOpacity={0.75}
-          >
-            <Text style={styles.secondaryBtnText}>Sudah punya akun?</Text>
-            <Text style={styles.secondaryBtnBold}> Masuk →</Text>
+          <TouchableOpacity style={styles.secBtn} onPress={() => router.replace('/login')} activeOpacity={0.75}>
+            <Text style={styles.secBtnText}>Sudah punya akun?</Text>
+            <Text style={styles.secBtnBold}> Masuk →</Text>
           </TouchableOpacity>
-
         </View>
       </ScrollView>
     </View>
@@ -196,15 +200,17 @@ export default function OnboardingScreen() {
       <FlatList
         ref={flatRef}
         data={SLIDES}
-        keyExtractor={(item) => item}
+        keyExtractor={(i) => i}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        renderItem={({ item }) =>
-          item === 'intro' ? <SlideIntro /> : <SlideAction />
-        }
+        renderItem={({ item }) => {
+          if (item === 'intro') return <SlideIntro />;
+          if (item === 'kenali') return <SlideKenali />;
+          return <SlideAction />;
+        }}
         style={{ flex: 1 }}
       />
 
@@ -220,83 +226,37 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
 
-  /* ── Hero Image ── */
-  heroImageWrapper: {
-    width: width,
-    aspectRatio: 4 / 3,
+  /* Image */
+  imageBox: {
+    width: '100%',
+    aspectRatio: 1 / 1,
     overflow: 'hidden',
-    backgroundColor: '#0a0a0a',
-    position: 'relative',
-    alignSelf: 'stretch',
-    marginLeft: 0,
-    marginRight: 0,
   },
-  heroImageBlur: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    opacity: 0.6,
-  },
-  heroImageFull: {
-    width: '100%',
-    height: '100%',
-  },
-  heroGradient: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 80,
-    backgroundColor: 'rgba(255,255,255,0.0)',
-    // Simulasi gradient dengan shadow
-  },
+  image: { width: '100%', height: '100%' },
 
-
-  /* ── Content ── */
-  contentArea: {
-    paddingHorizontal: 22,
-    paddingTop: 24,
-    gap: 18,
+  /* Skip */
+  skipRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 6,
   },
+  skipText: { fontSize: 12, color: '#90a4ae', fontWeight: '500' },
 
+  /* Content */
+  content: { paddingHorizontal: 22, paddingTop: 12, gap: 16 },
 
+  headline: { fontSize: 28, fontWeight: '900', color: '#1a1a2e', lineHeight: 36, letterSpacing: -0.5 },
+  accent: { color: '#00AA5B' },
+  underline: { width: 40, height: 4, backgroundColor: '#00AA5B', borderRadius: 2 },
 
-  /* ── Headline ── */
-  headline: {
-    fontSize: 30,
-    fontWeight: '900',
-    color: '#1a1a2e',
-    lineHeight: 38,
-    letterSpacing: -0.5,
-  },
-  headlineAccent: {
-    color: '#00AA5B',
-  },
-  headlineUnderline: {
-    width: 40,
-    height: 4,
-    backgroundColor: '#00AA5B',
-    borderRadius: 2,
-    marginTop: 8,
-  },
+  body: { fontSize: 14, color: '#546e7a', lineHeight: 24 },
+  bold: { fontWeight: '700', color: '#37474f' },
 
-  /* ── Body ── */
-  body: {
-    fontSize: 14,
-    color: '#546e7a',
-    lineHeight: 24,
-  },
-  bold: {
-    fontWeight: '700',
-    color: '#37474f',
-  },
-
-  /* ── Stat Bar ── */
+  /* Stat row */
   statRow: {
     flexDirection: 'row',
     backgroundColor: '#f8fffe',
@@ -304,120 +264,80 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e0f2e9',
     paddingVertical: 14,
-    paddingHorizontal: 8,
   },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 3,
-  },
-  statNumber: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#00AA5B',
-  },
-  statLabel: {
-    fontSize: 10,
-    color: '#78909c',
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: '#e0f2e9',
-    marginVertical: 4,
-  },
+  statItem: { flex: 1, alignItems: 'center', gap: 3 },
+  statNum: { fontSize: 22, fontWeight: '900', color: '#00AA5B' },
+  statLabel: { fontSize: 10, color: '#78909c', fontWeight: '600', textAlign: 'center', lineHeight: 14 },
+  statDiv: { width: 1, backgroundColor: '#e0f2e9', marginVertical: 4 },
 
-  /* ── Keunggulan ── */
-  keunggulanWrap: {
+  /* Keunggulan */
+  keunggulanBox: {
     backgroundColor: '#f8fffe',
-    borderRadius: 18,
-    padding: 16,
+    borderRadius: 16,
+    padding: 14,
     borderWidth: 1,
     borderColor: '#e0f2e9',
   },
-  keunggulanHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-    marginBottom: 14,
-  },
-  keunggulanHeaderDot: {
-    width: 4,
-    height: 16,
-    backgroundColor: '#00AA5B',
-    borderRadius: 2,
-  },
-  sectionLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#1a1a2e',
-    letterSpacing: 0.8,
-  },
-  keunggulanGrid: {
-    flexDirection: 'row',
-    gap: 10,
-  },
+  boxHeader: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 12 },
+  boxAccentBar: { width: 4, height: 14, backgroundColor: '#00AA5B', borderRadius: 2 },
+  boxTitle: { fontSize: 10, fontWeight: '800', color: '#1a1a2e', letterSpacing: 0.8 },
+  keunggulanGrid: { flexDirection: 'row', gap: 8 },
   keunggulanCard: {
     flex: 1,
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 12,
+    padding: 10,
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
     borderWidth: 1,
     borderColor: '#e8f5e9',
-    shadowColor: '#00AA5B',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
   },
-  keunggulanIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  keunggulanTitle: { fontSize: 12, fontWeight: '800', color: '#1a1a2e', textAlign: 'center' },
+  keunggulanDesc: { fontSize: 9, color: '#90a4ae', fontWeight: '500', textAlign: 'center', lineHeight: 13 },
+
+  /* Feature list */
+  featureList: { gap: 8 },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#f8fffe',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#e0f2e9',
+  },
+  featureLabel: { fontSize: 13, fontWeight: '800', color: '#1a1a2e', marginBottom: 1 },
+  featureDesc: { fontSize: 11, color: '#90a4ae', fontWeight: '500' },
+
+  /* Shared icon circle */
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#e8f5e9',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  keunggulanCardTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#1a1a2e',
-    textAlign: 'center',
-  },
-  keunggulanCardDesc: {
-    fontSize: 10,
-    color: '#90a4ae',
-    fontWeight: '500',
-    textAlign: 'center',
-    lineHeight: 14,
-  },
 
-  /* ── Buttons ── */
-  primaryBtn: {
+  /* Button */
+  btn: {
     backgroundColor: '#00AA5B',
-    paddingVertical: 16,
+    paddingVertical: 15,
     paddingHorizontal: 24,
     borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 10,
     shadowColor: '#00AA5B',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.28,
     shadowRadius: 10,
     elevation: 6,
-    gap: 10,
   },
-  primaryBtnText: {
-    color: '#fff',
-    fontWeight: '800',
-    fontSize: 15,
-    letterSpacing: 0.3,
-  },
-  primaryBtnIcon: {
+  btnText: { color: '#fff', fontWeight: '800', fontSize: 15, letterSpacing: 0.3 },
+  btnIcon: {
     backgroundColor: '#fff',
     width: 26,
     height: 26,
@@ -426,56 +346,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  /* ── Divider ── */
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#e8f0eb',
-  },
-  dividerText: {
-    fontSize: 12,
-    color: '#b0bec5',
-    fontWeight: '500',
-  },
+  /* Secondary */
+  divRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  divLine: { flex: 1, height: 1, backgroundColor: '#e8f0eb' },
+  divText: { fontSize: 12, color: '#b0bec5', fontWeight: '500' },
+  secBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 4 },
+  secBtnText: { fontSize: 14, color: '#90a4ae' },
+  secBtnBold: { fontSize: 14, color: '#00AA5B', fontWeight: '800' },
 
-  secondaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 4,
-  },
-  secondaryBtnText: {
-    fontSize: 14,
-    color: '#90a4ae',
-  },
-  secondaryBtnBold: {
-    fontSize: 14,
-    color: '#00AA5B',
-    fontWeight: '800',
-  },
-
-  /* ── Dots ── */
+  /* Dots */
   dotsWrap: {
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 14,
+    paddingVertical: 12,
     backgroundColor: '#fff',
   },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#c8e6c9',
-  },
-  dotActive: {
-    width: 22,
-    borderRadius: 3,
-    backgroundColor: '#00AA5B',
-  },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#c8e6c9' },
+  dotActive: { width: 22, borderRadius: 3, backgroundColor: '#00AA5B' },
 });
