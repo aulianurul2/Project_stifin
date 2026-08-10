@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\LandingController; 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KlienController;
 use App\Http\Controllers\PendaftaranController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\HasilTesController;
 use App\Http\Controllers\KontenInformasiController;
 use App\Http\Controllers\LaporanController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -22,6 +24,9 @@ use App\Http\Controllers\LaporanController;
 Route::get('/', function() {
     return redirect()->route('login');
 });
+
+// Halaman utama (/) mengarah ke Landing Page
+Route::get('/', [LandingController::class, 'index'])->name('landing');
 
 // Route GET untuk nampilin form login (URL: /login)
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
