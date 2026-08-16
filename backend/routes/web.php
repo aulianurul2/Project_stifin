@@ -20,16 +20,11 @@ use App\Http\Controllers\LaporanController;
 
 // --- GUEST ROUTES (Tanpa Login) ---
 
-// Halaman utama (/) mau diarahkan ke login juga boleh
-Route::get('/', function() {
-    return redirect()->route('login');
-});
-
 // Halaman utama (/) mengarah ke Landing Page
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 
 // Route GET untuk nampilin form login (URL: /login)
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::get('/loginadmin', [AuthController::class, 'showLogin'])->name('login');
 
 // Route POST untuk proses kirim data login (URL: /login)
 Route::post('/login', [AuthController::class, 'login']);

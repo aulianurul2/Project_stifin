@@ -1322,7 +1322,7 @@ Temukan bakat alami, gaya belajar, karier, dan hubungan yang lebih harmonis mela
   <div class="footer-col-label">Media Sosial & Kontak</div>
   <div class="footer-links">
     <!-- Alamat (Google Maps) -->
-    <a href="https://maps.google.com/?q=Nama+Jalan+Atau+Lokasi+Anda" target="_blank" rel="noopener noreferrer">
+    <a href="https://maps.app.goo.gl/j9SSbUhxPGUeZwM5A?g_st=ic" target="_blank" rel="noopener noreferrer">
       <i class="fa-solid fa-location-dot"></i> Alamat Kami
     </a>
 
